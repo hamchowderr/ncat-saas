@@ -15,6 +15,9 @@ import {
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 
+// Force dynamic rendering for pages that use cookies
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata() {
   return generateMeta({
     title: "Admin Dashboard",
