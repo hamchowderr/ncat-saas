@@ -88,7 +88,7 @@ export default function WorkflowsContent() {
     setResults(prev => ({ ...prev, [workflowId]: { success: false } }));
 
     try {
-      const workflowResults = [];
+      const workflowResults: any[] = [];
       
       for (const step of steps) {
         const response = await fetch(`${apiBaseUrl}${step.endpoint}`, {
