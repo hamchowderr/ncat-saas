@@ -16,9 +16,12 @@ import {
   SidebarMenuItem,
   useSidebar
 } from "@/components/ui/sidebar";
-import { BellIcon, CreditCardIcon, LogOutIcon, UserCircle2Icon, MonitorIcon, PaletteIcon } from "lucide-react";
+import { Bell, CreditCard, LogOut, UserCircle2Icon, MonitorIcon, PaletteIcon, BadgeCheck } from "lucide-react";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import Link from "next/link";
+import { createClient } from '@/lib/client';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/hooks/use-user';
 
 const userData = {
   name: "Toby Belhome",
@@ -28,6 +31,28 @@ const userData = {
 
 export function NavUser() {
   const { isMobile } = useSidebar();
+  const router = useRouter();
+  const { user, loading } = useUser();
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = '/auth/login';
+  };
+
+  if (loading) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg">
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium">Loading...</span>
+            </div>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
 
   return (
     <SidebarMenu>
@@ -38,12 +63,12 @@ export function NavUser() {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
               <Avatar className="rounded-full">
-                <AvatarImage src={userData.avatar} alt={userData.name} />
-                <AvatarFallback className="rounded-lg">JS</AvatarFallback>
+                <AvatarImage src={user?.user_metadata?.avatar_url || userData.avatar} alt={user?.user_metadata?.full_name || user?.email} />
+                <AvatarFallback className="rounded-lg">{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{userData.name}</span>
-                <span className="text-muted-foreground truncate text-xs">{userData.email}</span>
+                <span className="truncate font-medium">{user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}</span>
+                <span className="text-muted-foreground truncate text-xs">{user?.email || 'No email'}</span>
               </div>
               <DotsVerticalIcon className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -56,12 +81,12 @@ export function NavUser() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={userData.avatar} alt={userData.name} />
-                  <AvatarFallback className="rounded-lg">TB</AvatarFallback>
+                  <AvatarImage src={user?.user_metadata?.avatar_url || userData.avatar} alt={user?.user_metadata?.full_name || user?.email} />
+                  <AvatarFallback className="rounded-lg">{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{userData.name}</span>
-                  <span className="text-muted-foreground truncate text-xs">{userData.email}</span>
+                  <span className="truncate font-medium">{user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}</span>
+                  <span className="text-muted-foreground truncate text-xs">{user?.email || 'No email'}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -75,12 +100,12 @@ export function NavUser() {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/dashboard/pages/settings/account">
-                  <UserCircle2Icon />
+                  <BadgeCheck />
                   Account
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <CreditCardIcon />
+                <CreditCard />
                 Billing
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
@@ -91,7 +116,7 @@ export function NavUser() {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/dashboard/pages/settings/notifications">
-                  <BellIcon />
+                  <Bell />
                   Notifications
                 </Link>
               </DropdownMenuItem>
@@ -103,8 +128,8 @@ export function NavUser() {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOutIcon />
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

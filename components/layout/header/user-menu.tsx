@@ -1,3 +1,5 @@
+'use client'
+
 import { BadgeCheck, Bell, ChevronRightIcon, CreditCard, LogOut, Sparkles, UserCircle2Icon, PaletteIcon, MonitorIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,17 +15,37 @@ import {
 import Link from "next/link";
 import * as React from "react";
 import { Progress } from "@/components/ui/progress";
+import { createClient } from '@/lib/client';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/hooks/use-user';
 
 export default function UserMenu() {
+  const router = useRouter();
+  const { user, loading } = useUser();
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = '/auth/login';
+  };
+
+  if (loading) {
+    return (
+      <Avatar>
+        <AvatarFallback className="rounded-lg">...</AvatarFallback>
+      </Avatar>
+    );
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Avatar>
           <AvatarImage
-            src={`https://bundui-images.netlify.app/avatars/01.png`}
+            src={user?.user_metadata?.avatar_url || `https://bundui-images.netlify.app/avatars/01.png`}
             alt="NCAT SaaS"
           />
-          <AvatarFallback className="rounded-lg">TB</AvatarFallback>
+          <AvatarFallback className="rounded-lg">{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) min-w-60" align="end">
@@ -31,14 +53,14 @@ export default function UserMenu() {
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
             <Avatar>
               <AvatarImage
-                src={`https://bundui-images.netlify.app/avatars/01.png`}
+                src={user?.user_metadata?.avatar_url || `https://bundui-images.netlify.app/avatars/01.png`}
                 alt="NCAT SaaS"
               />
-              <AvatarFallback className="rounded-lg">TB</AvatarFallback>
+              <AvatarFallback className="rounded-lg">{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">Toby Belhome</span>
-              <span className="text-muted-foreground truncate text-xs">hello@tobybelhome.com</span>
+              <span className="truncate font-semibold">{user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}</span>
+              <span className="text-muted-foreground truncate text-xs">{user?.email || 'No email'}</span>
             </div>
           </div>
         </DropdownMenuLabel>
@@ -85,7 +107,7 @@ export default function UserMenu() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout}>
           <LogOut />
           Log out
         </DropdownMenuItem>

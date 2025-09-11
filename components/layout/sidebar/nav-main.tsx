@@ -43,7 +43,7 @@ import {
   SquareCheckIcon,
   SquareKanbanIcon,
   StickyNoteIcon,
-  UserIcon,
+  UserCircle2Icon,
   UsersIcon,
   WalletMinimalIcon,
   type LucideIcon,
@@ -51,7 +51,11 @@ import {
   RedoDotIcon,
   BrushCleaningIcon,
   CreditCardIcon,
-  WorkflowIcon
+  WorkflowIcon,
+  BadgeCheck,
+  Bell,
+  PaletteIcon,
+  MonitorIcon
 } from "lucide-react";
 import Link from "next/link";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -82,48 +86,43 @@ type NavItem = {
 
 export const navItems: NavGroup[] = [
   {
-    title: "Dashboards",
+    title: "Workspace",
     items: [
       {
         title: "File Manager",
-        href: "/dashboard/file-manager",
+        href: "/workspace",
         icon: FolderIcon
       },
       {
         title: "Files",
-        href: "/dashboard/apps/files",
+        href: "/workspace/files",
         icon: ArchiveRestoreIcon
       },
       {
         title: "Media Tools",
-        href: "/dashboard/apps/files/media-tools",
+        href: "/workspace/media-tools",
         icon: WorkflowIcon
       },
       {
         title: "Workflows",
-        href: "/dashboard/apps/files/workflows",
+        href: "/workspace/workflows",
         icon: ComponentIcon
       },
       {
         title: "Jobs",
-        href: "/dashboard/apps/jobs",
+        href: "/workspace/jobs",
         icon: ClipboardCheckIcon
       },
+      { title: "Chat", href: "/workspace/chat", icon: MessageSquareIcon, isDataBadge: "5" }
     ]
   },
   {
-    title: "Apps",
+    title: "AI",
     items: [
-      { title: "Chats", href: "/dashboard/apps/chat", icon: MessageSquareIcon, isDataBadge: "5" },
-    ]
-  },
-  {
-    title: "AI Apps",
-    items: [
-      { title: "AI Chat", href: "/dashboard/apps/ai-chat", icon: BrainIcon },
+      { title: "AI Chat", href: "/workspace/ai-chat", icon: BrainIcon },
       {
         title: "Image Generator",
-        href: "/dashboard/apps/ai-image-generator",
+        href: "/workspace/ai-image-generator",
         icon: ImagesIcon
       }
     ]
@@ -133,10 +132,15 @@ export const navItems: NavGroup[] = [
     items: [
       {
         title: "Users List",
-        href: "/dashboard/pages/users",
-        icon: UsersIcon
+        href: "/admin/users",
+        icon: UserCircle2Icon
       },
-      { title: "Api Keys", href: "/dashboard/apps/api-keys", icon: KeyIcon },
+      { title: "Api Keys", href: "/admin/api-keys", icon: KeyIcon },
+      {
+        title: "Admin Panel",
+        href: "/admin",
+        icon: SettingsIcon
+      },
     ]
   },
 ];

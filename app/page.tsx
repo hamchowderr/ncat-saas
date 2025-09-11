@@ -1,5 +1,14 @@
 import { generateMeta } from "@/lib/utils";
 
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      svg: React.SVGProps<SVGSVGElement>;
+      path: React.SVGProps<SVGPathElement>;
+    }
+  }
+}
+
 export async function generateMetadata() {
   return generateMeta({
     title: "Welcome To The NCAT SaaS Dashboard",
@@ -25,7 +34,7 @@ export default function HomePage() {
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-8 max-w-7xl mx-auto">
           <a
-            href="/dashboard/file-manager"
+            href="/workspace"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-indigo-300 dark:hover:border-indigo-500"
           >
             <div className="relative mb-4">
@@ -40,7 +49,7 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/dashboard/apps/files"
+            href="/workspace/files"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-green-300 dark:hover:border-green-500"
           >
             <div className="relative mb-4">
@@ -55,7 +64,7 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/dashboard/apps/files/workflows"
+            href="/workspace/workflows"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-violet-300 dark:hover:border-violet-500"
           >
             <div className="relative mb-4">
@@ -70,7 +79,7 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/dashboard/apps/files/media-tools"
+            href="/workspace/media-tools"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-amber-300 dark:hover:border-amber-500"
           >
             <div className="relative mb-4">
@@ -85,7 +94,7 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/dashboard/apps/jobs"
+            href="/workspace/jobs"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-blue-300 dark:hover:border-blue-500"
           >
             <div className="relative mb-4">
@@ -100,7 +109,7 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/dashboard/apps/chat"
+            href="/workspace/chat"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-purple-300 dark:hover:border-purple-500"
           >
             <div className="relative mb-4">
@@ -115,7 +124,7 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/dashboard/apps/ai-chat"
+            href="/workspace/ai-chat"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-pink-300 dark:hover:border-pink-500"
           >
             <div className="relative mb-4">
@@ -130,7 +139,7 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/dashboard/apps/ai-image-generator"
+            href="/workspace/ai-image-generator"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-cyan-300 dark:hover:border-cyan-500"
           >
             <div className="relative mb-4">
@@ -145,7 +154,7 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/dashboard/apps/users"
+            href="/admin/users"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-orange-300 dark:hover:border-orange-500"
           >
             <div className="relative mb-4">
@@ -160,7 +169,7 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/dashboard/apps/api-keys"
+            href="/admin/api-keys"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-yellow-300 dark:hover:border-yellow-500"
           >
             <div className="relative mb-4">
@@ -175,7 +184,7 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/dashboard/profile"
+            href="/settings"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-emerald-300 dark:hover:border-emerald-500"
           >
             <div className="relative mb-4">
@@ -190,7 +199,7 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/dashboard/account"
+            href="/settings/account"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-500"
           >
             <div className="relative mb-4">
@@ -206,7 +215,7 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/dashboard/appearance"
+            href="/settings/appearance"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-violet-300 dark:hover:border-violet-500"
           >
             <div className="relative mb-4">
@@ -221,7 +230,7 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/dashboard/notifications"
+            href="/settings/notifications"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-red-300 dark:hover:border-red-500"
           >
             <div className="relative mb-4">
@@ -236,7 +245,7 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/dashboard/display"
+            href="/settings/display"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-teal-300 dark:hover:border-teal-500"
           >
             <div className="relative mb-4">
