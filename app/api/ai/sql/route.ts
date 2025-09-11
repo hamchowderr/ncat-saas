@@ -5,7 +5,7 @@ import OpenAI from 'openai'
 import createClient from 'openapi-fetch'
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || '',
 })
 
 const client = createClient<paths>({
@@ -56,6 +56,14 @@ function formatSchemaForPrompt(schema: any) {
 
 export async function POST(request: Request) {
   try {
+    // Check if OpenAI API key is configured
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { message: 'OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable.' },
+        { status: 500 }
+      )
+    }
+
     const { prompt, projectRef } = await request.json()
 
     if (!prompt) {
