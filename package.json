@@ -108,6 +108,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.10",
+    "@types/common-tags": "^1.8.4",
     "@types/node": "^24",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",

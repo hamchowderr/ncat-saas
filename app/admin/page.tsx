@@ -31,7 +31,7 @@ export default function AdminPage() {
               Supabase Manager
             </CardTitle>
             <CardDescription>
-              Access your Supabase project's database, authentication, storage, logs, and other backend services.
+              Access your Supabase project&apos;s database, authentication, storage, logs, and other backend services.
             </CardDescription>
           </CardHeader>
           <CardContent>

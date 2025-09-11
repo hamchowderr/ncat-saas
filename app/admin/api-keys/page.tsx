@@ -5,7 +5,7 @@ import ApiKeysDataTable from "./datatable";
 import UpgradePlanCard from "./upgrade-plan-card";
 import SuccessfulConversionsCard from "./successful-conversions-card";
 import FailedConversionsCard from "./failed-conversions-card";
-import ApiCallsCard from "@/app/dashboard/(auth)/apps/api-keys/api-calls-card";
+import ApiCallsCard from "./api-calls-card";
 
 export async function generateMetadata() {
   return generateMeta({
@@ -18,7 +18,7 @@ export async function generateMetadata() {
 
 async function getApiKeys() {
   const data = await fs.readFile(
-    path.join(process.cwd(), "app/dashboard/(auth)/apps/api-keys/data.json")
+    path.join(process.cwd(), "app/admin/api-keys/data.json")
   );
   return JSON.parse(data.toString());
 }

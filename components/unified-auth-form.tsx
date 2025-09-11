@@ -199,7 +199,7 @@ export function UnifiedAuthForm({ className, ...props }: React.ComponentPropsWit
                 </>
               ) : (
                 <>
-                  Don't have an account?{' '}
+                  Don&apos;t have an account?{' '}
                   <button
                     type="button"
                     className="underline underline-offset-4 hover:text-primary"

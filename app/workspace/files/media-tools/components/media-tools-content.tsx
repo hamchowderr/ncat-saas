@@ -3,7 +3,7 @@
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Video, 
-  Image, 
+  Image as ImageIcon, 
   Music, 
   FileText, 
   Scissors, 
@@ -110,7 +110,7 @@ export function MediaToolsContent() {
       {/* Image Processing */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <Image className="h-5 w-5 text-purple-600" />
+          <ImageIcon className="h-5 w-5 text-purple-600" />
           <h2 className="text-xl font-semibold">Image Processing</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
