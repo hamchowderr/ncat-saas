@@ -74,6 +74,33 @@ export function TableRecentFiles() {
 
   useEffect(() => {
     fetchRecentFiles();
+
+    // Set up periodic refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchRecentFiles();
+    }, 30000);
+
+    // Set up real-time subscription to file changes
+    const channel = supabase
+      .channel('file-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'files'
+        },
+        () => {
+          // Refresh the file list when any changes occur
+          fetchRecentFiles();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchRecentFiles = async () => {
@@ -154,16 +181,7 @@ export function TableRecentFiles() {
 
   const deleteFile = async (file: FileRecord) => {
     try {
-      // Delete from storage first
-      const { error: storageError } = await supabase.storage
-        .from('files')
-        .remove([file.file_path]);
-
-      if (storageError) {
-        console.error('Error deleting from storage:', storageError);
-      }
-
-      // Delete from database
+      // Delete from database first
       const { error: dbError } = await supabase
         .from('files')
         .delete()
@@ -172,10 +190,25 @@ export function TableRecentFiles() {
       if (dbError) {
         console.error('Error deleting from database:', dbError);
         alert('Failed to delete file');
-      } else {
-        setFileList(fileList.filter((f) => f.id !== file.id));
-        alert('File deleted successfully');
+        return;
       }
+
+      // Then delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('files')
+        .remove([file.file_path]);
+
+      if (storageError) {
+        console.error('Error deleting from storage:', storageError);
+        // Note: File is already deleted from database
+      }
+
+      // Update local state and refresh
+      setFileList(fileList.filter((f) => f.id !== file.id));
+      alert('File deleted successfully');
+
+      // Force refresh to ensure consistency
+      setTimeout(() => fetchRecentFiles(), 500);
     } catch (error) {
       console.error('Error:', error);
       alert('Failed to delete file');

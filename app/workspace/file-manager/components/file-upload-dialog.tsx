@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Upload, UploadIcon, X } from "lucide-react";
 import { createClient } from '@/lib/client'
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +19,11 @@ import { Label } from "@/components/ui/label";
 
 const supabase = createClient()
 
-export function FileUploadDialog() {
+interface FileUploadDialogProps {
+  onUploadSuccess?: () => void;
+}
+
+export function FileUploadDialog({ onUploadSuccess }: FileUploadDialogProps = {}) {
   const [open, setOpen] = React.useState(false);
   const [files, setFiles] = React.useState<File[]>([]);
   const [dragActive, setDragActive] = React.useState(false);
@@ -79,15 +84,16 @@ export function FileUploadDialog() {
 
   const handleUpload = async () => {
     if (files.length === 0) return;
-    
+
     setUploading(true);
-    
+    console.log('🚀 Starting upload process for', files.length, 'files');
+
     try {
       // Check authentication
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       
       if (!user) {
-        alert('You must be logged in to upload files');
+        toast.error('You must be logged in to upload files');
         setUploading(false);
         return;
       }
@@ -191,23 +197,30 @@ export function FileUploadDialog() {
       const failed = uploadResults.filter(r => r.status === 'error');
       
       if (successful.length > 0) {
-        let message = `Successfully uploaded ${successful.length} file${successful.length > 1 ? 's' : ''}`;
-        
+        console.log('🎉 Showing success toast for', successful.length, 'files');
         if (renamed.length > 0) {
-          message += `\n\n${renamed.length} file${renamed.length > 1 ? 's were' : ' was'} renamed to avoid duplicates:`;
-          renamed.forEach(r => {
-            message += `\n• "${r.originalName}" → "${r.uploadedName}"`;
+          toast.success(`Successfully uploaded ${successful.length} file${successful.length > 1 ? 's' : ''}`, {
+            description: `${renamed.length} file${renamed.length > 1 ? 's were' : ' was'} renamed to avoid duplicates`,
+            duration: 5000,
+          });
+        } else {
+          toast.success(`Successfully uploaded ${successful.length} file${successful.length > 1 ? 's' : ''}`, {
+            duration: 3000,
           });
         }
-        
-        alert(message);
+
+        // Call the onUploadSuccess callback if provided
+        onUploadSuccess?.();
       }
-      
+
       if (failed.length > 0) {
         const failedNames = failed.map(r => r.originalName).join(', ');
-        alert(`Failed to upload: ${failedNames}`);
+        console.log('❌ Showing error toast for failed files:', failedNames);
+        toast.error(`Failed to upload: ${failedNames}`, {
+          duration: 5000,
+        });
       }
-      
+
       // Close dialog and reset if any files were successful
       if (successful.length > 0) {
         setOpen(false);
@@ -216,7 +229,7 @@ export function FileUploadDialog() {
       
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Upload failed. Please try again.');
+      toast.error('Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -224,7 +237,12 @@ export function FileUploadDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button onClick={() => setOpen(true)}>
+      <Button onClick={() => {
+        setOpen(true);
+        // Test toast to verify Sonner is working
+        console.log('📢 Dialog opened, testing toast...');
+        toast.info('Upload dialog opened', { duration: 2000 });
+      }}>
         <UploadIcon />
         <span className="hidden sm:inline">Upload</span>
       </Button>

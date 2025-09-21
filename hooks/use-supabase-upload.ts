@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/client'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { type FileError, type FileRejection, useDropzone } from 'react-dropzone'
+import { toast } from 'sonner'
 
 const supabase = createClient()
 
@@ -144,6 +145,7 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
     
     if (!user) {
       console.error('❌ User not authenticated')
+      toast.error('You must be logged in to upload files')
       setErrors([{ name: 'auth', message: 'You must be logged in to upload files' }])
       return
     }
@@ -219,6 +221,20 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
 
     console.log('Errors:', responseErrors)
     console.log('Successes:', newSuccesses)
+
+    // Show success/error notifications
+    if (responseSuccesses.length > 0) {
+      toast.success(`Successfully uploaded ${responseSuccesses.length} file${responseSuccesses.length > 1 ? 's' : ''}`, {
+        duration: 3000,
+      })
+    }
+
+    if (responseErrors.length > 0) {
+      const errorFileNames = responseErrors.map(e => e.name).join(', ')
+      toast.error(`Failed to upload: ${errorFileNames}`, {
+        duration: 5000,
+      })
+    }
 
     setLoading(false)
   }, [files, path, bucketName, errors, successes, cacheControl, upsert])
