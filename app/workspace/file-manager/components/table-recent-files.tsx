@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { createClient } from '@/lib/client';
+import { Database } from "@/lib/database.types";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -38,25 +39,20 @@ import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/componen
 
 const supabase = createClient();
 
-interface FileRecord {
-  id: string;
-  file_name: string;
-  original_name: string;
-  file_path: string;
-  file_size: number;
-  mime_type: string;
-  created_at: string;
-}
+type FileRecord = Database['public']['Tables']['files']['Row'];
 
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return "0 Bytes";
+function formatFileSize(bytes: number | null): string {
+  if (!bytes || bytes === 0) return "0 Bytes";
   const k = 1024;
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
-function getFileIcon(mimeType: string) {
+function getFileIcon(mimeType: string | null) {
+  if (!mimeType) {
+    return <File className="size-4" />;
+  }
   if (mimeType.startsWith('image/')) {
     return <ImageIcon className="size-4" />;
   } else if (mimeType.startsWith('video/')) {
@@ -236,7 +232,7 @@ export function TableRecentFiles() {
                     </Link>
                   </TableCell>
                   <TableCell>{formatFileSize(file.file_size)}</TableCell>
-                  <TableCell>{format(new Date(file.created_at), "MMM d, yyyy")}</TableCell>
+                  <TableCell>{file.created_at ? format(new Date(file.created_at), "MMM d, yyyy") : "N/A"}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

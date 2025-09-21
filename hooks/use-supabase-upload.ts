@@ -166,24 +166,41 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
     const responses = await Promise.all(
       filesToUpload.map(async (file) => {
         console.log(`📤 Uploading file: ${file.name}`)
-        // Include user ID in the path for user-specific uploads
-        const userPath = `${user.id}/${file.name}`
-        const uploadPath = !!path ? `${path}/${userPath}` : userPath
-        console.log(`Upload path: ${uploadPath}`)
-        
-        const { data, error } = await supabase.storage
-          .from(bucketName)
-          .upload(uploadPath, file, {
-            cacheControl: cacheControl.toString(),
-            upsert,
+
+        try {
+          // Get the current session token for the edge function
+          const { data: { session } } = await supabase.auth.getSession()
+
+          if (!session?.access_token) {
+            console.error(`❌ No access token for ${file.name}`)
+            return { name: file.name, message: 'No valid session token' }
+          }
+
+          // Create FormData for the edge function
+          const formData = new FormData()
+          formData.append('file', file)
+
+          // Call our edge function instead of direct storage upload
+          const response = await fetch('http://127.0.0.1:54321/functions/v1/file-upload', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: formData
           })
-        
-        if (error) {
+
+          const result = await response.json()
+
+          if (!response.ok || !result.success) {
+            console.error(`❌ Edge function upload failed for ${file.name}:`, result.error)
+            return { name: file.name, message: result.error || 'Upload failed' }
+          } else {
+            console.log(`✅ Edge function upload successful for ${file.name}:`, result)
+            return { name: file.name, message: undefined }
+          }
+        } catch (error) {
           console.error(`❌ Upload failed for ${file.name}:`, error)
-          return { name: file.name, message: error.message }
-        } else {
-          console.log(`✅ Upload successful for ${file.name}:`, data)
-          return { name: file.name, message: undefined }
+          return { name: file.name, message: error instanceof Error ? error.message : 'Unknown error' }
         }
       })
     )

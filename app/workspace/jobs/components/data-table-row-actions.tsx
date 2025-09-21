@@ -12,14 +12,14 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { jobSchema } from "../data/schema";
+import { Job } from "../data/schema";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
 }
 
 export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TData>) {
-  const job = jobSchema.parse(row.original);
+  const job = row.original as Job;
 
   return (
     <DropdownMenu>

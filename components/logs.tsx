@@ -30,26 +30,10 @@ import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown, Logs, Terminal } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-// Define the job item type based on our migration
-type JobItem = {
-  id: string
-  nca_build_number: string | null
-  nca_job_id: string | null
-  custom_id: string | null
-  nca_queue_length: number | null
-  nca_queue_id: string | null
-  nca_total_time: number | null
-  nca_queue_time: number | null
-  nca_run_time: number | null
-  nca_pid: number | null
-  nca_code: string | null
-  processing_status: string | null
-  nca_message: string | null
-  error_message: string | null
-  user_id: string
-  created_at: string
-  updated_at: string
-}
+import { Database } from "@/lib/database.types";
+
+// Use the database type directly
+type JobItem = Database['public']['Tables']['jobs']['Row'];
 
 // Define status filter options
 const statusOptions = [
