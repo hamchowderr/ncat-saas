@@ -100,87 +100,43 @@ export function FileUploadDialog({ onUploadSuccess }: FileUploadDialogProps = {}
 
       const uploadResults = [];
       
-      // Upload files one by one to handle duplicates individually
+      // Get session token for Edge Function authentication
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        toast.error('Authentication error - please refresh and try again');
+        setUploading(false);
+        return;
+      }
+
+      // Upload files using Edge Function
       for (const file of files) {
-        const userPath = `${user.id}/${file.name}`;
-        const uploadPath = `uploads/${userPath}`;
-        
         try {
-          const { data, error } = await supabase.storage
-            .from('files')
-            .upload(uploadPath, file, {
-              cacheControl: '3600',
-              upsert: false,
-            });
-          
-          if (error) {
-            // Handle duplicate file error (409 or ResourceAlreadyExists)
-            if (error.message?.includes('already exists') || error.message?.includes('Duplicate') || error.message?.includes('ResourceAlreadyExists')) {
-              // Generate unique filename with timestamp
-              const timestamp = Date.now();
-              const uniqueFileName = generateUniqueFileName(file.name, timestamp);
-              const uniqueUserPath = `${user.id}/${uniqueFileName}`;
-              const uniqueUploadPath = `uploads/${uniqueUserPath}`;
-              
-              // Retry with unique filename
-              const { data: retryData, error: retryError } = await supabase.storage
-                .from('files')
-                .upload(uniqueUploadPath, file, {
-                  cacheControl: '3600',
-                  upsert: false,
-                });
-              
-              if (retryError) {
-                throw retryError;
-              }
-              
-              // Save file metadata to database
-              const { error: dbError } = await supabase.from('files').insert({
-                user_id: user.id,
-                file_name: uniqueFileName,
-                original_name: file.name,
-                file_path: uniqueUploadPath,
-                file_size: file.size,
-                mime_type: file.type
-              });
+          // Create FormData for the edge function
+          const formData = new FormData()
+          formData.append('file', file)
 
-              if (dbError) {
-                console.error('Database insert error:', dbError);
-                throw dbError;
-              }
+          // Call our edge function
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321'
+          const response = await fetch(`${supabaseUrl}/functions/v1/file-upload`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: formData
+          })
 
-              uploadResults.push({
-                originalName: file.name,
-                uploadedName: uniqueFileName,
-                status: 'renamed',
-                data: retryData
-              });
-            } else {
-              throw error;
-            }
-          } else {
-            // Save file metadata to database for successful uploads
-            const { error: dbError } = await supabase.from('files').insert({
-              user_id: user.id,
-              file_name: file.name,
-              original_name: file.name,
-              file_path: uploadPath,
-              file_size: file.size,
-              mime_type: file.type
-            });
+          const result = await response.json()
 
-            if (dbError) {
-              console.error('Database insert error:', dbError);
-              throw dbError;
-            }
-
-            uploadResults.push({
-              originalName: file.name,
-              uploadedName: file.name,
-              status: 'success',
-              data: data
-            });
+          if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Upload failed')
           }
+
+          uploadResults.push({
+            originalName: file.name,
+            uploadedName: result.fileName || file.name,
+            status: 'success',
+            data: result.data
+          });
         } catch (fileError) {
           console.error(`Upload failed for ${file.name}:`, fileError);
           uploadResults.push({
