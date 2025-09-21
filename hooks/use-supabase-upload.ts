@@ -183,7 +183,8 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
           formData.append('file', file)
 
           // Call our edge function instead of direct storage upload
-          const response = await fetch('http://127.0.0.1:54321/functions/v1/file-upload', {
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321'
+          const response = await fetch(`${supabaseUrl}/functions/v1/file-upload`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${session.access_token}`,
