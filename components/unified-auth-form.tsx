@@ -43,7 +43,7 @@ export function UnifiedAuthForm({ className, ...props }: React.ComponentPropsWit
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard/file-manager`,
+            emailRedirectTo: `${window.location.origin}/workspace/file-manager`,
           },
         })
         if (error) throw error
@@ -56,8 +56,8 @@ export function UnifiedAuthForm({ className, ...props }: React.ComponentPropsWit
           password,
         })
         if (error) throw error
-        // Redirect to dashboard after successful login
-        window.location.href = '/dashboard/file-manager'
+        // Redirect to workspace after successful login
+        window.location.href = '/workspace/file-manager'
       }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred')
@@ -75,7 +75,7 @@ export function UnifiedAuthForm({ className, ...props }: React.ComponentPropsWit
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/dashboard/file-manager`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/workspace/file-manager`,
         },
       })
 

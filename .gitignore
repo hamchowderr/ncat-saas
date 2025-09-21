@@ -14,6 +14,8 @@ build/
 .env
 .env*.local
 .env.production
+.env.test
+.env.*.test
 
 # IDE
 .vscode/
@@ -53,3 +55,7 @@ next-env.d.ts
 # Temporary folders
 tmp/
 temp/
+
+# Development tools and configs
+.windsurf/
+.claude/

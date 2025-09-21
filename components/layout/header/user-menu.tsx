@@ -23,6 +23,15 @@ export default function UserMenu() {
   const router = useRouter();
   const { user, loading } = useUser();
 
+  // Debug user data
+  React.useEffect(() => {
+    if (user) {
+      console.log('User data in header:', user);
+      console.log('Avatar URL:', user.user_metadata?.avatar_url);
+      console.log('User metadata:', user.user_metadata);
+    }
+  }, [user]);
+
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -72,13 +81,13 @@ export default function UserMenu() {
         </DropdownMenuGroup>
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard/pages/settings">
+            <Link href="/settings/profile">
               <UserCircle2Icon />
               Profile
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard/pages/settings/account">
+            <Link href="/settings/account">
               <BadgeCheck />
               Account
             </Link>
@@ -88,19 +97,19 @@ export default function UserMenu() {
             Billing
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard/pages/settings/appearance">
+            <Link href="/settings/appearance">
               <PaletteIcon />
               Appearance
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard/pages/settings/notifications">
+            <Link href="/settings/notifications">
               <Bell />
               Notifications
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard/pages/settings/display">
+            <Link href="/settings/display">
               <MonitorIcon />
               Display
             </Link>

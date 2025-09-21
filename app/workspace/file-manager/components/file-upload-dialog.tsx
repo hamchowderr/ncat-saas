@@ -129,15 +129,19 @@ export function FileUploadDialog() {
               }
               
               // Save file metadata to database
-              await supabase.from('files').insert({
+              const { error: dbError } = await supabase.from('files').insert({
                 user_id: user.id,
                 file_name: uniqueFileName,
                 original_name: file.name,
                 file_path: uniqueUploadPath,
                 file_size: file.size,
-                mime_type: file.type,
-                bucket_name: 'files'
+                mime_type: file.type
               });
+
+              if (dbError) {
+                console.error('Database insert error:', dbError);
+                throw dbError;
+              }
 
               uploadResults.push({
                 originalName: file.name,
@@ -150,15 +154,19 @@ export function FileUploadDialog() {
             }
           } else {
             // Save file metadata to database for successful uploads
-            await supabase.from('files').insert({
+            const { error: dbError } = await supabase.from('files').insert({
               user_id: user.id,
               file_name: file.name,
               original_name: file.name,
               file_path: uploadPath,
               file_size: file.size,
-              mime_type: file.type,
-              bucket_name: 'files'
+              mime_type: file.type
             });
+
+            if (dbError) {
+              console.error('Database insert error:', dbError);
+              throw dbError;
+            }
 
             uploadResults.push({
               originalName: file.name,
@@ -237,7 +245,7 @@ export function FileUploadDialog() {
           onDrop={handleDrop}>
           <div className="text-center">
             <Upload className="mx-auto size-10 opacity-25" aria-hidden="true" />
-            <div className="mt-4 flex text-sm leading-none">
+            <div className="mt-4 flex items-center justify-center text-sm leading-none">
               <Label htmlFor="file-upload" className="relative cursor-pointer">
                 <span>Upload files</span>
                 <Input
@@ -252,7 +260,7 @@ export function FileUploadDialog() {
               </Label>
               <p className="pl-1">or drag and drop</p>
             </div>
-            <p className="text-muted-foreground text-xs leading-5">Images, MP3, MP4 up to 50MB each (max 10 files)</p>
+            <p className="text-muted-foreground text-xs leading-5 mt-2">Images, MP3, MP4 up to 50MB each (max 10 files)</p>
           </div>
         </div>
         {files.length > 0 && (

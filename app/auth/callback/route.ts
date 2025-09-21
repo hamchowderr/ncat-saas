@@ -4,11 +4,28 @@ import { createClient } from '@/lib/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
+
+  // Validate redirect URL to prevent open redirect attacks
+  const validateRedirectUrl = (url: string, baseOrigin: string): boolean => {
+    try {
+      // Handle relative paths
+      if (url.startsWith('/') && !url.startsWith('//')) {
+        return true
+      }
+
+      // Parse as absolute URL and check origin
+      const parsed = new URL(url, baseOrigin)
+      return parsed.origin === baseOrigin
+    } catch {
+      return false
+    }
+  }
+
   // if "next" is in param, use it as the redirect URL
-  let next = searchParams.get('next') ?? '/dashboard/file-manager'
-  if (!next.startsWith('/')) {
-    // if "next" is not a relative URL, use the default
-    next = '/dashboard/file-manager'
+  let next = searchParams.get('next') ?? '/workspace/file-manager'
+  if (!validateRedirectUrl(next, origin)) {
+    // if redirect URL is not safe, use the default
+    next = '/workspace/file-manager'
   }
 
   if (code) {

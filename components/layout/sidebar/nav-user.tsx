@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -33,6 +34,15 @@ export function NavUser() {
   const { isMobile } = useSidebar();
   const router = useRouter();
   const { user, loading } = useUser();
+
+  // Debug user data
+  React.useEffect(() => {
+    if (user) {
+      console.log('User data in sidebar:', user);
+      console.log('Avatar URL:', user.user_metadata?.avatar_url);
+      console.log('User metadata:', user.user_metadata);
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -93,13 +103,13 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/pages/settings">
+                <Link href="/settings/profile">
                   <UserCircle2Icon />
                   Profile
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/pages/settings/account">
+                <Link href="/settings/account">
                   <BadgeCheck />
                   Account
                 </Link>
@@ -109,19 +119,19 @@ export function NavUser() {
                 Billing
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/pages/settings/appearance">
+                <Link href="/settings/appearance">
                   <PaletteIcon />
                   Appearance
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/pages/settings/notifications">
+                <Link href="/settings/notifications">
                   <Bell />
                   Notifications
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/pages/settings/display">
+                <Link href="/settings/display">
                   <MonitorIcon />
                   Display
                 </Link>

@@ -1,29 +1,38 @@
-import { promises as fs } from "fs";
-import path from "path";
-import { z } from "zod";
-
 import { columns } from "./components/columns";
 import { DataTable } from "./components/data-table";
-import { jobSchema } from "./data/schema";
 import { generateMeta } from "@/lib/utils";
+import { createClient } from "@/lib/client";
 
 export async function generateMetadata() {
   return generateMeta({
     title: "Jobs",
-    description: "A job and issue tracker build using Tanstack Table.",
-    canonical: "/apps/jobs"
+    description: "Track NCA job processing and monitor job status.",
+    canonical: "/workspace/jobs"
   });
 }
 
-// Simulate a database read for jobs.
+// Fetch jobs from Supabase
 async function getJobs() {
-  const data = await fs.readFile(
-    path.join(process.cwd(), "app/workspace/jobs/data/jobs.json")
-  );
+  const supabase = createClient();
 
-  const jobs = JSON.parse(data.toString());
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return [];
+  }
 
-  return z.array(jobSchema).parse(jobs);
+  const { data: jobs, error } = await supabase
+    .from('jobs')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching jobs:', error);
+    return [];
+  }
+
+  return jobs || [];
 }
 
 export default async function JobPage() {

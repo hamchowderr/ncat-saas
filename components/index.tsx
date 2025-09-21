@@ -92,7 +92,7 @@ function DialogView({ projectRef, isMobile }: { projectRef: string; isMobile?: b
       {
         title: 'Logs',
         icon: ScrollText,
-        component: <LogsManager projectRef={projectRef} />,
+        component: <LogsManager />,
       },
       {
         title: 'Suggestions',

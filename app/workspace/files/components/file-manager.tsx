@@ -5,9 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import {
-  Folder,
   File,
-  Home,
   UploadIcon,
   FolderPlus,
   ChevronDownIcon,
@@ -21,74 +19,45 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbSeparator
-} from "@/components/ui/breadcrumb";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 import { FileUploadDialog } from "../../file-manager/components/file-upload-dialog";
-import allFileItems from "../data.json";
+import { createClient } from "@/lib/client";
 import FileManagerPagination from "./pagination";
 
-type FileItem = (typeof allFileItems)[number];
+// Define the structure of a file item based on the database schema
+export type FileItem = {
+  id: string;
+  created_at: string;
+  file_name: string;
+  file_size: number;
+  mime_type: string;
+  user_id: string;
+};
 
-function getFileIcon(iconType: string) {
-  switch (iconType) {
-    case "folder":
-      return <Folder className="h-5 w-5 text-yellow-600" />;
-    case "figma":
-      return (
-        <div className="flex h-5 w-5 items-center justify-center rounded bg-purple-500 text-xs font-bold text-white">
-          F
-        </div>
-      );
-    case "sketch":
-      return (
-        <div className="flex h-5 w-5 items-center justify-center rounded bg-yellow-500 text-xs font-bold text-white">
-          S
-        </div>
-      );
-    case "word":
-      return (
-        <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-600 text-xs font-bold text-white">
-          W
-        </div>
-      );
-    case "illustrator":
-      return (
-        <div className="flex h-5 w-5 items-center justify-center rounded bg-orange-600 text-xs font-bold text-white">
-          Ai
-        </div>
-      );
-    case "photoshop":
-      return (
-        <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-800 text-xs font-bold text-white">
-          Ps
-        </div>
-      );
-    case "pdf":
-      return (
-        <div className="flex h-5 w-5 items-center justify-center rounded bg-red-600 text-xs font-bold text-white">
-          <FileTextIcon className="size-3" />
-        </div>
-      );
-    case "audio":
-      return (
-        <div className="flex h-5 w-5 items-center justify-center rounded bg-green-600 text-xs font-bold text-white">
-          ♪
-        </div>
-      );
+function getFileIcon(mimeType: string) {
+  if (mimeType.startsWith("image/")) {
+    return <File className="h-5 w-5 text-blue-500" />;
+  }
+  if (mimeType.startsWith("video/")) {
+    return <File className="h-5 w-5 text-purple-500" />;
+  }
+  if (mimeType.startsWith("audio/")) {
+    return <div className="flex h-5 w-5 items-center justify-center rounded bg-green-600 text-xs font-bold text-white">♪</div>;
+  }
+  switch (mimeType) {
+    case "application/pdf":
+      return <div className="flex h-5 w-5 items-center justify-center rounded bg-red-600 text-xs font-bold text-white"><FileTextIcon className="size-3" /></div>;
+    case "application/msword":
+    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+      return <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-600 text-xs font-bold text-white">W</div>;
     default:
       return <File className="h-5 w-5 text-gray-500" />;
   }
@@ -106,28 +75,37 @@ export function FileManager() {
   const [sortBy, setSortBy] = useState<SortOption>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-
-  const currentPath = searchParams.get("path") || "";
-  const pathSegments = currentPath ? currentPath.split("/").filter(Boolean) : [];
+  const [allFileItems, setAllFileItems] = useState<FileItem[]>([]);
+  const supabase = createClient();
 
   const isMobile = useIsMobile();
 
-  const parseFileSize = (sizeStr: string): number => {
-    const size = Number.parseFloat(sizeStr);
-    if (sizeStr.includes("GB")) return size * 1024 * 1024 * 1024;
-    if (sizeStr.includes("MB")) return size * 1024 * 1024;
-    if (sizeStr.includes("KB")) return size * 1024;
-    return size;
-  };
+  useEffect(() => {
+    const fetchFiles = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from('files')
+          .select(`
+            id,
+            created_at,
+            file_name,
+            file_size,
+            mime_type,
+            user_id
+          `)
+          .eq('user_id', user.id);
 
-  const parseDate = (dateStr: string): number => {
-    const [day, month, year] = dateStr.split(".");
-    return new Date(
-      2000 + Number.parseInt(year),
-      Number.parseInt(month) - 1,
-      Number.parseInt(day)
-    ).getTime();
-  };
+        if (error) {
+          console.error('Error fetching files:', error);
+        } else if (data) {
+          setAllFileItems(data as any);
+        }
+      }
+    };
+
+    fetchFiles();
+  }, []);
 
   const sortItems = (items: FileItem[]): FileItem[] => {
     return [...items].sort((a, b) => {
@@ -135,13 +113,13 @@ export function FileManager() {
 
       switch (sortBy) {
         case "name":
-          comparison = a.name.localeCompare(b.name);
+          comparison = a.file_name.localeCompare(b.file_name);
           break;
         case "date":
-          comparison = parseDate(a.date) - parseDate(b.date);
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
           break;
         case "size":
-          comparison = parseFileSize(a.size) - parseFileSize(b.size);
+          comparison = a.file_size - b.file_size;
           break;
       }
 
@@ -149,27 +127,15 @@ export function FileManager() {
     });
   };
 
-  const getCurrentFolderItems = () => {
-    if (!currentPath) {
-      return allFileItems.filter((item) => !item.parentPath);
-    }
-
-    const parentFolder = allFileItems.find(
-      (item) => item.name === pathSegments[pathSegments.length - 1]
-    );
-    return parentFolder?.children || [];
-  };
-
-  const currentItems = getCurrentFolderItems();
-  const filteredItems = currentItems.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredItems = allFileItems.filter((item) =>
+    item.file_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
   const sortedAndFilteredItems = sortItems(filteredItems);
 
   useEffect(() => {
     setSelectedItem(null);
     setShowMobileDetails(false);
-  }, [currentPath]);
+  }, []);
 
   const handleSortChange = (option: SortOption) => {
     if (sortBy === option) {
@@ -193,22 +159,8 @@ export function FileManager() {
   };
 
   const handleItemClick = (item: FileItem) => {
-    if (item.type === "folder") {
-      const newPath = currentPath ? `${currentPath}/${item.name}` : item.name;
-      router.push(`?path=${encodeURIComponent(newPath)}`);
-    } else {
-      setSelectedItem(item);
-      setShowMobileDetails(true);
-    }
-  };
-
-  const handleBreadcrumbClick = (index: number) => {
-    if (index === -1) {
-      router.push("/workspace/files");
-    } else {
-      const newPath = pathSegments.slice(0, index + 1).join("/");
-      router.push(`?path=${encodeURIComponent(newPath)}`);
-    }
+    setSelectedItem(item);
+    setShowMobileDetails(true);
   };
 
   const toggleSelectAll = () => {
@@ -230,14 +182,22 @@ export function FileManager() {
     setSelectedItems(newSelectedItems);
   };
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
   const FileDetailContent = ({ selectedItem }: { selectedItem: FileItem }) => {
     return (
       <div className="space-y-6 px-4">
         <div className="flex flex-col items-center space-y-8 py-4">
           <div className="flex items-center">
-            <div className="scale-[3]">{getFileIcon(selectedItem.icon)}</div>
+            <div className="scale-[3]">{getFileIcon(selectedItem.mime_type)}</div>
           </div>
-          <h2 className="text-foreground text-center">{selectedItem.name}</h2>
+          <h2 className="text-foreground text-center">{selectedItem.file_name}</h2>
         </div>
 
         <div>
@@ -247,29 +207,29 @@ export function FileManager() {
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-muted-foreground text-sm">Type</span>
-              <span className="text-foreground text-sm capitalize">{selectedItem.type}</span>
+              <span className="text-foreground text-sm capitalize">{selectedItem.mime_type}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground text-sm">Size</span>
-              <span className="text-foreground text-sm">{selectedItem.size}</span>
+              <span className="text-foreground text-sm">{formatFileSize(selectedItem.file_size)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground text-sm">Owner</span>
-              <span className="text-foreground text-sm">ArtTemplate</span>
+              <span className="text-foreground text-sm">You</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground text-sm">Location</span>
               <span className="text-sm">
-                {currentPath ? `My Files/${currentPath}` : "My Files"}
+                My Files
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground text-sm">Modified</span>
-              <span className="text-foreground text-sm">Sep 17, 2020 4:25</span>
+              <span className="text-foreground text-sm">{new Date(selectedItem.created_at).toLocaleDateString()}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground text-sm">Created</span>
-              <span className="text-foreground text-sm">Sep 10, 2020 2:25</span>
+              <span className="text-foreground text-sm">{new Date(selectedItem.created_at).toLocaleDateString()}</span>
             </div>
           </div>
         </div>
@@ -300,41 +260,9 @@ export function FileManager() {
   return (
     <div className="flex">
       <div className="border-border min-w-0 flex-1 space-y-4">
-        {/* Breadcrumb Navigation */}
         <div className="flex justify-between">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold tracking-tight">Files</h1>
-            {pathSegments.length > 0 && (
-              <>
-                <Separator
-                  orientation="vertical"
-                  className="mx-2 data-[orientation=vertical]:h-4"
-                />
-                <div className="border-border/50 bg-muted/20 flex items-center overflow-x-auto">
-                  <Breadcrumb>
-                    <BreadcrumbList>
-                      <BreadcrumbItem
-                        className="cursor-pointer"
-                        onClick={() => handleBreadcrumbClick(-1)}>
-                        <Home className="h-4 w-4" />
-                      </BreadcrumbItem>
-                      <BreadcrumbSeparator />
-                      {pathSegments.map((segment, i) => (
-                        <>
-                          <BreadcrumbItem
-                            className="cursor-pointer"
-                            key={i}
-                            onClick={() => handleBreadcrumbClick(i)}>
-                            {segment}
-                          </BreadcrumbItem>
-                          {i < pathSegments.length - 1 && <BreadcrumbSeparator />}
-                        </>
-                      ))}
-                    </BreadcrumbList>
-                  </Breadcrumb>
-                </div>
-              </>
-            )}
           </div>
 
           <div className="border-border flex items-center justify-between gap-2">
@@ -343,7 +271,6 @@ export function FileManager() {
         </div>
 
         <div className="flex border-t">
-          {/* File List */}
           <div className="min-w-0 grow">
             <div className="flex items-center justify-between border-b p-2 pe-1! lg:p-4">
               <div className="flex grow items-center gap-2">
@@ -428,16 +355,16 @@ export function FileManager() {
                     checked={selectedItems.has(item.id)}
                     onClick={(e: React.MouseEvent) => toggleItemSelection(item.id, e)}
                   />
-                  <div className="shrink-0">{getFileIcon(item.icon)}</div>
-                  <div className="min-w-0 truncate">{item.name}</div>
+                  <div className="shrink-0">{getFileIcon(item.mime_type)}</div>
+                  <div className="min-w-0 truncate">{item.file_name}</div>
                 </div>
 
                 <div className="text-muted-foreground flex items-center space-x-4 text-sm">
-                  <span className="hidden w-16 text-right lg:inline">{item.date}</span>
-                  <span className="hidden w-16 text-right lg:inline">{item.size}</span>
+                  <span className="hidden w-16 text-right lg:inline">{new Date(item.created_at).toLocaleDateString()}</span>
+                  <span className="hidden w-16 text-right lg:inline">{formatFileSize(item.file_size)}</span>
                   <Avatar className="h-6 w-6">
-                    <AvatarImage src={item.owner.avatar || "/placeholder.svg"} />
-                    <AvatarFallback className="text-xs">{item.owner.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage src="/placeholder.svg" />
+                    <AvatarFallback className="text-xs">U</AvatarFallback>
                   </Avatar>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -465,22 +392,19 @@ export function FileManager() {
               </div>
             )}
 
-            {sortedAndFilteredItems.length === 0 && !searchQuery && currentPath && (
+            {sortedAndFilteredItems.length === 0 && !searchQuery && (
               <div className="flex h-[calc(100vh-var(--header-height)-3rem)] flex-col items-center justify-center">
                 <div className="mx-auto max-w-md space-y-4 text-center">
                   <FolderPlus className="mx-auto size-14 opacity-50" />
-                  <h2 className="text-muted-foreground">This folder is empty.</h2>
+                  <h2 className="text-muted-foreground">No files uploaded yet.</h2>
                   <div>
-                    <Button>
-                      <UploadIcon />
-                      Upload
-                    </Button>
+                    <FileUploadDialog />
                   </div>
                 </div>
               </div>
             )}
 
-            {pathSegments.length == 0 && (
+            {sortedAndFilteredItems.length > 0 && (
               <div className="mt-4">
                 <FileManagerPagination />
               </div>

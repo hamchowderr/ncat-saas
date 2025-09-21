@@ -1,5 +1,12 @@
+import React from "react";
+import { cookies } from "next/headers";
 import { SidebarNav } from "./sidebar-nav";
 import { generateMeta } from "@/lib/utils";
+
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
+import { SiteHeader } from "@/components/layout/header";
+import { SettingsHeader } from "./settings-header";
 
 export async function generateMetadata() {
   return generateMeta({
@@ -13,41 +20,56 @@ export async function generateMetadata() {
 const sidebarNavItems = [
   {
     title: "Profile",
-    href: "/dashboard/pages/settings"
+    href: "/settings/profile"
   },
   {
     title: "Account",
-    href: "/dashboard/pages/settings/account"
+    href: "/settings/account"
   },
   {
     title: "Appearance",
-    href: "/dashboard/pages/settings/appearance"
+    href: "/settings/appearance"
   },
   {
     title: "Notifications",
-    href: "/dashboard/pages/settings/notifications"
+    href: "/settings/notifications"
   },
   {
     title: "Display",
-    href: "/dashboard/pages/settings/display"
+    href: "/settings/display"
   }
 ];
 
-export default function SettingsLayout({ children }: { children: React.ReactNode }) {
+export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
+  const defaultOpen =
+    cookieStore.get("sidebar_state")?.value === "true" ||
+    cookieStore.get("sidebar_state") === undefined;
+
   return (
-    <>
-      <div className="mb-6 space-y-0.5">
-        <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
-        <p className="text-muted-foreground">
-          Manage your account settings and set e-mail preferences.
-        </p>
-      </div>
-      <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-6">
-        <div className="flex-1 lg:max-w-2xl">{children}</div>
-        <aside className="lg:w-1/5">
-          <SidebarNav items={sidebarNavItems} />
-        </aside>
-      </div>
-    </>
+    <SidebarProvider
+      defaultOpen={defaultOpen}
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 64)",
+          "--header-height": "calc(var(--spacing) * 14)"
+        } as React.CSSProperties
+      }>
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <SiteHeader />
+        <div className="flex flex-1 flex-col">
+          <div className="@container/main p-4 xl:group-data-[theme-content-layout=centered]/layout:container xl:group-data-[theme-content-layout=centered]/layout:mx-auto">
+            <SettingsHeader />
+            <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-6">
+              <div className="flex-1 lg:max-w-2xl">{children}</div>
+              <aside className="lg:w-1/5">
+                <SidebarNav items={sidebarNavItems} />
+              </aside>
+            </div>
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
