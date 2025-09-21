@@ -135,8 +135,8 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Insert file metadata into database using user client (respects RLS)
-    const { error: dbError } = await supabaseUser
+    // Insert file metadata into database using admin client (we already verified auth above)
+    const { error: dbError } = await supabaseAdmin
       .from('files')
       .insert({
         user_id: user.id,
