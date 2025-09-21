@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
     // Upload to Supabase Storage using admin client
     const { data: storageData, error: storageError } = await supabaseAdmin
       .storage
-      .from('media')
+      .from('files')
       .upload(uploadPath, file, {
         contentType: file.type,
         cacheControl: '3600',
@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
       console.error('Database insert error:', dbError)
 
       // Clean up the uploaded file if database insert fails
-      await supabaseAdmin.storage.from('media').remove([uploadPath])
+      await supabaseAdmin.storage.from('files').remove([uploadPath])
 
       return new Response(
         JSON.stringify({ success: false, error: `Database insert failed: ${dbError.message}` }),
