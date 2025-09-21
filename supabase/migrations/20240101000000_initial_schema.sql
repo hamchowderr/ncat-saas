@@ -45,16 +45,16 @@ CREATE POLICY "Users can insert their own profile" ON public.profiles
 
 -- Files policies
 CREATE POLICY "Users can view their own files" ON public.files
-    FOR SELECT USING (auth.uid() = user_id);
+    FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can insert their own files" ON public.files
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+    FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can update their own files" ON public.files
-    FOR UPDATE USING (auth.uid() = user_id);
+    FOR UPDATE TO authenticated USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete their own files" ON public.files
-    FOR DELETE USING (auth.uid() = user_id);
+    FOR DELETE TO authenticated USING (auth.uid() = user_id);
 
 -- Function to handle user profile creation
 CREATE OR REPLACE FUNCTION public.handle_new_user()
