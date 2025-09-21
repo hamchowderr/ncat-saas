@@ -1,12 +1,8 @@
 // Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { randomUUID } from 'node:crypto'
 
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-)
 
 interface UploadResponse {
   success: boolean;
@@ -58,8 +54,27 @@ Deno.serve(async (req) => {
     // Extract JWT token from Bearer token
     const token = authHeader.replace('Bearer ', '')
 
-    // Verify the user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    // Create supabase client with service role for storage operations
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // Create supabase client with anon key for database operations (respects RLS)
+    const supabaseUser = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: authHeader
+          }
+        }
+      }
+    )
+
+    // Verify the user is authenticated using admin client
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
 
     if (authError || !user) {
       return new Response(
@@ -96,10 +111,10 @@ Deno.serve(async (req) => {
     const userPath = `${user.id}/${uniqueFileName}`
     const uploadPath = `uploads/${userPath}`
 
-    // Upload to Supabase Storage
-    const { data: storageData, error: storageError } = await supabase
+    // Upload to Supabase Storage using admin client
+    const { data: storageData, error: storageError } = await supabaseAdmin
       .storage
-      .from('files')
+      .from('media')
       .upload(uploadPath, file, {
         contentType: file.type,
         cacheControl: '3600',
@@ -120,8 +135,8 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Insert file metadata into database
-    const { error: dbError } = await supabase
+    // Insert file metadata into database using user client (respects RLS)
+    const { error: dbError } = await supabaseUser
       .from('files')
       .insert({
         user_id: user.id,
@@ -136,7 +151,7 @@ Deno.serve(async (req) => {
       console.error('Database insert error:', dbError)
 
       // Clean up the uploaded file if database insert fails
-      await supabase.storage.from('files').remove([uploadPath])
+      await supabaseAdmin.storage.from('media').remove([uploadPath])
 
       return new Response(
         JSON.stringify({ success: false, error: `Database insert failed: ${dbError.message}` }),
