@@ -105,9 +105,17 @@ export function TableRecentFiles() {
 
   const fetchRecentFiles = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
+      // Get session to ensure proper authentication for RLS
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        setLoading(false);
+        return;
+      }
+
+      if (!session?.user) {
+        console.error('No authenticated session');
         setLoading(false);
         return;
       }
@@ -115,7 +123,7 @@ export function TableRecentFiles() {
       const { data: files, error } = await supabase
         .from('files')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', session.user.id)
         .order('created_at', { ascending: false })
         .limit(5);
 

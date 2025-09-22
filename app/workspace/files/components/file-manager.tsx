@@ -81,8 +81,20 @@ export function FileManager() {
   const isMobile = useIsMobile();
 
   const fetchFiles = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
+    try {
+      // Get session to ensure proper authentication for RLS
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        return;
+      }
+
+      if (!session?.user) {
+        console.error('No authenticated session');
+        return;
+      }
+
       const { data, error } = await supabase
         .from('files')
         .select(`
@@ -93,13 +105,15 @@ export function FileManager() {
           mime_type,
           user_id
         `)
-        .eq('user_id', user.id);
+        .eq('user_id', session.user.id);
 
       if (error) {
         console.error('Error fetching files:', error);
       } else if (data) {
         setAllFileItems(data as any);
       }
+    } catch (error) {
+      console.error('Fetch files error:', error);
     }
   };
 
