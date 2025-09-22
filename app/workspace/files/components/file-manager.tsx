@@ -80,30 +80,30 @@ export function FileManager() {
 
   const isMobile = useIsMobile();
 
-  useEffect(() => {
-    const fetchFiles = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data, error } = await supabase
-          .from('files')
-          .select(`
-            id,
-            created_at,
-            file_name,
-            file_size,
-            mime_type,
-            user_id
-          `)
-          .eq('user_id', user.id);
+  const fetchFiles = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data, error } = await supabase
+        .from('files')
+        .select(`
+          id,
+          created_at,
+          file_name,
+          file_size,
+          mime_type,
+          user_id
+        `)
+        .eq('user_id', user.id);
 
-        if (error) {
-          console.error('Error fetching files:', error);
-        } else if (data) {
-          setAllFileItems(data as any);
-        }
+      if (error) {
+        console.error('Error fetching files:', error);
+      } else if (data) {
+        setAllFileItems(data as any);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchFiles();
   }, []);
 
@@ -266,7 +266,7 @@ export function FileManager() {
           </div>
 
           <div className="border-border flex items-center justify-between gap-2">
-            <FileUploadDialog />
+            <FileUploadDialog onUploadSuccess={fetchFiles} />
           </div>
         </div>
 
@@ -398,7 +398,7 @@ export function FileManager() {
                   <FolderPlus className="mx-auto size-14 opacity-50" />
                   <h2 className="text-muted-foreground">No files uploaded yet.</h2>
                   <div>
-                    <FileUploadDialog />
+                    <FileUploadDialog onUploadSuccess={fetchFiles} />
                   </div>
                 </div>
               </div>
