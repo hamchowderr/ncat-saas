@@ -18,6 +18,7 @@ import {
 import { format } from "date-fns";
 import { createClient } from '@/lib/client';
 import { Database } from "@/lib/database.types";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -142,12 +143,12 @@ export function TableRecentFiles() {
   const downloadFile = async (file: FileRecord) => {
     try {
       const { data, error } = await supabase.storage
-        .from('files')
+        .from(file.bucket || 'files') // Use file's bucket or default to 'files'
         .download(file.file_path);
 
       if (error) {
         console.error('Error downloading file:', error);
-        alert('Failed to download file');
+        toast.error('Failed to download file');
         return;
       }
 
@@ -162,28 +163,28 @@ export function TableRecentFiles() {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error:', error);
-      alert('Failed to download file');
+      toast.error('Failed to download file');
     }
   };
 
   const shareFile = async (file: FileRecord) => {
     try {
       const { data, error } = await supabase.storage
-        .from('files')
+        .from(file.bucket || 'files') // Use file's bucket or default to 'files'
         .createSignedUrl(file.file_path, 3600); // 1 hour expiry
 
       if (error) {
         console.error('Error creating share URL:', error);
-        alert('Failed to create share link');
+        toast.error('Failed to create share link');
         return;
       }
 
       // Copy URL to clipboard
       await navigator.clipboard.writeText(data.signedUrl);
-      alert('Share link copied to clipboard! Link expires in 1 hour.');
+      toast.success('Share link copied to clipboard! Link expires in 1 hour.');
     } catch (error) {
       console.error('Error:', error);
-      alert('Failed to create share link');
+      toast.error('Failed to create share link');
     }
   };
 
@@ -197,13 +198,13 @@ export function TableRecentFiles() {
 
       if (dbError) {
         console.error('Error deleting from database:', dbError);
-        alert('Failed to delete file');
+        toast.error('Failed to delete file');
         return;
       }
 
       // Then delete from storage
       const { error: storageError } = await supabase.storage
-        .from('files')
+        .from(file.bucket || 'files') // Use file's bucket or default to 'files'
         .remove([file.file_path]);
 
       if (storageError) {
@@ -213,13 +214,13 @@ export function TableRecentFiles() {
 
       // Update local state and refresh
       setFileList(fileList.filter((f) => f.id !== file.id));
-      alert('File deleted successfully');
+      toast.success('File deleted successfully');
 
       // Force refresh to ensure consistency
       setTimeout(() => fetchRecentFiles(), 500);
     } catch (error) {
       console.error('Error:', error);
-      alert('Failed to delete file');
+      toast.error('Failed to delete file');
     }
   };
 

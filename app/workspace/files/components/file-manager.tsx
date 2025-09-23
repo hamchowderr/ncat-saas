@@ -30,19 +30,24 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 
 import { FileUploadDialog } from "../../file-manager/components/file-upload-dialog";
 import { createClient } from "@/lib/client";
+import { Database } from "@/lib/database.types";
 import FileManagerPagination from "./pagination";
 
-// Define the structure of a file item based on the database schema
-export type FileItem = {
-  id: string;
-  created_at: string;
-  file_name: string;
-  file_size: number;
-  mime_type: string;
-  user_id: string;
-};
+// Use the proper database type for file records
+export type FileItem = Database['public']['Tables']['files']['Row'];
 
-function getFileIcon(mimeType: string) {
+function formatFileSize(bytes: number | null): string {
+  if (!bytes || bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+
+function getFileIcon(mimeType: string | null) {
+  if (!mimeType) {
+    return <File className="h-5 w-5 text-gray-500" />;
+  }
   if (mimeType.startsWith("image/")) {
     return <File className="h-5 w-5 text-blue-500" />;
   }
@@ -108,14 +113,7 @@ export function FileManager() {
 
       const { data, error } = await supabase
         .from('files')
-        .select(`
-          id,
-          created_at,
-          file_name,
-          file_size,
-          mime_type,
-          user_id
-        `)
+        .select('*')
         .eq('user_id', session.user.id);
 
       if (error) {
@@ -133,7 +131,7 @@ export function FileManager() {
           setIsLoading(false);
         }
       } else if (data) {
-        setAllFileItems(data as any);
+        setAllFileItems(data);
         setLastFetchError(null);
         setIsLoading(false);
       }
@@ -167,10 +165,12 @@ export function FileManager() {
           comparison = a.file_name.localeCompare(b.file_name);
           break;
         case "date":
-          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+          comparison = dateA - dateB;
           break;
         case "size":
-          comparison = a.file_size - b.file_size;
+          comparison = (a.file_size || 0) - (b.file_size || 0);
           break;
       }
 
@@ -262,7 +262,7 @@ export function FileManager() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground text-sm">Size</span>
-              <span className="text-foreground text-sm">{formatFileSize(selectedItem.file_size)}</span>
+              <span className="text-foreground text-sm">{formatFileSize(selectedItem.file_size ?? 0)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground text-sm">Owner</span>
@@ -276,11 +276,11 @@ export function FileManager() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground text-sm">Modified</span>
-              <span className="text-foreground text-sm">{new Date(selectedItem.created_at).toLocaleDateString()}</span>
+              <span className="text-foreground text-sm">{selectedItem.created_at ? new Date(selectedItem.created_at).toLocaleDateString() : 'N/A'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground text-sm">Created</span>
-              <span className="text-foreground text-sm">{new Date(selectedItem.created_at).toLocaleDateString()}</span>
+              <span className="text-foreground text-sm">{selectedItem.created_at ? new Date(selectedItem.created_at).toLocaleDateString() : 'N/A'}</span>
             </div>
           </div>
         </div>
@@ -421,8 +421,8 @@ export function FileManager() {
                 </div>
 
                 <div className="text-muted-foreground flex items-center space-x-4 text-sm">
-                  <span className="hidden w-16 text-right lg:inline">{new Date(item.created_at).toLocaleDateString()}</span>
-                  <span className="hidden w-16 text-right lg:inline">{formatFileSize(item.file_size)}</span>
+                  <span className="hidden w-16 text-right lg:inline">{item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'}</span>
+                  <span className="hidden w-16 text-right lg:inline">{formatFileSize(item.file_size ?? 0)}</span>
                   <Avatar className="h-6 w-6">
                     <AvatarImage src="/placeholder.svg" />
                     <AvatarFallback className="text-xs">U</AvatarFallback>

@@ -144,7 +144,8 @@ Deno.serve(async (req) => {
         original_name: file.name,
         file_path: uploadPath,
         file_size: file.size,
-        mime_type: file.type
+        mime_type: file.type,
+        bucket: 'files' // Explicitly set bucket to match storage bucket
       })
 
     if (dbError) {

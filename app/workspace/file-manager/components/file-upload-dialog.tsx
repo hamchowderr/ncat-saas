@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Upload, UploadIcon, X } from "lucide-react";
 import { createClient } from '@/lib/client'
+import { Database } from "@/lib/database.types";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -19,16 +20,10 @@ import { Label } from "@/components/ui/label";
 
 const supabase = createClient()
 
+type FileRecord = Database['public']['Tables']['files']['Row'];
+
 interface FileUploadDialogProps {
-  onUploadSuccess?: (uploadedFiles?: Array<{
-    id: string;
-    file_name: string;
-    original_name: string;
-    file_size: number;
-    mime_type: string;
-    user_id: string;
-    created_at: string;
-  }>) => void;
+  onUploadSuccess?: (uploadedFiles?: FileRecord[]) => void;
 }
 
 export function FileUploadDialog({ onUploadSuccess }: FileUploadDialogProps = {}) {
@@ -152,10 +147,13 @@ export function FileUploadDialog({ onUploadSuccess }: FileUploadDialogProps = {}
             id: crypto.randomUUID(), // Temporary ID, will be replaced by actual fetch
             file_name: result.fileName || file.name,
             original_name: file.name,
-            file_size: file.size,
-            mime_type: file.type,
+            file_size: file.size || null, // Handle nullable field
+            mime_type: file.type || null, // Handle nullable field
             user_id: session.user.id,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(), // Add missing field
+            bucket: 'files', // Add missing field with default value
+            file_path: result.filePath || `uploads/${session.user.id}/${result.fileName || file.name}` // Add missing field
           });
         } catch (fileError) {
           console.error(`Upload failed for ${file.name}:`, fileError);
