@@ -67,6 +67,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { isUserAdmin } from "@/lib/admin";
+import { useEffect, useState } from "react";
 
 type NavGroup = {
   title: string;
@@ -148,10 +150,28 @@ export const navItems: NavGroup[] = [
 export function NavMain() {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const adminStatus = await isUserAdmin();
+      setIsAdmin(adminStatus);
+    };
+
+    checkAdminStatus();
+  }, []);
+
+  // Filter out admin section for non-admin users
+  const filteredNavItems = navItems.filter((nav) => {
+    if (nav.title === "Admin" && !isAdmin) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <>
-      {navItems.map((nav) => (
+      {filteredNavItems.map((nav) => (
         <SidebarGroup key={nav.title}>
           <SidebarGroupLabel>{nav.title}</SidebarGroupLabel>
           <SidebarGroupContent className="flex flex-col gap-2">
