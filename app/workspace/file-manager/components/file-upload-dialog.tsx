@@ -20,7 +20,15 @@ import { Label } from "@/components/ui/label";
 const supabase = createClient()
 
 interface FileUploadDialogProps {
-  onUploadSuccess?: () => void;
+  onUploadSuccess?: (uploadedFiles?: Array<{
+    id: string;
+    file_name: string;
+    original_name: string;
+    file_size: number;
+    mime_type: string;
+    user_id: string;
+    created_at: string;
+  }>) => void;
 }
 
 export function FileUploadDialog({ onUploadSuccess }: FileUploadDialogProps = {}) {
@@ -99,7 +107,8 @@ export function FileUploadDialog({ onUploadSuccess }: FileUploadDialogProps = {}
       }
 
       const uploadResults = [];
-      
+      const uploadedFileData = [];
+
       // Get session token for Edge Function authentication
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) {
@@ -137,6 +146,17 @@ export function FileUploadDialog({ onUploadSuccess }: FileUploadDialogProps = {}
             status: 'success',
             data: result.data
           });
+
+          // Create optimistic file data for immediate UI update
+          uploadedFileData.push({
+            id: crypto.randomUUID(), // Temporary ID, will be replaced by actual fetch
+            file_name: result.fileName || file.name,
+            original_name: file.name,
+            file_size: file.size,
+            mime_type: file.type,
+            user_id: session.user.id,
+            created_at: new Date().toISOString()
+          });
         } catch (fileError) {
           console.error(`Upload failed for ${file.name}:`, fileError);
           uploadResults.push({
@@ -165,8 +185,11 @@ export function FileUploadDialog({ onUploadSuccess }: FileUploadDialogProps = {}
           });
         }
 
-        // Call the onUploadSuccess callback if provided
-        onUploadSuccess?.();
+        // Call the onUploadSuccess callback immediately with uploaded file data
+        // This enables optimistic UI updates while background refresh handles consistency
+        if (onUploadSuccess) {
+          onUploadSuccess(uploadedFileData);
+        }
       }
 
       if (failed.length > 0) {

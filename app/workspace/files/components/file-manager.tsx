@@ -76,22 +76,33 @@ export function FileManager() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [allFileItems, setAllFileItems] = useState<FileItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastFetchError, setLastFetchError] = useState<string | null>(null);
   const supabase = createClient();
 
   const isMobile = useIsMobile();
 
-  const fetchFiles = async () => {
+  const fetchFiles = async (retryCount = 0, showLoading = true) => {
+    if (showLoading && retryCount === 0) {
+      setIsLoading(true);
+      setLastFetchError(null);
+    }
+
     try {
       // Get session to ensure proper authentication for RLS
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
       if (sessionError) {
         console.error('Session error:', sessionError);
+        setLastFetchError('Session error - please refresh the page');
+        setIsLoading(false);
         return;
       }
 
       if (!session?.user) {
         console.error('No authenticated session');
+        setLastFetchError('Not authenticated - please log in again');
+        setIsLoading(false);
         return;
       }
 
@@ -109,11 +120,37 @@ export function FileManager() {
 
       if (error) {
         console.error('Error fetching files:', error);
+
+        // Retry logic for production consistency issues
+        if (retryCount < 3) {
+          const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff: 1s, 2s, 4s
+          console.log(`Retrying file fetch in ${delay}ms (attempt ${retryCount + 1}/3)`);
+          setTimeout(() => {
+            fetchFiles(retryCount + 1, false);
+          }, delay);
+        } else {
+          setLastFetchError(`Failed to load files: ${error.message}`);
+          setIsLoading(false);
+        }
       } else if (data) {
         setAllFileItems(data as any);
+        setLastFetchError(null);
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Fetch files error:', error);
+
+      // Retry logic for network/connection errors
+      if (retryCount < 3) {
+        const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff: 1s, 2s, 4s
+        console.log(`Retrying file fetch in ${delay}ms (attempt ${retryCount + 1}/3)`);
+        setTimeout(() => {
+          fetchFiles(retryCount + 1, false);
+        }, delay);
+      } else {
+        setLastFetchError(`Failed to load files: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        setIsLoading(false);
+      }
     }
   };
 
@@ -280,7 +317,17 @@ export function FileManager() {
           </div>
 
           <div className="border-border flex items-center justify-between gap-2">
-            <FileUploadDialog onUploadSuccess={fetchFiles} />
+            <FileUploadDialog onUploadSuccess={(uploadedFiles) => {
+              // Optimistic update: immediately add uploaded files to the UI
+              if (uploadedFiles && uploadedFiles.length > 0) {
+                setAllFileItems(prev => [...uploadedFiles, ...prev]);
+              }
+
+              // Background refresh to ensure consistency with delay for production
+              setTimeout(() => {
+                fetchFiles(0, false);
+              }, 500);
+            }} />
           </div>
         </div>
 
@@ -412,7 +459,17 @@ export function FileManager() {
                   <FolderPlus className="mx-auto size-14 opacity-50" />
                   <h2 className="text-muted-foreground">No files uploaded yet.</h2>
                   <div>
-                    <FileUploadDialog onUploadSuccess={fetchFiles} />
+                    <FileUploadDialog onUploadSuccess={(uploadedFiles) => {
+                      // Optimistic update: immediately add uploaded files to the UI
+                      if (uploadedFiles && uploadedFiles.length > 0) {
+                        setAllFileItems(prev => [...uploadedFiles, ...prev]);
+                      }
+
+                      // Background refresh to ensure consistency with delay for production
+                      setTimeout(() => {
+                        fetchFiles(0, false);
+                      }, 500);
+                    }} />
                   </div>
                 </div>
               </div>
