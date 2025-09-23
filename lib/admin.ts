@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/client'
 
 export async function isUserAdmin(): Promise<boolean> {
   try {
