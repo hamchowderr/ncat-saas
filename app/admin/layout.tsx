@@ -1,23 +1,54 @@
-import React from "react";
-import { cookies } from "next/headers";
+"use client";
 
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
 import { SiteHeader } from "@/components/layout/header";
+import { isUserAdmin } from "@/lib/admin";
 
-export default async function AdminLayout({
+export default function AdminLayout({
   children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = await cookies();
-  const defaultOpen =
-    cookieStore.get("sidebar_state")?.value === "true" ||
-    cookieStore.get("sidebar_state") === undefined;
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const router = useRouter();
 
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const adminStatus = await isUserAdmin();
+      setIsAdmin(adminStatus);
+
+      if (!adminStatus) {
+        router.push('/dashboard');
+      }
+    };
+
+    checkAdminStatus();
+  }, [router]);
+
+  // Loading state while checking admin status
+  if (isAdmin === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not admin, don't render anything (redirect is happening)
+  if (!isAdmin) {
+    return null;
+  }
+
+  // Admin user - render the layout
   return (
     <SidebarProvider
-      defaultOpen={defaultOpen}
+      defaultOpen={true}
       style={
         {
           "--sidebar-width": "calc(var(--spacing) * 64)",
