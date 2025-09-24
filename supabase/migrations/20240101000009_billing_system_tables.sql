@@ -1,5 +1,5 @@
--- Migration 9: Billing System Tables
--- Create billing-related tables for products, prices, customers, subscriptions, and payments
+-- Migration 9: Billing System and User Setup
+-- Create billing-related tables, RLS policies, and comprehensive user setup trigger
 
 -- Billing Products Table
 CREATE TABLE IF NOT EXISTS public.billing_products (
@@ -247,3 +247,18 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Create trigger on auth.users to automatically set up new users
+CREATE OR REPLACE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Create user profiles for existing users (if any)
+INSERT INTO public.user_profiles (id, full_name, avatar_url)
+SELECT
+    id,
+    COALESCE(raw_user_meta_data->>'full_name', raw_user_meta_data->>'name'),
+    raw_user_meta_data->>'avatar_url'
+FROM auth.users
+WHERE id NOT IN (SELECT id FROM public.user_profiles)
+ON CONFLICT (id) DO NOTHING;
