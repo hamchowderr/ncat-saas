@@ -335,112 +335,112 @@ verify_jwt = false
 import_map = "./functions/ncat-webhook/deno.json"
 entrypoint = "./functions/ncat-webhook/index.ts"
 
-# Media Processing Functions - require JWT verification
+# Media Processing Functions - handle JWT verification internally
 [functions.audio-concatenate]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/audio-concatenate/deno.json"
 entrypoint = "./functions/audio-concatenate/index.ts"
 
 [functions.code-execute-python]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/code-execute-python/deno.json"
 entrypoint = "./functions/code-execute-python/index.ts"
 
 [functions.ffmpeg-compose]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/ffmpeg-compose/deno.json"
 entrypoint = "./functions/ffmpeg-compose/index.ts"
 
 [functions.file-upload]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/file-upload/deno.json"
 entrypoint = "./functions/file-upload/index.ts"
 
 [functions.image-convert-video]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/image-convert-video/deno.json"
 entrypoint = "./functions/image-convert-video/index.ts"
 
 [functions.media-convert]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/media-convert/deno.json"
 entrypoint = "./functions/media-convert/index.ts"
 
 [functions.media-convert-mp3]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/media-convert-mp3/deno.json"
 entrypoint = "./functions/media-convert-mp3/index.ts"
 
 [functions.media-download]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/media-download/deno.json"
 entrypoint = "./functions/media-download/index.ts"
 
 [functions.media-metadata]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/media-metadata/deno.json"
 entrypoint = "./functions/media-metadata/index.ts"
 
 [functions.media-silence]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/media-silence/deno.json"
 entrypoint = "./functions/media-silence/index.ts"
 
 [functions.media-transcribe]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/media-transcribe/deno.json"
 entrypoint = "./functions/media-transcribe/index.ts"
 
 [functions.s3-upload]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/s3-upload/deno.json"
 entrypoint = "./functions/s3-upload/index.ts"
 
 [functions.video-caption]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/video-caption/deno.json"
 entrypoint = "./functions/video-caption/index.ts"
 
 [functions.video-concatenate]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/video-concatenate/deno.json"
 entrypoint = "./functions/video-concatenate/index.ts"
 
 [functions.video-cut]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/video-cut/deno.json"
 entrypoint = "./functions/video-cut/index.ts"
 
 [functions.video-split]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/video-split/deno.json"
 entrypoint = "./functions/video-split/index.ts"
 
 [functions.video-thumbnail]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/video-thumbnail/deno.json"
 entrypoint = "./functions/video-thumbnail/index.ts"
 
 [functions.video-trim]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/video-trim/deno.json"
 entrypoint = "./functions/video-trim/index.ts"
 
