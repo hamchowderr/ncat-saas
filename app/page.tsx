@@ -230,21 +230,6 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/settings/notifications"
-            className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-red-300 dark:hover:border-red-500"
-          >
-            <div className="relative mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:rotate-3">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4.868 19.718l8.485-8.485a2 2 0 012.828 0l1.414 1.414a2 2 0 010 2.828l-8.485 8.485A2 2 0 017.696 24H4a1 1 0 01-1-1v-3.696a2 2 0 01.586-1.414z" />
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white text-center mb-2">Notifications</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">Alert preferences</p>
-          </a>
-
-          <a
             href="/settings/display"
             className="group flex flex-col items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-teal-300 dark:hover:border-teal-500"
           >

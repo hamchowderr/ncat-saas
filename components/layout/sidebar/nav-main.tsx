@@ -130,6 +130,16 @@ export const navItems: NavGroup[] = [
     ]
   },
   {
+    title: "Billing",
+    items: [
+      {
+        title: "Billing",
+        href: "/billing",
+        icon: CreditCardIcon
+      }
+    ]
+  },
+  {
     title: "Admin",
     items: [
       {

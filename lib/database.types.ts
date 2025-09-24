@@ -1348,7 +1348,10 @@ export type Database = {
           id: string
           is_read: boolean
           is_seen: boolean
+          link: string | null
+          message: string
           payload: Json
+          type: Database["public"]["Enums"]["notification_type"]
           updated_at: string
           user_id: string
         }
@@ -1357,7 +1360,10 @@ export type Database = {
           id?: string
           is_read?: boolean
           is_seen?: boolean
+          link?: string | null
+          message?: string
           payload?: Json
+          type?: Database["public"]["Enums"]["notification_type"]
           updated_at?: string
           user_id: string
         }
@@ -1366,7 +1372,10 @@ export type Database = {
           id?: string
           is_read?: boolean
           is_seen?: boolean
+          link?: string | null
+          message?: string
           payload?: Json
+          type?: Database["public"]["Enums"]["notification_type"]
           updated_at?: string
           user_id?: string
         }
@@ -1758,6 +1767,7 @@ export type Database = {
         | "completed"
         | "moderator_hold"
       marketing_feedback_thread_type: "bug" | "feature_request" | "general"
+      notification_type: "info" | "warning" | "error"
       organization_joining_status:
         | "invited"
         | "joinied"
@@ -1940,6 +1950,7 @@ export const Constants = {
         "moderator_hold",
       ],
       marketing_feedback_thread_type: ["bug", "feature_request", "general"],
+      notification_type: ["info", "warning", "error"],
       organization_joining_status: [
         "invited",
         "joinied",

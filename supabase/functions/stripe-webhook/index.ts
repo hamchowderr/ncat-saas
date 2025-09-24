@@ -6,7 +6,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.39.3'
 const stripe = new Stripe(Deno.env.get('STRIPE_API_KEY') as string, {
   // This is needed to use the Fetch API rather than relying on the Node http
   // package.
-  apiVersion: '2024-11-20'
+  apiVersion: '2025-08-27.basil'
 })
 
 // This is needed in order to use the Web Crypto API in Deno.
@@ -133,23 +133,62 @@ async function handlePriceEvent(price: Stripe.Price) {
 }
 
 async function handleCustomerEvent(customer: Stripe.Customer) {
-  const { error } = await supabase
-    .from('billing_customers')
-    .upsert({
-      gateway_customer_id: customer.id,
-      workspace_id: '00000000-0000-0000-0000-000000000000', // Default workspace - update as needed
-      gateway_name: 'stripe',
-      default_currency: customer.currency || 'usd',
-      billing_email: customer.email || '',
-      metadata: customer.metadata || {}
-    })
-  
-  if (error) {
-    console.error('Error upserting customer:', error)
-    throw error
+  // Extract user_id from customer metadata
+  const userId = customer.metadata?.user_id || customer.metadata?.workspace_id
+
+  if (!userId) {
+    console.error('Customer missing user_id in metadata:', customer.id)
+    throw new Error('Customer missing user_id in metadata')
   }
-  
-  console.log(`✅ Customer ${customer.id} synced`)
+
+  // Check if there's a pending customer record for this user
+  const { data: pendingCustomer } = await supabase
+    .from('billing_customers')
+    .select('*')
+    .eq('workspace_id', userId)
+    .eq('gateway_name', 'stripe')
+    .like('gateway_customer_id', 'pending_%')
+    .single()
+
+  // If there's a pending record, update it; otherwise insert new
+  if (pendingCustomer) {
+    const { error } = await supabase
+      .from('billing_customers')
+      .update({
+        gateway_customer_id: customer.id,
+        default_currency: customer.currency || 'usd',
+        billing_email: customer.email || '',
+        metadata: {
+          ...pendingCustomer.metadata,
+          stripe_customer_created: true,
+          stripe_metadata: customer.metadata || {}
+        }
+      })
+      .eq('id', pendingCustomer.id)
+
+    if (error) {
+      console.error('Error updating pending customer:', error)
+      throw error
+    }
+  } else {
+    const { error } = await supabase
+      .from('billing_customers')
+      .upsert({
+        gateway_customer_id: customer.id,
+        workspace_id: userId,
+        gateway_name: 'stripe',
+        default_currency: customer.currency || 'usd',
+        billing_email: customer.email || '',
+        metadata: customer.metadata || {}
+      })
+
+    if (error) {
+      console.error('Error upserting customer:', error)
+      throw error
+    }
+  }
+
+  console.log(`✅ Customer ${customer.id} synced for user ${userId}`)
 }
 
 async function handleSubscriptionEvent(subscription: Stripe.Subscription) {

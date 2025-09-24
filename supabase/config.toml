@@ -315,19 +315,134 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
-# Disable JWT verification for the Stripe webhook function
-[functions.stripe-webhook]
-verify_jwt = false
-
-# Disable JWT verification for the NCA Toolkit webhook function
-[functions.ncat-webhook]
-verify_jwt = false
-
 [analytics]
 enabled = true
 port = 54327
 # Configure one of the supported backends: `postgres`, `bigquery`.
 backend = "postgres"
+
+# Edge Functions Configuration
+# Webhook functions - external requests, no JWT verification required
+[functions.stripe-webhook]
+enabled = true
+verify_jwt = false
+import_map = "./functions/stripe-webhook/deno.json"
+entrypoint = "./functions/stripe-webhook/index.ts"
+
+[functions.ncat-webhook]
+enabled = true
+verify_jwt = false
+import_map = "./functions/ncat-webhook/deno.json"
+entrypoint = "./functions/ncat-webhook/index.ts"
+
+# Media Processing Functions - require JWT verification
+[functions.audio-concatenate]
+enabled = true
+verify_jwt = true
+import_map = "./functions/audio-concatenate/deno.json"
+entrypoint = "./functions/audio-concatenate/index.ts"
+
+[functions.code-execute-python]
+enabled = true
+verify_jwt = true
+import_map = "./functions/code-execute-python/deno.json"
+entrypoint = "./functions/code-execute-python/index.ts"
+
+[functions.ffmpeg-compose]
+enabled = true
+verify_jwt = true
+import_map = "./functions/ffmpeg-compose/deno.json"
+entrypoint = "./functions/ffmpeg-compose/index.ts"
+
+[functions.file-upload]
+enabled = true
+verify_jwt = true
+import_map = "./functions/file-upload/deno.json"
+entrypoint = "./functions/file-upload/index.ts"
+
+[functions.image-convert-video]
+enabled = true
+verify_jwt = true
+import_map = "./functions/image-convert-video/deno.json"
+entrypoint = "./functions/image-convert-video/index.ts"
+
+[functions.media-convert]
+enabled = true
+verify_jwt = true
+import_map = "./functions/media-convert/deno.json"
+entrypoint = "./functions/media-convert/index.ts"
+
+[functions.media-convert-mp3]
+enabled = true
+verify_jwt = true
+import_map = "./functions/media-convert-mp3/deno.json"
+entrypoint = "./functions/media-convert-mp3/index.ts"
+
+[functions.media-download]
+enabled = true
+verify_jwt = true
+import_map = "./functions/media-download/deno.json"
+entrypoint = "./functions/media-download/index.ts"
+
+[functions.media-metadata]
+enabled = true
+verify_jwt = true
+import_map = "./functions/media-metadata/deno.json"
+entrypoint = "./functions/media-metadata/index.ts"
+
+[functions.media-silence]
+enabled = true
+verify_jwt = true
+import_map = "./functions/media-silence/deno.json"
+entrypoint = "./functions/media-silence/index.ts"
+
+[functions.media-transcribe]
+enabled = true
+verify_jwt = true
+import_map = "./functions/media-transcribe/deno.json"
+entrypoint = "./functions/media-transcribe/index.ts"
+
+[functions.s3-upload]
+enabled = true
+verify_jwt = true
+import_map = "./functions/s3-upload/deno.json"
+entrypoint = "./functions/s3-upload/index.ts"
+
+[functions.video-caption]
+enabled = true
+verify_jwt = true
+import_map = "./functions/video-caption/deno.json"
+entrypoint = "./functions/video-caption/index.ts"
+
+[functions.video-concatenate]
+enabled = true
+verify_jwt = true
+import_map = "./functions/video-concatenate/deno.json"
+entrypoint = "./functions/video-concatenate/index.ts"
+
+[functions.video-cut]
+enabled = true
+verify_jwt = true
+import_map = "./functions/video-cut/deno.json"
+entrypoint = "./functions/video-cut/index.ts"
+
+[functions.video-split]
+enabled = true
+verify_jwt = true
+import_map = "./functions/video-split/deno.json"
+entrypoint = "./functions/video-split/index.ts"
+
+[functions.video-thumbnail]
+enabled = true
+verify_jwt = true
+import_map = "./functions/video-thumbnail/deno.json"
+entrypoint = "./functions/video-thumbnail/index.ts"
+
+[functions.video-trim]
+enabled = true
+verify_jwt = true
+import_map = "./functions/video-trim/deno.json"
+entrypoint = "./functions/video-trim/index.ts"
 
 # Experimental features may be deprecated any time
 [experimental]
@@ -341,189 +456,3 @@ s3_region = "env(S3_REGION)"
 s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
-[functions.audio-concatenate]
-enabled = true
-verify_jwt = true
-import_map = "./functions/audio-concatenate/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/audio-concatenate/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/audio-concatenate/*.html" ]
-
-[functions.code-execute-python]
-enabled = true
-verify_jwt = true
-import_map = "./functions/code-execute-python/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/code-execute-python/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/code-execute-python/*.html" ]
-
-[functions.ffmpeg-compose]
-enabled = true
-verify_jwt = true
-import_map = "./functions/ffmpeg-compose/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/ffmpeg-compose/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/ffmpeg-compose/*.html" ]
-
-[functions.image-convert-video]
-enabled = true
-verify_jwt = true
-import_map = "./functions/image-convert-video/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/image-convert-video/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/image-convert-video/*.html" ]
-
-[functions.media-convert]
-enabled = true
-verify_jwt = true
-import_map = "./functions/media-convert/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/media-convert/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/media-convert/*.html" ]
-
-[functions.media-convert-mp3]
-enabled = true
-verify_jwt = true
-import_map = "./functions/media-convert-mp3/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/media-convert-mp3/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/media-convert-mp3/*.html" ]
-
-[functions.media-download]
-enabled = true
-verify_jwt = true
-import_map = "./functions/media-download/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/media-download/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/media-download/*.html" ]
-
-[functions.media-transcribe]
-enabled = true
-verify_jwt = true
-import_map = "./functions/media-transcribe/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/media-transcribe/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/media-transcribe/*.html" ]
-
-[functions.media-silence]
-enabled = true
-verify_jwt = true
-import_map = "./functions/media-silence/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/media-silence/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/media-silence/*.html" ]
-
-[functions.media-metadata]
-enabled = true
-verify_jwt = true
-import_map = "./functions/media-metadata/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/media-metadata/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/media-metadata/*.html" ]
-
-[functions.s3-upload]
-enabled = true
-verify_jwt = true
-import_map = "./functions/s3-upload/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/s3-upload/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/s3-upload/*.html" ]
-
-[functions.video-caption]
-enabled = true
-verify_jwt = true
-import_map = "./functions/video-caption/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/video-caption/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/video-caption/*.html" ]
-
-[functions.video-concatenate]
-enabled = true
-verify_jwt = true
-import_map = "./functions/video-concatenate/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/video-concatenate/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/video-concatenate/*.html" ]
-
-[functions.video-thumbnail]
-enabled = true
-verify_jwt = true
-import_map = "./functions/video-thumbnail/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/video-thumbnail/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/video-thumbnail/*.html" ]
-
-[functions.video-cut]
-enabled = true
-verify_jwt = true
-import_map = "./functions/video-cut/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/video-cut/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/video-cut/*.html" ]
-
-[functions.video-split]
-enabled = true
-verify_jwt = true
-import_map = "./functions/video-split/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/video-split/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/video-split/*.html" ]
-
-[functions.video-trim]
-enabled = true
-verify_jwt = true
-import_map = "./functions/video-trim/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/video-trim/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/video-trim/*.html" ]

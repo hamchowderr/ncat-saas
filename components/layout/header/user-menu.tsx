@@ -1,6 +1,6 @@
 'use client'
 
-import { BadgeCheck, Bell, ChevronRightIcon, CreditCard, LogOut, Sparkles, UserCircle2Icon, PaletteIcon, MonitorIcon } from "lucide-react";
+import { BadgeCheck, ChevronRightIcon, CreditCard, LogOut, Sparkles, UserCircle2Icon, PaletteIcon, MonitorIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -100,12 +100,6 @@ export default function UserMenu() {
             <Link href="/settings/appearance">
               <PaletteIcon />
               Appearance
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/settings/notifications">
-              <Bell />
-              Notifications
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>

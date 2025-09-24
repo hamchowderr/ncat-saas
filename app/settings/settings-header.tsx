@@ -19,10 +19,6 @@ const pageMapping: Record<string, { title: string; description: string }> = {
     title: "Appearance",
     description: "Customize the appearance of the app. Automatically switch between day and night themes."
   },
-  "/settings/notifications": {
-    title: "Notifications",
-    description: "Configure how you receive notifications."
-  },
   "/settings/display": {
     title: "Display",
     description: "Turn items on or off to control what's displayed in the app."

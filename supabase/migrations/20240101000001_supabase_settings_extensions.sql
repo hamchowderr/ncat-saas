@@ -14,6 +14,11 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
 CREATE EXTENSION IF NOT EXISTS "wrappers" WITH SCHEMA "extensions";
 CREATE EXTENSION IF NOT EXISTS "pg_jsonschema" WITH SCHEMA "extensions";
 
+-- Create Stripe Foreign Data Wrapper
+CREATE FOREIGN DATA WRAPPER stripe_wrapper
+  HANDLER stripe_fdw_handler
+  VALIDATOR stripe_fdw_validator;
+
 -- Database configuration is handled by Supabase config.toml
 
 -- Grant necessary permissions

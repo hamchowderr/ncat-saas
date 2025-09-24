@@ -27,12 +27,12 @@ const sidebarNavItems = [
     href: "/settings/account"
   },
   {
-    title: "Appearance",
-    href: "/settings/appearance"
+    title: "Billing",
+    href: "/billing"
   },
   {
-    title: "Notifications",
-    href: "/settings/notifications"
+    title: "Appearance",
+    href: "/settings/appearance"
   },
   {
     title: "Display",

@@ -1,0 +1,87 @@
+-- Migration 30: Set up Stripe foreign tables and server
+
+-- Store Stripe API key in Vault (use your actual secret key from .env.local)
+SELECT vault.create_secret(
+  'stripe_api_key',
+  'sk_test_51QI5q7CCFNRAwpJseDM0lCyPUZTD9ivJYKZDKyF5Qf6q1SgOl0HWJ8hpKnHhIYTBnQJ1JCbcv6cDqH3FQGE6XTJF00eVpKCZX7',
+  'Stripe API key for foreign data wrapper'
+);
+
+-- Create Stripe server using Vault secret
+CREATE SERVER stripe_server
+FOREIGN DATA WRAPPER stripe_wrapper
+OPTIONS (
+  api_key_id 'stripe_api_key', -- References the Vault secret
+  api_url 'https://api.stripe.com/v1/',
+  api_version '2024-06-20'
+);
+
+-- Create schema for Stripe foreign tables
+CREATE SCHEMA IF NOT EXISTS stripe;
+
+-- Create foreign table for customers
+CREATE FOREIGN TABLE stripe.customers (
+  id text,
+  email text,
+  name text,
+  description text,
+  created timestamp,
+  metadata jsonb,
+  attrs jsonb
+) SERVER stripe_server
+OPTIONS (
+  object 'customers',
+  rowid_column 'id'
+);
+
+-- Create foreign table for subscriptions
+CREATE FOREIGN TABLE stripe.subscriptions (
+  id text,
+  customer text,
+  currency text,
+  status text,
+  current_period_start timestamp,
+  current_period_end timestamp,
+  metadata jsonb,
+  attrs jsonb
+) SERVER stripe_server
+OPTIONS (
+  object 'subscriptions',
+  rowid_column 'id'
+);
+
+-- Create foreign table for products
+CREATE FOREIGN TABLE stripe.products (
+  id text,
+  name text,
+  description text,
+  active boolean,
+  created timestamp,
+  metadata jsonb,
+  attrs jsonb
+) SERVER stripe_server
+OPTIONS (
+  object 'products',
+  rowid_column 'id'
+);
+
+-- Create foreign table for prices
+CREATE FOREIGN TABLE stripe.prices (
+  id text,
+  product text,
+  currency text,
+  unit_amount bigint,
+  recurring jsonb,
+  active boolean,
+  created timestamp,
+  metadata jsonb,
+  attrs jsonb
+) SERVER stripe_server
+OPTIONS (
+  object 'prices',
+  rowid_column 'id'
+);
+
+-- Grant access to foreign tables
+GRANT USAGE ON SCHEMA stripe TO postgres, service_role;
+GRANT SELECT ON ALL TABLES IN SCHEMA stripe TO postgres, service_role;

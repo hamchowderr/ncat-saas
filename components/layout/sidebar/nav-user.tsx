@@ -17,7 +17,7 @@ import {
   SidebarMenuItem,
   useSidebar
 } from "@/components/ui/sidebar";
-import { Bell, CreditCard, LogOut, UserCircle2Icon, MonitorIcon, PaletteIcon, BadgeCheck } from "lucide-react";
+import { CreditCard, LogOut, UserCircle2Icon, MonitorIcon, PaletteIcon, BadgeCheck } from "lucide-react";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import Link from "next/link";
 import { createClient } from '@/lib/client';
@@ -122,12 +122,6 @@ export function NavUser() {
                 <Link href="/settings/appearance">
                   <PaletteIcon />
                   Appearance
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings/notifications">
-                  <Bell />
-                  Notifications
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
