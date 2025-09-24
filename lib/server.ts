@@ -32,3 +32,28 @@ export async function createClient() {
     }
   )
 }
+
+/**
+ * Create a service role client that bypasses RLS policies
+ * Use this for server-side operations that need admin access
+ */
+export function createServiceRoleClient() {
+  console.log('🔧 Debug: Creating service role client')
+  console.log('🔧 Debug: URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+  console.log('🔧 Debug: Service Role Key starts with:', process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20))
+
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return []
+        },
+        setAll() {
+          // No-op for service role client
+        },
+      },
+    }
+  )
+}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { createClient } from '@/lib/server'
+import { createClient, createServiceRoleClient } from '@/lib/server'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     // Create a billing portal session
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: returnUrl || `${process.env.NEXT_PUBLIC_URL}/billing`,
+      return_url: returnUrl || `${process.env.NEXT_PUBLIC_SITE_URL}/billing`,
     })
 
     return NextResponse.json({ url: session.url })
@@ -49,8 +49,8 @@ export async function GET(req: NextRequest) {
       .eq('gateway_name', 'stripe')
       .single()
 
-    // If no customer exists, create one automatically
-    if (customerError || !customer) {
+    // If no customer exists, or customer ID starts with "pending_", create one automatically
+    if (customerError || !customer || customer.gateway_customer_id.startsWith('pending_')) {
       console.log('Creating Stripe customer for user:', user.id, user.email)
 
       // Create Stripe customer
@@ -62,15 +62,27 @@ export async function GET(req: NextRequest) {
         }
       })
 
-      // Save to database
-      const { data: newCustomer, error: createError } = await supabase
+      // Save to database using service role client to bypass RLS policies
+      const serviceClient = createServiceRoleClient()
+      console.log('🔧 Debug: Using service role client for billing customer creation')
+      console.log('🔧 Debug: Service role key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY)
+
+      // Use upsert with service role client to handle both insert and update cases
+      console.log('🔧 Debug: Using upsert to create/update billing customer record')
+      const { data: newCustomer, error: createError } = await serviceClient
         .from('billing_customers')
-        .insert({
+        .upsert({
           gateway_customer_id: stripeCustomer.id,
           workspace_id: user.id,
           gateway_name: 'stripe',
           billing_email: user.email || '',
-          default_currency: 'usd'
+          default_currency: 'usd',
+          metadata: {
+            status: 'active',
+            updated_at: new Date().toISOString()
+          }
+        }, {
+          onConflict: 'workspace_id,gateway_name'
         })
         .select('gateway_customer_id')
         .single()
@@ -89,7 +101,7 @@ export async function GET(req: NextRequest) {
     // Create a billing portal session
     const session = await stripe.billingPortal.sessions.create({
       customer: customer.gateway_customer_id,
-      return_url: `${process.env.NEXT_PUBLIC_URL}/billing`,
+      return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/billing`,
     })
 
     return NextResponse.json({ url: session.url })

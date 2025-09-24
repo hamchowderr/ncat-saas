@@ -6,6 +6,7 @@ import { ChevronsUpDown, ShoppingBagIcon, UserCircle2Icon } from "lucide-react";
 import { PlusIcon } from "@radix-ui/react-icons";
 import { usePathname } from "next/navigation";
 import { useIsTablet } from "@/hooks/use-mobile";
+import { useWorkspace } from "@/hooks/use-workspace";
 import Link from "next/link";
 
 import {
@@ -37,6 +38,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const { setOpen, setOpenMobile, isMobile } = useSidebar();
   const isTablet = useIsTablet();
+  const { workspace, loading } = useWorkspace();
 
   useEffect(() => {
     if (isMobile) setOpenMobile(false);
@@ -64,36 +66,35 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 side={isMobile ? "bottom" : "right"}
                 align="end"
                 sideOffset={4}>
-                <DropdownMenuLabel>Clients</DropdownMenuLabel>
+                <DropdownMenuLabel>Organizations</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="flex items-center gap-3">
-                  <UserCircle2Icon className="text-muted-foreground size-4" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">NCA Archetics</span>
-                    <span className="text-muted-foreground text-xs">Active</span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-3">
-                  <UserCircle2Icon className="text-muted-foreground size-4" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">Vibin Coders</span>
-                    <span className="text-muted-foreground text-xs">Inactive</span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-3">
-                  <UserCircle2Icon className="text-muted-foreground size-4" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">Otaku Solutions</span>
-                    <span className="text-muted-foreground text-xs">Inactive</span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Button className="w-full" variant="secondary">
-                    <PlusIcon />
-                    Add New Client
-                  </Button>
-                </DropdownMenuItem>
+                {loading ? (
+                  <DropdownMenuItem className="flex items-center gap-3">
+                    <UserCircle2Icon className="text-muted-foreground size-4" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">Loading...</span>
+                      <span className="text-muted-foreground text-xs">Please wait</span>
+                    </div>
+                  </DropdownMenuItem>
+                ) : workspace ? (
+                  <DropdownMenuItem className="flex items-center gap-3">
+                    <UserCircle2Icon className="text-muted-foreground size-4" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{workspace.name}</span>
+                      <span className="text-muted-foreground text-xs capitalize">
+                        {workspace.workspace_member_role || 'Member'}
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem className="flex items-center gap-3">
+                    <UserCircle2Icon className="text-muted-foreground size-4" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">No Organization</span>
+                      <span className="text-muted-foreground text-xs">Setup required</span>
+                    </div>
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>

@@ -32,6 +32,24 @@ export async function GET(request: Request) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      // Check if user needs onboarding (workspace name is still default/generated)
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (user) {
+        const { data: workspace } = await supabase
+          .from('workspaces')
+          .select('name')
+          .eq('id', user.id)
+          .single()
+
+        // If workspace name ends with 's Workspace', it's still the default name from handle_new_user
+        const isDefaultName = workspace?.name?.endsWith('\'s Workspace') || workspace?.name?.endsWith('-workspace')
+
+        if (isDefaultName && next === '/workspace/file-manager') {
+          next = '/onboarding'
+        }
+      }
+
       const forwardedHost = request.headers.get('x-forwarded-host')
       const isLocalEnv = process.env.NODE_ENV === 'development'
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
