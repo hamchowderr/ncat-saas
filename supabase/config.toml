@@ -170,7 +170,7 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = true
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
@@ -443,6 +443,12 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/video-trim/deno.json"
 entrypoint = "./functions/video-trim/index.ts"
+
+[functions.send-email]
+enabled = true
+verify_jwt = false
+import_map = "./functions/send-email/deno.json"
+entrypoint = "./functions/send-email/index.ts"
 
 # Experimental features may be deprecated any time
 [experimental]

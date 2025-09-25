@@ -43,13 +43,14 @@ export function UnifiedAuthForm({ className, ...props }: React.ComponentPropsWit
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/workspace/file-manager`,
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=/auth/onboarding`,
           },
         })
         if (error) throw error
-        setError(null)
-        // Show success message for sign up
-        setError('Check your email for a confirmation link!')
+        // Store email for resend functionality
+        localStorage.setItem('signupEmail', email)
+        // Redirect to confirmation page
+        window.location.href = '/auth/sign-up-success'
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,

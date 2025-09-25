@@ -97,6 +97,7 @@
     "react-world-flags": "^1.6.0",
     "recharts": "^2.15.4",
     "remark-gfm": "^4.0.1",
+    "resend": "^6.1.0",
     "shiki": "^3.7.0",
     "sonner": "^2.0.7",
     "stripe": "^18.5.0",
@@ -109,6 +110,7 @@
     "zustand": "^5.0.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.1",
     "@tailwindcss/postcss": "^4.1.10",
     "@types/common-tags": "^1.8.4",
     "@types/node": "^24",

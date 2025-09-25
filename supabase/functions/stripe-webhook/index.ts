@@ -3,7 +3,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import Stripe from 'npm:stripe@12.0.0'
 import { createClient } from 'npm:@supabase/supabase-js@2.39.3'
 
-const stripe = new Stripe(Deno.env.get('STRIPE_API_KEY') as string, {
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
   // This is needed to use the Fetch API rather than relying on the Node http
   // package.
   apiVersion: '2025-08-27.basil'

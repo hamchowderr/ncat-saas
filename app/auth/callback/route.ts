@@ -32,10 +32,15 @@ export async function GET(request: Request) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      // Check if user needs onboarding (workspace name is still default/generated)
+      // Check if user needs onboarding
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
+        // Check if this is the user's first sign in after email confirmation
+        const isNewUser = user.email_confirmed_at &&
+                          new Date(user.email_confirmed_at).getTime() === new Date(user.created_at).getTime()
+
+        // Also check workspace name for existing users
         const { data: workspace } = await supabase
           .from('workspaces')
           .select('name')
@@ -45,8 +50,9 @@ export async function GET(request: Request) {
         // If workspace name ends with 's Workspace', it's still the default name from handle_new_user
         const isDefaultName = workspace?.name?.endsWith('\'s Workspace') || workspace?.name?.endsWith('-workspace')
 
-        if (isDefaultName && next === '/workspace/file-manager') {
-          next = '/onboarding'
+        // Route to onboarding if new user OR default workspace name
+        if ((isNewUser || isDefaultName) && next === '/workspace/file-manager') {
+          next = '/auth/onboarding'
         }
       }
 

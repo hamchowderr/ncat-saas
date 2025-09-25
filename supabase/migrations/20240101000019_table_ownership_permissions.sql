@@ -10,7 +10,6 @@ ALTER TABLE "public"."user_api_keys" OWNER TO "postgres";
 ALTER TABLE "public"."user_notifications" OWNER TO "postgres";
 ALTER TABLE "public"."account_delete_tokens" OWNER TO "postgres";
 ALTER TABLE "public"."files" OWNER TO "postgres";
-ALTER TABLE "public"."profiles" OWNER TO "postgres";
 ALTER TABLE "public"."projects" OWNER TO "postgres";
 ALTER TABLE "public"."project_comments" OWNER TO "postgres";
 ALTER TABLE "public"."chats" OWNER TO "postgres";
@@ -32,7 +31,6 @@ ALTER TABLE "public"."app_settings" OWNER TO "postgres";
 
 -- Grant Core Table Permissions
 GRANT ALL ON TABLE public.files TO authenticated;
-GRANT ALL ON TABLE public.profiles TO authenticated;
 
 -- Grant Billing Table Permissions
 GRANT SELECT ON TABLE public.billing_products TO authenticated;

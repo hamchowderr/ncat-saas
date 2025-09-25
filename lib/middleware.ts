@@ -39,6 +39,9 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims()
   const user = data?.claims
 
+  // Get full user details to check email confirmation status
+  const { data: { user: fullUser } } = await supabase.auth.getUser()
+
   if (
     !user &&
     !request.nextUrl.pathname.startsWith('/login') &&
@@ -48,6 +51,24 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     return NextResponse.redirect(url)
+  }
+
+  // Handle email confirmation flow for authenticated but unconfirmed users
+  if (user && fullUser && !fullUser.email_confirmed_at) {
+    // Allow access to confirmation-related pages
+    const allowedPaths = [
+      '/auth/sign-up-success',
+      '/auth/callback',
+      '/auth/login',
+      '/auth/error'
+    ]
+
+    if (!allowedPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
+      // Redirect unconfirmed users to the sign-up success page
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/sign-up-success'
+      return NextResponse.redirect(url)
+    }
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
