@@ -6,66 +6,66 @@ import {
   Circle,
   CircleOff,
   HelpCircle,
-  Timer,
-} from "lucide-react"
+  Timer
+} from "lucide-react";
 
 export const labels = [
   {
     value: "bug",
-    label: "Bug",
+    label: "Bug"
   },
   {
     value: "feature",
-    label: "Feature",
+    label: "Feature"
   },
   {
     value: "documentation",
-    label: "Documentation",
-  },
-]
+    label: "Documentation"
+  }
+];
 
 export const statuses = [
   {
     value: "pending",
     label: "Pending",
-    icon: Circle,
+    icon: Circle
   },
   {
     value: "processing",
     label: "Processing",
-    icon: Timer,
+    icon: Timer
   },
   {
     value: "completed",
     label: "Completed",
-    icon: CheckCircle,
+    icon: CheckCircle
   },
   {
     value: "failed",
     label: "Failed",
-    icon: CircleOff,
+    icon: CircleOff
   },
   {
     value: "error",
     label: "Error",
-    icon: CircleOff,
-  },
-]
+    icon: CircleOff
+  }
+];
 
 export const priorities = [
   {
     label: "Low",
     value: "low",
-    icon: ArrowDown,
+    icon: ArrowDown
   },
   {
     label: "Medium",
     value: "medium",
-    icon: ArrowRight,
+    icon: ArrowRight
   },
   {
     label: "High",
     value: "high",
-    icon: ArrowUp,
-  },
-]
+    icon: ArrowUp
+  }
+];

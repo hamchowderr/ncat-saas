@@ -1,6 +1,15 @@
-'use client'
+"use client";
 
-import { BadgeCheck, ChevronRightIcon, CreditCard, LogOut, Sparkles, UserCircle2Icon, PaletteIcon, MonitorIcon } from "lucide-react";
+import {
+  BadgeCheck,
+  ChevronRightIcon,
+  CreditCard,
+  LogOut,
+  Sparkles,
+  UserCircle2Icon,
+  PaletteIcon,
+  MonitorIcon
+} from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -15,9 +24,9 @@ import {
 import Link from "next/link";
 import * as React from "react";
 import { Progress } from "@/components/ui/progress";
-import { createClient } from '@/lib/client';
-import { useRouter } from 'next/navigation';
-import { useUser } from '@/hooks/use-user';
+import { createClient } from "@/lib/client";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/hooks/use-user";
 
 export default function UserMenu() {
   const router = useRouter();
@@ -26,16 +35,16 @@ export default function UserMenu() {
   // Debug user data
   React.useEffect(() => {
     if (user) {
-      console.log('User data in header:', user);
-      console.log('Avatar URL:', user.user_metadata?.avatar_url);
-      console.log('User metadata:', user.user_metadata);
+      console.log("User data in header:", user);
+      console.log("Avatar URL:", user.user_metadata?.avatar_url);
+      console.log("User metadata:", user.user_metadata);
     }
   }, [user]);
 
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    window.location.href = '/auth/login';
+    window.location.href = "/auth/login";
   };
 
   if (loading) {
@@ -51,10 +60,14 @@ export default function UserMenu() {
       <DropdownMenuTrigger asChild>
         <Avatar>
           <AvatarImage
-            src={user?.user_metadata?.avatar_url || `https://bundui-images.netlify.app/avatars/01.png`}
+            src={
+              user?.user_metadata?.avatar_url || `https://bundui-images.netlify.app/avatars/01.png`
+            }
             alt="NCAT SaaS"
           />
-          <AvatarFallback className="rounded-lg">{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+          <AvatarFallback className="rounded-lg">
+            {user?.email?.charAt(0).toUpperCase() || "U"}
+          </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) min-w-60" align="end">
@@ -62,14 +75,23 @@ export default function UserMenu() {
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
             <Avatar>
               <AvatarImage
-                src={user?.user_metadata?.avatar_url || `https://bundui-images.netlify.app/avatars/01.png`}
+                src={
+                  user?.user_metadata?.avatar_url ||
+                  `https://bundui-images.netlify.app/avatars/01.png`
+                }
                 alt="NCAT SaaS"
               />
-              <AvatarFallback className="rounded-lg">{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+              <AvatarFallback className="rounded-lg">
+                {user?.email?.charAt(0).toUpperCase() || "U"}
+              </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">{user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}</span>
-              <span className="text-muted-foreground truncate text-xs">{user?.email || 'No email'}</span>
+              <span className="truncate font-semibold">
+                {user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User"}
+              </span>
+              <span className="text-muted-foreground truncate text-xs">
+                {user?.email || "No email"}
+              </span>
             </div>
           </div>
         </DropdownMenuLabel>

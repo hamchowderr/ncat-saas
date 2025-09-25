@@ -72,7 +72,8 @@ function AvatarIndicator({
     <div
       data-slot="avatar-indicator"
       className={cn(indicatorVariants({ variant, position, className }))}
-      {...props}></div>
+      {...props}
+    ></div>
   );
 }
 

@@ -175,7 +175,10 @@
         "id": 4,
         "type": "image",
         "data": {
-          "images": ["https://bundui-images.netlify.app/extra/image4.jpg", "https://bundui-images.netlify.app/extra/image2.jpg"]
+          "images": [
+            "https://bundui-images.netlify.app/extra/image4.jpg",
+            "https://bundui-images.netlify.app/extra/image2.jpg"
+          ]
         },
         "read": false,
         "own_message": true
@@ -210,7 +213,10 @@
         "id": 1,
         "type": "image",
         "data": {
-          "images": ["https://bundui-images.netlify.app/extra/image2.jpg", "https://bundui-images.netlify.app/extra/image1.jpg"]
+          "images": [
+            "https://bundui-images.netlify.app/extra/image2.jpg",
+            "https://bundui-images.netlify.app/extra/image1.jpg"
+          ]
         },
         "read": true,
         "own_message": true
@@ -313,7 +319,10 @@
         "id": 4,
         "type": "image",
         "data": {
-          "images": ["https://bundui-images.netlify.app/extra/image4.jpg", "https://bundui-images.netlify.app/extra/image2.jpg"]
+          "images": [
+            "https://bundui-images.netlify.app/extra/image4.jpg",
+            "https://bundui-images.netlify.app/extra/image2.jpg"
+          ]
         },
         "read": false,
         "own_message": true
@@ -331,7 +340,10 @@
         "id": 1,
         "type": "image",
         "data": {
-          "images": ["https://bundui-images.netlify.app/extra/image4.jpg", "https://bundui-images.netlify.app/extra/image2.jpg"]
+          "images": [
+            "https://bundui-images.netlify.app/extra/image4.jpg",
+            "https://bundui-images.netlify.app/extra/image2.jpg"
+          ]
         },
         "read": true,
         "own_message": true
@@ -370,7 +382,10 @@
         "id": 4,
         "type": "image",
         "data": {
-          "images": ["https://bundui-images.netlify.app/extra/image2.jpg", "https://bundui-images.netlify.app/extra/image1.jpg"]
+          "images": [
+            "https://bundui-images.netlify.app/extra/image2.jpg",
+            "https://bundui-images.netlify.app/extra/image1.jpg"
+          ]
         },
         "read": false,
         "own_message": true
@@ -409,7 +424,10 @@
         "id": 4,
         "type": "image",
         "data": {
-          "images": ["https://bundui-images.netlify.app/extra/image4.jpg", "https://bundui-images.netlify.app/extra/image2.jpg"]
+          "images": [
+            "https://bundui-images.netlify.app/extra/image4.jpg",
+            "https://bundui-images.netlify.app/extra/image2.jpg"
+          ]
         },
         "read": true,
         "own_message": true
@@ -448,7 +466,10 @@
         "id": 4,
         "type": "image",
         "data": {
-          "images": ["https://bundui-images.netlify.app/extra/image3.jpg", "https://bundui-images.netlify.app/extra/image1.jpg"]
+          "images": [
+            "https://bundui-images.netlify.app/extra/image3.jpg",
+            "https://bundui-images.netlify.app/extra/image1.jpg"
+          ]
         },
         "read": true,
         "own_message": true

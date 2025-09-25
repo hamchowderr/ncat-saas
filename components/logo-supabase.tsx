@@ -45,5 +45,5 @@ export function LogoSupabase({ className, size = 24 }: { className?: string; siz
         </linearGradient>
       </defs>
     </svg>
-  )
+  );
 }

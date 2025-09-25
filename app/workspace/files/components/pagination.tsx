@@ -65,7 +65,8 @@ export default function FileManagerPagination({
                 href={currentPage === 1 ? undefined : `#/page/${currentPage - 1}`}
                 aria-label="Go to first page"
                 aria-disabled={currentPage === 1 ? true : undefined}
-                role={currentPage === 1 ? "link" : undefined}>
+                role={currentPage === 1 ? "link" : undefined}
+              >
                 <ChevronFirstIcon size={16} aria-hidden="true" />
               </PaginationLink>
             </PaginationItem>
@@ -77,7 +78,8 @@ export default function FileManagerPagination({
                 href={currentPage === 1 ? undefined : `#/page/${currentPage - 1}`}
                 aria-label="Go to previous page"
                 aria-disabled={currentPage === 1 ? true : undefined}
-                role={currentPage === 1 ? "link" : undefined}>
+                role={currentPage === 1 ? "link" : undefined}
+              >
                 <ChevronLeftIcon size={16} aria-hidden="true" />
               </PaginationLink>
             </PaginationItem>
@@ -89,7 +91,8 @@ export default function FileManagerPagination({
                 href={currentPage === totalPages ? undefined : `#/page/${currentPage + 1}`}
                 aria-label="Go to next page"
                 aria-disabled={currentPage === totalPages ? true : undefined}
-                role={currentPage === totalPages ? "link" : undefined}>
+                role={currentPage === totalPages ? "link" : undefined}
+              >
                 <ChevronRightIcon size={16} aria-hidden="true" />
               </PaginationLink>
             </PaginationItem>
@@ -101,7 +104,8 @@ export default function FileManagerPagination({
                 href={currentPage === totalPages ? undefined : `#/page/${totalPages}`}
                 aria-label="Go to last page"
                 aria-disabled={currentPage === totalPages ? true : undefined}
-                role={currentPage === totalPages ? "link" : undefined}>
+                role={currentPage === totalPages ? "link" : undefined}
+              >
                 <ChevronLastIcon size={16} aria-hidden="true" />
               </PaginationLink>
             </PaginationItem>

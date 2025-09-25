@@ -1,85 +1,82 @@
-'use client'
+"use client";
 
-import { DynamicForm } from '@/components/dynamic-form'
-import {
-  useGetAuthConfig,
-  useUpdateAuthConfig,
-} from '@/hooks/use-auth'
+import { DynamicForm } from "@/components/dynamic-form";
+import { useGetAuthConfig, useUpdateAuthConfig } from "@/hooks/use-auth";
 import {
   authEmailProviderSchema,
   authFieldLabels,
   authGeneralSettingsSchema,
   type AuthGeneralSettingsSchema,
   authGoogleProviderSchema,
-  authPhoneProviderSchema,
-} from '@/lib/schemas/auth'
-import { AlertTriangle, ChevronRight, Mail, Phone, User } from 'lucide-react'
-import { useCallback, useMemo } from 'react'
-import { z } from 'zod'
-import { useSheetNavigation } from '@/contexts/SheetNavigationContext'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+  authPhoneProviderSchema
+} from "@/lib/schemas/auth";
+import { AlertTriangle, ChevronRight, Mail, Phone, User } from "lucide-react";
+import { useCallback, useMemo } from "react";
+import { z } from "zod";
+import { useSheetNavigation } from "@/contexts/SheetNavigationContext";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 function ProviderSettingsView({
   projectRef,
   schema,
   title,
   initialValues: allInitialValues,
-  onSuccess,
+  onSuccess
 }: {
-  projectRef: string
-  schema: z.ZodObject<any> | z.ZodEffects<z.ZodObject<any>>
-  title: string
-  initialValues: any
-  onSuccess: () => void
+  projectRef: string;
+  schema: z.ZodObject<any> | z.ZodEffects<z.ZodObject<any>>;
+  title: string;
+  initialValues: any;
+  onSuccess: () => void;
 }) {
-  const { mutate: updateAuthConfig, isPending: isUpdatingConfig } = useUpdateAuthConfig()
+  const { mutate: updateAuthConfig, isPending: isUpdatingConfig } = useUpdateAuthConfig();
 
-  const actualSchema = 'shape' in schema ? schema : (schema._def.schema as z.ZodObject<any>)
+  const actualSchema = "shape" in schema ? schema : (schema._def.schema as z.ZodObject<any>);
 
   const handleUpdateAuthConfig = (formData: z.infer<typeof actualSchema>) => {
     const payload = Object.fromEntries(
       Object.entries(formData).filter(([_, value]) => value !== undefined)
-    )
+    );
 
     if (Object.keys(payload).length === 0) {
-      alert('No changes to submit. Please modify a field to update.')
-      return
+      alert("No changes to submit. Please modify a field to update.");
+      return;
     }
 
     updateAuthConfig(
       {
         projectRef,
-        payload,
+        payload
       },
       {
-        onSuccess,
+        onSuccess
       }
-    )
-  }
+    );
+  };
 
   const formInitialValues = useMemo(() => {
     if (!allInitialValues) {
-      return undefined
+      return undefined;
     }
-    const schemaKeys = Object.keys(actualSchema.shape)
+    const schemaKeys = Object.keys(actualSchema.shape);
     const result = schemaKeys.reduce(
       (acc, key) => {
         if (Object.prototype.hasOwnProperty.call(allInitialValues, key)) {
-          acc[key] = allInitialValues[key]
+          acc[key] = allInitialValues[key];
         }
-        return acc
+        return acc;
       },
       {} as Record<string, any>
-    )
+    );
 
-    return result
-  }, [allInitialValues, actualSchema])
+    return result;
+  }, [allInitialValues, actualSchema]);
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-6 pt-4 lg:p-12 lg:pt-12">
-      <h2 className="lg:text-xl font-semibold mb-2 lg:mb-4">{title}</h2>
+    <div className="mx-auto w-full max-w-3xl p-6 pt-4 lg:p-12 lg:pt-12">
+      <h2 className="mb-2 font-semibold lg:mb-4 lg:text-xl">{title}</h2>
       <DynamicForm
         schema={actualSchema}
         onSubmit={handleUpdateAuthConfig}
@@ -88,60 +85,60 @@ function ProviderSettingsView({
         labels={authFieldLabels}
       />
     </div>
-  )
+  );
 }
 
 export function AuthManager({ projectRef }: { projectRef: string }) {
   const {
     data: authConfigData,
     isLoading: isLoadingConfig,
-    error: errorLoadingConfig,
-  } = useGetAuthConfig(projectRef)
+    error: errorLoadingConfig
+  } = useGetAuthConfig(projectRef);
 
-  const { mutate: updateAuthConfig, isPending: isUpdatingConfig } = useUpdateAuthConfig()
-  const { push, pop } = useSheetNavigation()
+  const { mutate: updateAuthConfig, isPending: isUpdatingConfig } = useUpdateAuthConfig();
+  const { push, pop } = useSheetNavigation();
 
   const handleUpdateGeneralSettings = (formData: AuthGeneralSettingsSchema) => {
     const payload = Object.fromEntries(
       Object.entries(formData).filter(([_, value]) => value !== undefined)
-    )
+    );
 
     if (Object.keys(payload).length === 0) {
-      alert('No changes to submit. Please modify a field to update.')
-      return
+      alert("No changes to submit. Please modify a field to update.");
+      return;
     }
 
     updateAuthConfig({
       projectRef,
-      payload,
-    })
-  }
+      payload
+    });
+  };
 
   const providers: {
-    name: string
-    icon: React.ReactNode
-    description: string
-    schema: z.ZodObject<any> | z.ZodEffects<z.ZodObject<any>>
+    name: string;
+    icon: React.ReactNode;
+    description: string;
+    schema: z.ZodObject<any> | z.ZodEffects<z.ZodObject<any>>;
   }[] = [
     {
-      icon: <Mail className="h-4 w-4 text-muted-foreground" />,
-      name: 'Email',
-      description: 'Sign in with email and password',
-      schema: authEmailProviderSchema,
+      icon: <Mail className="text-muted-foreground h-4 w-4" />,
+      name: "Email",
+      description: "Sign in with email and password",
+      schema: authEmailProviderSchema
     },
     {
-      icon: <Phone className="h-4 w-4 text-muted-foreground" />,
-      name: 'Phone',
-      description: 'Sign in with phone number',
-      schema: authPhoneProviderSchema,
+      icon: <Phone className="text-muted-foreground h-4 w-4" />,
+      name: "Phone",
+      description: "Sign in with phone number",
+      schema: authPhoneProviderSchema
     },
     {
-      icon: <User className="h-4 w-4 text-muted-foreground" />,
-      name: 'Google',
-      description: 'Sign in with Google',
-      schema: authGoogleProviderSchema,
-    },
-  ]
+      icon: <User className="text-muted-foreground h-4 w-4" />,
+      name: "Google",
+      description: "Sign in with Google",
+      schema: authGoogleProviderSchema
+    }
+  ];
 
   const handleProviderClick = useCallback(
     (provider: { name: string; schema: z.ZodObject<any> | z.ZodEffects<z.ZodObject<any>> }) => {
@@ -155,31 +152,31 @@ export function AuthManager({ projectRef }: { projectRef: string }) {
             initialValues={authConfigData}
             onSuccess={() => pop()}
           />
-        ),
-      })
+        )
+      });
     },
     [projectRef, authConfigData, push, pop]
-  )
+  );
 
   const formInitialValues = useMemo(() => {
     if (!authConfigData) {
-      return undefined
+      return undefined;
     }
-    const schemaKeys = Object.keys(authGeneralSettingsSchema.shape)
+    const schemaKeys = Object.keys(authGeneralSettingsSchema.shape);
     return schemaKeys.reduce(
       (acc, key) => {
         if (Object.prototype.hasOwnProperty.call(authConfigData, key)) {
-          acc[key] = authConfigData[key as keyof typeof authConfigData]
+          acc[key] = authConfigData[key as keyof typeof authConfigData];
         }
-        return acc
+        return acc;
       },
       {} as Record<string, any>
-    )
-  }, [authConfigData])
+    );
+  }, [authConfigData]);
 
   if (errorLoadingConfig) {
     return (
-      <div className="mx-6 lg:mx-8 mt-8">
+      <div className="mx-6 mt-8 lg:mx-8">
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Error loading auth settings</AlertTitle>
@@ -188,23 +185,23 @@ export function AuthManager({ projectRef }: { projectRef: string }) {
           </AlertDescription>
         </Alert>
       </div>
-    )
+    );
   }
 
   if (isLoadingConfig)
     return (
-      <div className="w-full max-w-3xl mx-auto p-12 space-y-2">
-        <Skeleton className="h-12 w-full mb-8" />
+      <div className="mx-auto w-full max-w-3xl space-y-2 p-12">
+        <Skeleton className="mb-8 h-12 w-full" />
         <Skeleton className="h-12 w-full" />
         <Skeleton className="h-12 w-full" />
       </div>
-    )
+    );
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-6 pt-4 lg:p-12 lg:pt-12">
+    <div className="mx-auto w-full max-w-3xl p-6 pt-4 lg:p-12 lg:pt-12">
       <div className="mb-12">
-        <h2 className="text-base lg:text-xl font-semibold">General Settings</h2>
-        <p className="text-sm lg:text-base text-muted-foreground mt-1 mb-2">
+        <h2 className="text-base font-semibold lg:text-xl">General Settings</h2>
+        <p className="text-muted-foreground mt-1 mb-2 text-sm lg:text-base">
           Allow people to sign up to your app
         </p>
         <DynamicForm
@@ -217,28 +214,28 @@ export function AuthManager({ projectRef }: { projectRef: string }) {
       </div>
       <div>
         <h2 className="font-semibold lg:text-lg">Sign in methods</h2>
-        <p className="text-muted-foreground mb-6 mt-1 text-sm lg:text-base">
+        <p className="text-muted-foreground mt-1 mb-6 text-sm lg:text-base">
           Configure how people sign in and up to your app.
         </p>
-        <div className="border rounded-md overflow-hidden bg-background">
+        <div className="bg-background overflow-hidden rounded-md border">
           {providers.map((provider) => (
             <Button
               variant="ghost"
               size="lg"
               onClick={() => handleProviderClick(provider)}
               key={provider.name}
-              className="rounded-none justify-start flex-row text-left h-auto px-8 py-4 w-full gap-4 border-b last:border-b-0"
+              className="h-auto w-full flex-row justify-start gap-4 rounded-none border-b px-8 py-4 text-left last:border-b-0"
             >
               {provider.icon}
               <div className="flex-1">
                 <h3 className="font-bold">{provider.name}</h3>
                 <p className="text-muted-foreground text-sm">{provider.description}</p>
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <ChevronRight className="text-muted-foreground h-4 w-4" />
             </Button>
           ))}
         </div>
       </div>
     </div>
-  )
+  );
 }

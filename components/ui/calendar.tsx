@@ -308,7 +308,8 @@ function Nav({
             ? `Go to the previous ${displayYears.to - displayYears.from + 1} years`
             : labelPrevious(previousMonth)
         }
-        onClick={handlePreviousClick}>
+        onClick={handlePreviousClick}
+      >
         <ChevronLeft className="h-4 w-4" />
       </Button>
 
@@ -323,7 +324,8 @@ function Nav({
             ? `Go to the next ${displayYears.to - displayYears.from + 1} years`
             : labelNext(nextMonth)
         }
-        onClick={handleNextClick}>
+        onClick={handleNextClick}
+      >
         <ChevronRight className="h-4 w-4" />
       </Button>
     </nav>
@@ -349,7 +351,8 @@ function CaptionLabel({
       className="h-7 w-full truncate text-sm font-medium"
       variant="ghost"
       size="sm"
-      onClick={() => setNavView((prev) => (prev === "days" ? "years" : "days"))}>
+      onClick={() => setNavView((prev) => (prev === "days" ? "years" : "days"))}
+    >
       {navView === "days" ? children : displayYears.from + " - " + displayYears.to}
     </Button>
   );
@@ -436,7 +439,8 @@ function YearGrid({
                 new Date(displayYears.from + i, (selected as Date | undefined)?.getMonth() ?? 0)
               );
             }}
-            disabled={navView === "years" ? isDisabled : undefined}>
+            disabled={navView === "years" ? isDisabled : undefined}
+          >
             {displayYears.from + i}
           </Button>
         );

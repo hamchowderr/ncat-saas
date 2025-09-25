@@ -29,7 +29,8 @@ function Suggestion({
         variant={variant || "outline"}
         size={size || "lg"}
         className={cn("rounded-full", className)}
-        {...props}>
+        {...props}
+      >
         {children}
       </Button>
     );
@@ -45,7 +46,8 @@ function Suggestion({
           "hover:bg-accent",
           className
         )}
-        {...props}>
+        {...props}
+      >
         {children}
       </Button>
     );
@@ -65,7 +67,8 @@ function Suggestion({
         "hover:bg-accent",
         className
       )}
-      {...props}>
+      {...props}
+    >
       {shouldHighlight ? (
         (() => {
           const index = contentLower.indexOf(highlightLower);

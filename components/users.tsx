@@ -1,26 +1,26 @@
-'use client'
+"use client";
 
-import { SqlEditor } from '@/components/sql-editor'
-import { useState } from 'react'
+import { SqlEditor } from "@/components/sql-editor";
+import { useState } from "react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { UsersGrowthChart } from '@/components/users-growth-chart'
+  SelectValue
+} from "@/components/ui/select";
+import { UsersGrowthChart } from "@/components/users-growth-chart";
 
 export function UsersManager({ projectRef }: { projectRef: string }) {
-  const [timeRange, setTimeRange] = useState(90)
-  const defaultSql = `SELECT * FROM auth.users ORDER BY created_at DESC LIMIT 100;`
+  const [timeRange, setTimeRange] = useState(90);
+  const defaultSql = `SELECT * FROM auth.users ORDER BY created_at DESC LIMIT 100;`;
 
   return (
     <div className="pb-8">
       <div className="flex items-center justify-between p-6 pt-4 lg:p-8 lg:pt-8">
         <div className="flex-1">
-          <h1 className="text-base lg:text-xl font-semibold">Users</h1>
-          <p className="hidden lg:block text-sm lg:text-base text-muted-foreground mt-1">
+          <h1 className="text-base font-semibold lg:text-xl">Users</h1>
+          <p className="text-muted-foreground mt-1 hidden text-sm lg:block lg:text-base">
             View user signups over time
           </p>
         </div>
@@ -55,5 +55,5 @@ export function UsersManager({ projectRef }: { projectRef: string }) {
         runAutomatically={true}
       />
     </div>
-  )
+  );
 }

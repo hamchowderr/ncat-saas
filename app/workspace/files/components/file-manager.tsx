@@ -34,7 +34,7 @@ import { Database } from "@/lib/database.types";
 import FileManagerPagination from "./pagination";
 
 // Use the proper database type for file records
-export type FileItem = Database['public']['Tables']['files']['Row'];
+export type FileItem = Database["public"]["Tables"]["files"]["Row"];
 
 function formatFileSize(bytes: number | null): string {
   if (!bytes || bytes === 0) return "0 Bytes";
@@ -55,14 +55,26 @@ function getFileIcon(mimeType: string | null) {
     return <File className="h-5 w-5 text-purple-500" />;
   }
   if (mimeType.startsWith("audio/")) {
-    return <div className="flex h-5 w-5 items-center justify-center rounded bg-green-600 text-xs font-bold text-white">♪</div>;
+    return (
+      <div className="flex h-5 w-5 items-center justify-center rounded bg-green-600 text-xs font-bold text-white">
+        ♪
+      </div>
+    );
   }
   switch (mimeType) {
     case "application/pdf":
-      return <div className="flex h-5 w-5 items-center justify-center rounded bg-red-600 text-xs font-bold text-white"><FileTextIcon className="size-3" /></div>;
+      return (
+        <div className="flex h-5 w-5 items-center justify-center rounded bg-red-600 text-xs font-bold text-white">
+          <FileTextIcon className="size-3" />
+        </div>
+      );
     case "application/msword":
     case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-      return <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-600 text-xs font-bold text-white">W</div>;
+      return (
+        <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-600 text-xs font-bold text-white">
+          W
+        </div>
+      );
     default:
       return <File className="h-5 w-5 text-gray-500" />;
   }
@@ -95,29 +107,32 @@ export function FileManager() {
 
     try {
       // Get session to ensure proper authentication for RLS
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error: sessionError
+      } = await supabase.auth.getSession();
 
       if (sessionError) {
-        console.error('Session error:', sessionError);
-        setLastFetchError('Session error - please refresh the page');
+        console.error("Session error:", sessionError);
+        setLastFetchError("Session error - please refresh the page");
         setIsLoading(false);
         return;
       }
 
       if (!session?.user) {
-        console.error('No authenticated session');
-        setLastFetchError('Not authenticated - please log in again');
+        console.error("No authenticated session");
+        setLastFetchError("Not authenticated - please log in again");
         setIsLoading(false);
         return;
       }
 
       const { data, error } = await supabase
-        .from('files')
-        .select('*')
-        .eq('user_id', session.user.id);
+        .from("files")
+        .select("*")
+        .eq("user_id", session.user.id);
 
       if (error) {
-        console.error('Error fetching files:', error);
+        console.error("Error fetching files:", error);
 
         // Retry logic for production consistency issues
         if (retryCount < 3) {
@@ -136,7 +151,7 @@ export function FileManager() {
         setIsLoading(false);
       }
     } catch (error) {
-      console.error('Fetch files error:', error);
+      console.error("Fetch files error:", error);
 
       // Retry logic for network/connection errors
       if (retryCount < 3) {
@@ -146,7 +161,9 @@ export function FileManager() {
           fetchFiles(retryCount + 1, false);
         }, delay);
       } else {
-        setLastFetchError(`Failed to load files: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        setLastFetchError(
+          `Failed to load files: ${error instanceof Error ? error.message : "Unknown error"}`
+        );
         setIsLoading(false);
       }
     }
@@ -234,12 +251,12 @@ export function FileManager() {
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
 
   const FileDetailContent = ({ selectedItem }: { selectedItem: FileItem }) => {
     return (
@@ -262,7 +279,9 @@ export function FileManager() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground text-sm">Size</span>
-              <span className="text-foreground text-sm">{formatFileSize(selectedItem.file_size ?? 0)}</span>
+              <span className="text-foreground text-sm">
+                {formatFileSize(selectedItem.file_size ?? 0)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground text-sm">Owner</span>
@@ -270,17 +289,23 @@ export function FileManager() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground text-sm">Location</span>
-              <span className="text-sm">
-                My Files
-              </span>
+              <span className="text-sm">My Files</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground text-sm">Modified</span>
-              <span className="text-foreground text-sm">{selectedItem.created_at ? new Date(selectedItem.created_at).toLocaleDateString() : 'N/A'}</span>
+              <span className="text-foreground text-sm">
+                {selectedItem.created_at
+                  ? new Date(selectedItem.created_at).toLocaleDateString()
+                  : "N/A"}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground text-sm">Created</span>
-              <span className="text-foreground text-sm">{selectedItem.created_at ? new Date(selectedItem.created_at).toLocaleDateString() : 'N/A'}</span>
+              <span className="text-foreground text-sm">
+                {selectedItem.created_at
+                  ? new Date(selectedItem.created_at).toLocaleDateString()
+                  : "N/A"}
+              </span>
             </div>
           </div>
         </div>
@@ -317,17 +342,19 @@ export function FileManager() {
           </div>
 
           <div className="border-border flex items-center justify-between gap-2">
-            <FileUploadDialog onUploadSuccess={(uploadedFiles) => {
-              // Optimistic update: immediately add uploaded files to the UI
-              if (uploadedFiles && uploadedFiles.length > 0) {
-                setAllFileItems(prev => [...uploadedFiles, ...prev]);
-              }
+            <FileUploadDialog
+              onUploadSuccess={(uploadedFiles) => {
+                // Optimistic update: immediately add uploaded files to the UI
+                if (uploadedFiles && uploadedFiles.length > 0) {
+                  setAllFileItems((prev) => [...uploadedFiles, ...prev]);
+                }
 
-              // Background refresh to ensure consistency with delay for production
-              setTimeout(() => {
-                fetchFiles(0, false);
-              }, 500);
-            }} />
+                // Background refresh to ensure consistency with delay for production
+                setTimeout(() => {
+                  fetchFiles(0, false);
+                }, 500);
+              }}
+            />
           </div>
         </div>
 
@@ -364,7 +391,9 @@ export function FileManager() {
                     placeholder="Search for files and folders..."
                     className="bg-background w-full border-0 shadow-none focus:ring-0!"
                     value={searchQuery}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setSearchQuery(e.target.value)
+                    }
                   />
                 )}
               </div>
@@ -409,7 +438,8 @@ export function FileManager() {
                   "hover:bg-muted flex cursor-pointer items-center justify-between border-b p-2 lg:p-4",
                   selectedItem?.id === item.id && "bg-muted"
                 )}
-                onClick={() => handleItemClick(item)}>
+                onClick={() => handleItemClick(item)}
+              >
                 <div className="flex min-w-0 items-center space-x-4">
                   <Checkbox
                     defaultChecked={selectedItem?.id === item.id}
@@ -421,8 +451,12 @@ export function FileManager() {
                 </div>
 
                 <div className="text-muted-foreground flex items-center space-x-4 text-sm">
-                  <span className="hidden w-16 text-right lg:inline">{item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'}</span>
-                  <span className="hidden w-16 text-right lg:inline">{formatFileSize(item.file_size ?? 0)}</span>
+                  <span className="hidden w-16 text-right lg:inline">
+                    {item.created_at ? new Date(item.created_at).toLocaleDateString() : "N/A"}
+                  </span>
+                  <span className="hidden w-16 text-right lg:inline">
+                    {formatFileSize(item.file_size ?? 0)}
+                  </span>
                   <Avatar className="h-6 w-6">
                     <AvatarImage src="/placeholder.svg" />
                     <AvatarFallback className="text-xs">U</AvatarFallback>
@@ -459,17 +493,19 @@ export function FileManager() {
                   <FolderPlus className="mx-auto size-14 opacity-50" />
                   <h2 className="text-muted-foreground">No files uploaded yet.</h2>
                   <div>
-                    <FileUploadDialog onUploadSuccess={(uploadedFiles) => {
-                      // Optimistic update: immediately add uploaded files to the UI
-                      if (uploadedFiles && uploadedFiles.length > 0) {
-                        setAllFileItems(prev => [...uploadedFiles, ...prev]);
-                      }
+                    <FileUploadDialog
+                      onUploadSuccess={(uploadedFiles) => {
+                        // Optimistic update: immediately add uploaded files to the UI
+                        if (uploadedFiles && uploadedFiles.length > 0) {
+                          setAllFileItems((prev) => [...uploadedFiles, ...prev]);
+                        }
 
-                      // Background refresh to ensure consistency with delay for production
-                      setTimeout(() => {
-                        fetchFiles(0, false);
-                      }, 500);
-                    }} />
+                        // Background refresh to ensure consistency with delay for production
+                        setTimeout(() => {
+                          fetchFiles(0, false);
+                        }, 500);
+                      }}
+                    />
                   </div>
                 </div>
               </div>
@@ -489,7 +525,8 @@ export function FileManager() {
                 onClick={() => setSelectedItem(null)}
                 variant="ghost"
                 size="icon"
-                className="absolute top-2 right-0">
+                className="absolute top-2 right-0"
+              >
                 <XIcon />
               </Button>
               <FileDetailContent selectedItem={selectedItem} />

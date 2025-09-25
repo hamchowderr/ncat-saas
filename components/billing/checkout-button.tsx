@@ -1,16 +1,16 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { CreditCard, Loader2 } from 'lucide-react'
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { CreditCard, Loader2 } from "lucide-react";
 
 interface CheckoutButtonProps {
-  priceId: string
-  planName: string
-  customerId?: string
-  className?: string
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
-  size?: 'default' | 'sm' | 'lg' | 'icon'
+  priceId: string;
+  planName: string;
+  customerId?: string;
+  className?: string;
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  size?: "default" | "sm" | "lg" | "icon";
 }
 
 export function CheckoutButton({
@@ -18,39 +18,39 @@ export function CheckoutButton({
   planName,
   customerId,
   className,
-  variant = 'default',
-  size = 'default'
+  variant = "default",
+  size = "default"
 }: CheckoutButtonProps) {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const handleCheckout = async () => {
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const response = await fetch('/api/billing/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           priceId,
           customerId,
           successUrl: `${window.location.origin}/billing?success=true&plan=${encodeURIComponent(planName)}`,
           cancelUrl: `${window.location.origin}/pricing?canceled=true`
         })
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to create checkout session')
+        throw new Error("Failed to create checkout session");
       }
 
-      const { url } = await response.json()
-      window.location.href = url
+      const { url } = await response.json();
+      window.location.href = url;
     } catch (error) {
-      console.error('Error creating checkout session:', error)
-      alert('Failed to start checkout. Please try again.')
+      console.error("Error creating checkout session:", error);
+      alert("Failed to start checkout. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Button
@@ -72,5 +72,5 @@ export function CheckoutButton({
         </>
       )}
     </Button>
-  )
+  );
 }

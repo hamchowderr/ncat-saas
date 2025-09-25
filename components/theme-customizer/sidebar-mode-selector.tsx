@@ -13,14 +13,16 @@ export function SidebarModeSelector() {
       <ToggleGroup
         type="single"
         onValueChange={() => toggleSidebar()}
-        className="*:border-input w-full gap-4 *:rounded-md *:border">
+        className="*:border-input w-full gap-4 *:rounded-md *:border"
+      >
         <ToggleGroupItem variant="outline" value="full">
           Default
         </ToggleGroupItem>
         <ToggleGroupItem
           variant="outline"
           value="centered"
-          className="data-[variant=outline]:border-l-1">
+          className="data-[variant=outline]:border-l-1"
+        >
           Icon
         </ToggleGroupItem>
       </ToggleGroup>

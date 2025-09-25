@@ -35,7 +35,8 @@ export function VideoCallDialog() {
           </Button>
           <Button
             variant="destructive"
-            className="size-12 rounded-full bg-green-600 hover:bg-green-700 dark:bg-green-950">
+            className="size-12 rounded-full bg-green-600 hover:bg-green-700 dark:bg-green-950"
+          >
             <Phone />
           </Button>
         </div>

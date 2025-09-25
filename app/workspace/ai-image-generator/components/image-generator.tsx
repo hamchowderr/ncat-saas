@@ -145,7 +145,8 @@ export default function ImageGenerator() {
               <Drawer
                 open={mobileFormOpen}
                 onOpenChange={setMobileFormOpen}
-                repositionInputs={false}>
+                repositionInputs={false}
+              >
                 <DrawerTrigger asChild className="flex lg:hidden">
                   <Button variant="default" size="sm">
                     <Wand2 />

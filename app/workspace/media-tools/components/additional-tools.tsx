@@ -28,9 +28,13 @@ export function FFmpegComposeTool({ executeTool, loading, results }: any) {
           className="w-full"
         >
           {loading === "ffmpeg-compose" ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</>
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...
+            </>
           ) : (
-            <><Play className="mr-2 h-4 w-4" /> Execute</>
+            <>
+              <Play className="mr-2 h-4 w-4" /> Execute
+            </>
           )}
         </Button>
       </div>
@@ -66,14 +70,24 @@ export function ImageToVideoTool({ executeTool, loading, results }: any) {
           />
         </div>
         <Button
-          onClick={() => executeTool("/v1/image/convert/video", { image_url: imageUrl, duration: parseInt(duration) }, "image-to-video")}
+          onClick={() =>
+            executeTool(
+              "/v1/image/convert/video",
+              { image_url: imageUrl, duration: parseInt(duration) },
+              "image-to-video"
+            )
+          }
           disabled={loading === "image-to-video" || !imageUrl}
           className="w-full"
         >
           {loading === "image-to-video" ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Converting...</>
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Converting...
+            </>
           ) : (
-            <><Play className="mr-2 h-4 w-4" /> Convert</>
+            <>
+              <Play className="mr-2 h-4 w-4" /> Convert
+            </>
           )}
         </Button>
       </div>
@@ -121,17 +135,27 @@ export function WebpageScreenshotTool({ executeTool, loading, results }: any) {
           </div>
         </div>
         <Button
-          onClick={() => executeTool("/v1/image/screenshot/webpage", { 
-            url, 
-            viewport: { width: parseInt(width), height: parseInt(height) }
-          }, "webpage-screenshot")}
+          onClick={() =>
+            executeTool(
+              "/v1/image/screenshot/webpage",
+              {
+                url,
+                viewport: { width: parseInt(width), height: parseInt(height) }
+              },
+              "webpage-screenshot"
+            )
+          }
           disabled={loading === "webpage-screenshot" || !url}
           className="w-full"
         >
           {loading === "webpage-screenshot" ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Capturing...</>
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Capturing...
+            </>
           ) : (
-            <><Play className="mr-2 h-4 w-4" /> Screenshot</>
+            <>
+              <Play className="mr-2 h-4 w-4" /> Screenshot
+            </>
           )}
         </Button>
       </div>
@@ -166,14 +190,24 @@ export function MediaConvertTool({ executeTool, loading, results }: any) {
           />
         </div>
         <Button
-          onClick={() => executeTool("/v1/media/convert", { media_url: mediaUrl, output_format: outputFormat }, "media-convert")}
+          onClick={() =>
+            executeTool(
+              "/v1/media/convert",
+              { media_url: mediaUrl, output_format: outputFormat },
+              "media-convert"
+            )
+          }
           disabled={loading === "media-convert" || !mediaUrl}
           className="w-full"
         >
           {loading === "media-convert" ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Converting...</>
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Converting...
+            </>
           ) : (
-            <><Play className="mr-2 h-4 w-4" /> Convert</>
+            <>
+              <Play className="mr-2 h-4 w-4" /> Convert
+            </>
           )}
         </Button>
       </div>
@@ -197,14 +231,20 @@ export function MediaToMp3Tool({ executeTool, loading, results }: any) {
           />
         </div>
         <Button
-          onClick={() => executeTool("/v1/media/convert/mp3", { media_url: mediaUrl }, "media-to-mp3")}
+          onClick={() =>
+            executeTool("/v1/media/convert/mp3", { media_url: mediaUrl }, "media-to-mp3")
+          }
           disabled={loading === "media-to-mp3" || !mediaUrl}
           className="w-full"
         >
           {loading === "media-to-mp3" ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Converting...</>
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Converting...
+            </>
           ) : (
-            <><Play className="mr-2 h-4 w-4" /> Convert to MP3</>
+            <>
+              <Play className="mr-2 h-4 w-4" /> Convert to MP3
+            </>
           )}
         </Button>
       </div>

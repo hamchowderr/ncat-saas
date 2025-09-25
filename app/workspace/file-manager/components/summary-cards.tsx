@@ -87,7 +87,8 @@ export function SummaryCards() {
           <CardFooter className="border-border flex items-center justify-end border-t p-0!">
             <Link
               href="#"
-              className="text-primary hover:text-primary/90 flex items-center px-6 py-3 text-sm font-medium">
+              className="text-primary hover:text-primary/90 flex items-center px-6 py-3 text-sm font-medium"
+            >
               View more <ArrowRightIcon className="ms-1 size-4" />
             </Link>
           </CardFooter>

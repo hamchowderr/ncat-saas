@@ -23,7 +23,8 @@ export default async function BillingLayout({
           "--sidebar-width": "calc(var(--spacing) * 64)",
           "--header-height": "calc(var(--spacing) * 14)"
         } as React.CSSProperties
-      }>
+      }
+    >
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />

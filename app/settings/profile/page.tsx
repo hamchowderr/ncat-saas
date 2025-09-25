@@ -174,7 +174,8 @@ export default function Page() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => append({ value: "" })}>
+                onClick={() => append({ value: "" })}
+              >
                 Add URL
               </Button>
             </div>

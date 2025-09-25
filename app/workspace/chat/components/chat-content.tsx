@@ -4,12 +4,7 @@ import { useEffect, useRef } from "react";
 import useChatStore from "../useChatStore";
 import { ChatMessageProps } from "../types";
 
-import {
-  ChatHeader,
-  ChatBubble,
-  ChatFooter,
-  UserDetailSheet
-} from "./index";
+import { ChatHeader, ChatBubble, ChatFooter, UserDetailSheet } from "./index";
 import Image from "next/image";
 
 export function ChatContent() {

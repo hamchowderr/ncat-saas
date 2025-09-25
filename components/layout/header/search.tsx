@@ -72,7 +72,8 @@ export default function Search() {
                     onSelect={() => {
                       setOpen(false);
                       router.push(item.href);
-                    }}>
+                    }}
+                  >
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
                   </CommandItem>

@@ -136,7 +136,8 @@ export default function AppRender() {
       {dismiss && (
         <button
           onClick={() => handleRemoveFile(index)}
-          className="hover:bg-secondary/50 rounded-full p-1">
+          className="hover:bg-secondary/50 rounded-full p-1"
+        >
           <X className="size-4" />
         </button>
       )}
@@ -148,17 +149,20 @@ export default function AppRender() {
       <ChatContainer
         className={cn("relative w-full flex-1 space-y-4 pe-2", { hidden: !isFirstResponse })}
         ref={containerRef}
-        scrollToRef={bottomRef}>
+        scrollToRef={bottomRef}
+      >
         {messages.map((message) => {
           const isAssistant = message.role === "assistant";
           return (
             <Message
               key={message.id}
-              className={message.role === "user" ? "justify-end" : "justify-start"}>
+              className={message.role === "user" ? "justify-end" : "justify-start"}
+            >
               <div
                 className={cn("max-w-[85%] flex-1 sm:max-w-[75%]", {
                   "justify-end text-end": !isAssistant
-                })}>
+                })}
+              >
                 {isAssistant ? (
                   <div className="bg-muted text-foreground prose rounded-lg border px-3 py-2">
                     <Markdown className={"space-y-4"}>{message.content}</Markdown>
@@ -205,7 +209,8 @@ export default function AppRender() {
         value={prompt}
         onValueChange={setPrompt}
         onSubmit={streamResponse}
-        className="w-full max-w-(--breakpoint-md)">
+        className="w-full max-w-(--breakpoint-md)"
+      >
         {files.length > 0 && (
           <div className="flex flex-wrap gap-2 pb-2">
             {files.map((file, index) => (
@@ -220,7 +225,8 @@ export default function AppRender() {
           <PromptInputAction tooltip="Attach files">
             <label
               htmlFor="file-upload"
-              className="hover:bg-secondary-foreground/10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-2xl">
+              className="hover:bg-secondary-foreground/10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-2xl"
+            >
               <input
                 type="file"
                 multiple
@@ -237,7 +243,8 @@ export default function AppRender() {
               variant="default"
               size="icon"
               className="h-8 w-8 rounded-full"
-              onClick={streamResponse}>
+              onClick={streamResponse}
+            >
               {isStreaming ? <SquareIcon /> : <ArrowUpIcon />}
             </Button>
           </PromptInputAction>

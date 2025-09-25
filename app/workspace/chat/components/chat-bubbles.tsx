@@ -19,12 +19,14 @@ function TextChatBubble({ message }: { message: ChatMessageProps }) {
     <div
       className={cn("max-w-(--breakpoint-sm) space-y-1", {
         "self-end": message.own_message
-      })}>
+      })}
+    >
       <div className="flex items-center gap-2">
         <div
           className={cn("bg-muted inline-flex rounded-md border p-4", {
             "order-1": message.own_message
-          })}>
+          })}
+        >
           {message.content}
         </div>
         <div className={cn({ "order-2": !message.own_message })}>
@@ -48,11 +50,13 @@ function TextChatBubble({ message }: { message: ChatMessageProps }) {
       <div
         className={cn("flex items-center gap-2", {
           "justify-end": message.own_message
-        })}>
+        })}
+      >
         <time
           className={cn("text-muted-foreground mt-1 flex items-center text-xs", {
             "justify-end": message.own_message
-          })}>
+          })}
+        >
           05:23 PM
         </time>
         {message.own_message && <MessageStatusIcon status="read" />}
@@ -66,12 +70,14 @@ function FileChatBubble({ message }: { message: ChatMessageProps }) {
     <div
       className={cn("max-w-(--breakpoint-sm) space-y-1", {
         "self-end": message.own_message
-      })}>
+      })}
+    >
       <div className="flex items-center gap-2">
         <div
           className={cn("bg-muted inline-flex items-start rounded-md border p-4", {
             "order-1": message.own_message
-          })}>
+          })}
+        >
           <FileIcon className="me-4 mt-1 size-8 opacity-50" strokeWidth={1.5} />
           <div className="flex flex-col gap-2">
             <div className="text-sm">
@@ -109,11 +115,13 @@ function FileChatBubble({ message }: { message: ChatMessageProps }) {
       <div
         className={cn("flex items-center gap-2", {
           "justify-end": message.own_message
-        })}>
+        })}
+      >
         <time
           className={cn("text-muted-foreground mt-1 flex items-center text-xs", {
             "justify-end": message.own_message
-          })}>
+          })}
+        >
           05:23 PM
         </time>
         {message.own_message && <MessageStatusIcon status="read" />}
@@ -127,7 +135,8 @@ function VideoChatBubble({ message }: { message: ChatMessageProps }) {
     <div
       className={cn("max-w-(--breakpoint-sm) space-y-1", {
         "self-end": message.own_message
-      })}>
+      })}
+    >
       <div className="flex items-center gap-4">
         <div
           style={{
@@ -135,7 +144,8 @@ function VideoChatBubble({ message }: { message: ChatMessageProps }) {
           }}
           className={cn(
             "relative order-1 flex aspect-4/3 w-52 shrink-0 cursor-pointer items-center justify-center self-start rounded-lg bg-cover transition-opacity hover:opacity-90"
-          )}>
+          )}
+        >
           <PlayIcon className="size-8 text-white/80" />
           <div className="absolute end-2 top-2 text-xs font-semibold text-white/60">
             {message?.data?.duration}
@@ -162,11 +172,13 @@ function VideoChatBubble({ message }: { message: ChatMessageProps }) {
       <div
         className={cn("flex items-center gap-2", {
           "justify-end": message.own_message
-        })}>
+        })}
+      >
         <time
           className={cn("text-muted-foreground mt-1 flex items-center text-xs", {
             "justify-end": message.own_message
-          })}>
+          })}
+        >
           05:23 PM
         </time>
         {message.own_message && <MessageStatusIcon status="read" />}
@@ -180,12 +192,14 @@ function SoundChatBubble({ message }: { message: ChatMessageProps }) {
     <div
       className={cn("max-w-(--breakpoint-sm)", {
         "self-end": message.own_message
-      })}>
+      })}
+    >
       <div className="flex items-center gap-2">
         <div
           className={cn("bg-muted inline-flex gap-4 rounded-md p-4", {
             "relative order-1 flex items-center justify-center": message.own_message
-          })}>
+          })}
+        >
           {message.content}
           <audio id="song" className="block w-80" controls>
             <source src={message?.data?.path} type="audio/mpeg" />
@@ -212,11 +226,13 @@ function SoundChatBubble({ message }: { message: ChatMessageProps }) {
       <div
         className={cn("flex items-center gap-2", {
           "justify-end": message.own_message
-        })}>
+        })}
+      >
         <time
           className={cn("text-muted-foreground mt-1 flex items-center text-sm", {
             "justify-end": message.own_message
-          })}>
+          })}
+        >
           05:23 PM
         </time>
         {message.own_message && <MessageStatusIcon status="read" />}
@@ -234,23 +250,27 @@ function ImageChatBubble({ message }: { message: ChatMessageProps }) {
     <div
       className={cn("max-w-(--breakpoint-sm)", {
         "self-end": message.own_message
-      })}>
+      })}
+    >
       <div className="flex items-center gap-2">
         <div
           className={cn("bg-muted inline-flex gap-4 rounded-md border p-4", {
             "relative order-1 flex items-center justify-center": message.own_message
-          })}>
+          })}
+        >
           {message.content}
           {images.length && (
             <div
               className={cn("grid gap-2", {
                 "grid-cols-1": images.length === 1,
                 "grid-cols-2": images.length > 1
-              })}>
+              })}
+            >
               {images_with_limit.map((image, key) => (
                 <figure
                   className="relative cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-90"
-                  key={key}>
+                  key={key}
+                >
                   <Image
                     src={image}
                     className="aspect-4/3 object-cover"
@@ -290,11 +310,13 @@ function ImageChatBubble({ message }: { message: ChatMessageProps }) {
       <div
         className={cn("mt-1 flex items-center gap-2", {
           "justify-end": message.own_message
-        })}>
+        })}
+      >
         <time
           className={cn("text-muted-foreground mt-1 flex items-center text-xs", {
             "justify-end": message.own_message
-          })}>
+          })}
+        >
           05:23 PM
         </time>
         {message.own_message && <MessageStatusIcon status="read" />}

@@ -41,7 +41,8 @@ export function CircularLoader({
         "border-primary animate-spin rounded-full border-2 border-t-transparent",
         sizeClasses[size],
         className
-      )}>
+      )}
+    >
       <span className="sr-only">Loading</span>
     </div>
   );
@@ -132,7 +133,8 @@ export function PulseDotLoader({
         "bg-primary animate-[pulse-dot_1.2s_ease-in-out_infinite] rounded-full",
         sizeClasses[size],
         className
-      )}>
+      )}
+    >
       <span className="sr-only">Loading</span>
     </div>
   );
@@ -349,7 +351,8 @@ export function TextBlinkLoader({
         "animate-[text-blink_2s_ease-in-out_infinite] font-medium",
         textSizes[size],
         className
-      )}>
+      )}
+    >
       {text}
     </div>
   );
@@ -378,7 +381,8 @@ export function TextShimmerLoader({
         "animate-[shimmer_4s_infinite_linear]",
         textSizes[size],
         className
-      )}>
+      )}
+    >
       {text}
     </div>
   );

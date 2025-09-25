@@ -15,16 +15,12 @@ export async function generateMetadata() {
 }
 
 async function getChats() {
-  const data = await fs.readFile(
-    path.join(process.cwd(), "app/workspace/chat/data/chats.json")
-  );
+  const data = await fs.readFile(path.join(process.cwd(), "app/workspace/chat/data/chats.json"));
   return JSON.parse(data.toString());
 }
 
 async function getChatUser(id: number) {
-  const data = await fs.readFile(
-    path.join(process.cwd(), "app/workspace/chat/data/contacts.json")
-  );
+  const data = await fs.readFile(path.join(process.cwd(), "app/workspace/chat/data/contacts.json"));
 
   return JSON.parse(data.toString()).find((item: UserPropsTypes) => item.id === id);
 }

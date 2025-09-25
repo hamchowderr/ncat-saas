@@ -41,7 +41,8 @@ export default function ImageItem({ image, onDeleteImage }: ImageItemProps) {
     <>
       <div
         key={image.id}
-        className="group bg-card relative overflow-hidden rounded-lg border transition-all duration-300 hover:shadow-md">
+        className="group bg-card relative overflow-hidden rounded-lg border transition-all duration-300 hover:shadow-md"
+      >
         <div className="relative aspect-square overflow-hidden">
           <img
             src={image.url}
@@ -56,21 +57,24 @@ export default function ImageItem({ image, onDeleteImage }: ImageItemProps) {
               size="icon"
               variant="secondary"
               className="bg-background/90 hover:bg-background h-8 w-8"
-              onClick={() => handleViewImage(image)}>
+              onClick={() => handleViewImage(image)}
+            >
               <Eye className="h-4 w-4" />
             </Button>
             <Button
               size="icon"
               variant="secondary"
               className="bg-background/90 hover:bg-background h-8 w-8"
-              onClick={() => handleDownload(image)}>
+              onClick={() => handleDownload(image)}
+            >
               <Download className="h-4 w-4" />
             </Button>
             <Button
               size="icon"
               variant="destructive"
               className="h-8 w-8"
-              onClick={() => onDeleteImage(image.id)}>
+              onClick={() => onDeleteImage(image.id)}
+            >
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>

@@ -1,33 +1,33 @@
-'use client'
+"use client";
 
-import * as React from 'react'
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import * as React from "react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/chart'
-import { useGetUserCountsByDay } from '@/hooks/use-user-counts'
-import { Skeleton } from '@/components/ui/skeleton'
-import { AlertTriangle } from 'lucide-react'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+  ChartTooltipContent
+} from "@/components/ui/chart";
+import { useGetUserCountsByDay } from "@/hooks/use-user-counts";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const chartConfig = {
   users: {
-    label: 'New Users',
-    color: 'var(--chart-1)',
-  },
-} satisfies ChartConfig
+    label: "New Users",
+    color: "var(--chart-1)"
+  }
+} satisfies ChartConfig;
 
 export function UsersGrowthChart({
   projectRef,
-  timeRange,
+  timeRange
 }: {
-  projectRef: string
-  timeRange: number
+  projectRef: string;
+  timeRange: number;
 }) {
-  const { data: chartData, isLoading, isError } = useGetUserCountsByDay(projectRef, timeRange)
+  const { data: chartData, isLoading, isError } = useGetUserCountsByDay(projectRef, timeRange);
 
   return (
     <div>
@@ -46,7 +46,7 @@ export function UsersGrowthChart({
             data={chartData}
             margin={{
               left: -24,
-              right: 12,
+              right: 12
             }}
           >
             <CartesianGrid vertical={false} />
@@ -57,11 +57,11 @@ export function UsersGrowthChart({
               tickMargin={8}
               minTickGap={32}
               tickFormatter={(value) => {
-                const date = new Date(value)
-                return date.toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                })
+                const date = new Date(value);
+                return date.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric"
+                });
               }}
             />
             <YAxis
@@ -76,11 +76,11 @@ export function UsersGrowthChart({
                 <ChartTooltipContent
                   className="w-[150px]"
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })
+                    return new Date(value).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric"
+                    });
                   }}
                   indicator="dot"
                 />
@@ -91,5 +91,5 @@ export function UsersGrowthChart({
         </ChartContainer>
       )}
     </div>
-  )
+  );
 }

@@ -7,6 +7,7 @@ Built with Next.js 15 and React 19, this interface streamlines advanced media pr
 ## What Can It Do?
 
 The dashboard provides easy access to all NCA Toolkit capabilities:
+
 - Convert and process audio files
 - Create transcriptions of content
 - Add captions to videos
@@ -22,11 +23,13 @@ Easily replace services like ChatGPT Whisper, Cloud Convert, Createomate, JSON2V
 The NCAT SaaS Dashboard includes the following pages and features:
 
 ### Core Dashboard
+
 - **File Manager** - Main dashboard for file management and storage operations
 - **Files** - File access and organization interface
 - **Jobs** - Task management and job monitoring
 
 ### NCA Toolkit Interface
+
 - **Workflows** - Predefined automation workflows including:
   - AI Podcast Creation
   - YouTube ChapterBot
@@ -42,11 +45,13 @@ The NCAT SaaS Dashboard includes the following pages and features:
   - Python code execution
 
 ### Communication & AI
+
 - **Chat** - Team communication interface
 - **AI Chat** - AI assistance and interaction
 - **Image Generator** - AI-powered image creation
 
 ### Administration
+
 - **Users List** - User management and administration
 - **API Keys** - API key management for NCA Toolkit integration
 - **Profile** - User profile management
@@ -59,104 +64,335 @@ The NCAT SaaS Dashboard includes the following pages and features:
 
 Before installing this SaaS dashboard, ensure you have the following:
 
-1. **Docker Desktop**: Required for running Supabase locally. [Download Docker Desktop](https://www.docker.com/products/docker-desktop/)
-2. **Deploy the NCAT API**: Follow the installation guide for the [No-Code Architects Toolkit API](https://github.com/stephengpope/no-code-architects-toolkit)
-3. **Get your API credentials**: Obtain your NCAT API URL and API key from your deployed instance
-4. **Stripe Account**: Set up a Stripe account for payment processing (optional for basic functionality)
+1. **Node.js**: Version 22.18.0 required (check `.nvmrc` for exact version)
+2. **Docker Desktop**: Required for running Supabase locally. [Download Docker Desktop](https://www.docker.com/products/docker-desktop/)
+3. **Supabase Account**: Create a free account at [supabase.com](https://supabase.com)
+4. **Stripe Account**: Set up a Stripe account for payment processing
+5. **Stripe CLI**: Required for local webhook testing. [Install Stripe CLI](https://stripe.com/docs/stripe-cli)
 
-## Installation
+## Development Setup
 
-Follow these steps to get your project up and running locally:
+Follow these steps **in the exact order** to get your project up and running locally:
 
-1. Clone the repository:
+### 1. Clone and Install
 
-    ```sh
-    git clone https://github.com/hamchowderr/ncat-saas.git
-    cd ncat-saas
-    ```
-
-2. Install dependencies:
-
-    ```sh
-    npm install
-    # or
-    yarn install
-    # or
-    pnpm install
-    ```
-
-   If you encounter any problems installing packages, try adding the `--legacy-peer-deps` or `--force` flag:
-
-    ```sh
-    npm install --legacy-peer-deps
-    ```
-
-3. Run the development server:
-
-    ```sh
-    npm run dev
-    # or
-    yarn dev
-    # or
-    pnpm dev
-    ```
-
-3. Open [http://localhost:3000](http://localhost:3000) in your browser to view the result.
-
-4. To edit the project, you can examine the files under the app folder and components folder.
-
-## Minimum system requirements
-
-- Node.js version 20 and above.
-
-Note: If you experience problems with versions above Node.js v20, please replace with version v20.
-
-## Production Configuration
-
-### Edge Function Secrets
-
-For production deployment, you need to configure environment variables as Edge Function Secrets in your Supabase Dashboard. Go to your [Supabase Dashboard Functions Settings](https://supabase.com/dashboard/project/YOUR_PROJECT_ID/settings/functions) and add the following secrets:
-
-#### Required Secrets:
-
-**NCAT API Configuration:**
-```
-NCAT_API_URL=https://api.nocodearchs.com
-NCAT_API_KEY=your_ncat_api_key_here
+```bash
+git clone https://github.com/hamchowderr/ncat-saas.git
+cd ncat-saas
+npm install --legacy-peer-deps
 ```
 
-**Stripe Configuration:**
+### 2. Environment Variables
+
+Create a `.env.local` file in the project root for **LOCAL TESTING**:
+
+```bash
+# ================================
+# SUPABASE CONFIGURATION (REQUIRED)
+# ================================
+# Your Supabase project URL (Project Settings > API)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+
+# Supabase anonymous key (Project Settings > API)
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# Supabase service role key (Project Settings > API) - KEEP SECRET!
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# ================================
+# STRIPE CONFIGURATION (REQUIRED FOR BILLING)
+# ================================
+# Stripe TEST keys (Developers > API Keys)
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_51...
+STRIPE_SECRET_KEY=sk_test_51...
+
+# Stripe webhook signing secret (generated by Stripe CLI - see step 5)
+STRIPE_WEBHOOK_SIGNING_SECRET=whsec_...
+
+# Free plan price ID (create in Stripe Dashboard with metadata: sync_to_app: "true")
+STRIPE_FREE_PRICE_ID=price_1SAgo7CCFNRAwpJserQa3BZG
+
+# ================================
+# LOCAL DEVELOPMENT SETTINGS
+# ================================
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+DATABASE_URL=postgresql://postgres:password@localhost:54322/postgres
+
+# ================================
+# OPTIONAL - FOR ADDITIONAL FEATURES
+# ================================
+# OpenAI for AI features
+OPENAI_API_KEY=sk-...
+
+# Resend for custom emails
+RESEND_API_KEY=re_...
+FROM_EMAIL=noreply@yourdomain.com
+
+# NCAT API for media processing (only URL and key needed)
+NCAT_API_URL=https://your-ncat-api-url.com
+NCAT_API_KEY=your-ncat-api-key
 ```
-STRIPE_API_KEY=sk_live_your_stripe_secret_key_here
-STRIPE_WEBHOOK_SIGNING_SECRET=whsec_your_webhook_signing_secret_here
+
+### 3. Start Supabase Services
+
+**⚠️ CRITICAL: This must be done before Stripe CLI setup!**
+
+```bash
+npx supabase start
+npx supabase functions serve
 ```
 
-#### How to Add Secrets:
+Wait for both services to be fully running before proceeding.
 
-1. Go to your Supabase Dashboard: `https://supabase.com/dashboard/project/YOUR_PROJECT_ID/settings/functions`
-2. Click "Add new secret" for each environment variable
-3. Enter the secret name and value
-4. Save the configuration
+### 4. Database Setup
 
-### Stripe Webhook Configuration
+```bash
+npx supabase db push
+npm run update-types
+```
 
-You'll also need to configure webhooks in your Stripe Dashboard:
+### 5. Stripe Setup
 
-1. Go to your [Stripe Dashboard Webhooks](https://dashboard.stripe.com/webhooks)
-2. Click "Add endpoint"
-3. Set the endpoint URL: `https://YOUR_PROJECT_ID.supabase.co/functions/v1/stripe-webhook`
-4. Select the following events to send:
-   - `customer.created`
-   - `customer.subscription.created`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
-   - `invoice.payment_succeeded`
-   - `invoice.payment_failed`
-5. Copy the webhook signing secret and add it to your Edge Function Secrets as `STRIPE_WEBHOOK_SIGNING_SECRET`
+**Install and authenticate Stripe CLI:**
 
-### Environment Setup Notes:
+```bash
+stripe login
+```
 
-- **Development**: Use test API keys and webhook secrets
-- **Production**: Use live API keys and webhook secrets
-- **Security**: Never commit actual API keys to your repository
-- **Local Development**: Environment variables can be set in `supabase/functions/.env` for local testing
+**Forward webhooks to Supabase Edge Functions:**
+
+```bash
+stripe listen --forward-to http://127.0.0.1:54321/functions/v1/stripe-webhook
+```
+
+**Copy the webhook signing secret** from the Stripe CLI output and add it to your `.env.local` as `STRIPE_WEBHOOK_SIGNING_SECRET`.
+
+### 6. Sync Stripe Products
+
+Create a test product in Stripe with the following metadata:
+
+```json
+{
+  "sync_to_app": "true"
+}
+```
+
+Or trigger a test product creation:
+
+```bash
+stripe trigger product.created
+```
+
+### 7. Start Development Server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Development Commands
+
+### Core Development
+
+- `npm run dev` - Start development server on http://localhost:3000
+- `npm run build` - Build the application for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint for code linting
+- `npm run update-types` - Generate TypeScript types from Supabase database schema
+
+### Supabase Commands
+
+- `npx supabase start` - Start local Supabase stack
+- `npx supabase stop` - Stop local Supabase stack
+- `npx supabase status` - Check local services status
+- `npx supabase db push` - Push migrations to database
+- `npx supabase functions serve` - Serve Edge Functions locally
+
+### Stripe CLI Commands
+
+- `stripe login` - Authenticate with Stripe CLI
+- `stripe listen --forward-to http://127.0.0.1:54321/functions/v1/stripe-webhook` - Forward webhooks to Supabase Edge Function
+- `stripe trigger product.created` - Create test product for billing
+- `stripe trigger customer.subscription.created` - Test subscription creation
+- `stripe logs tail` - View real-time API request logs
+
+### Testing
+
+- `npx playwright test` - Run all E2E tests
+- `npx playwright test --ui` - Run tests with interactive UI
+- `npx playwright install` - Install required browsers
+
+## Development Workflow
+
+### Making Changes and Adding Features
+
+**⚠️ IMPORTANT: Always follow this sequence when making changes:**
+
+#### 1. Pre-Development Quality Checks
+
+```bash
+# 1. Lint check (fix errors before proceeding)
+npm run lint
+
+# 2. Build check (ensure codebase builds)
+npm run build
+
+# 3. Type check
+npm run update-types
+```
+
+#### 2. Make Your Changes
+
+- Edit files as needed
+- Follow existing code patterns
+- Test locally in browser
+
+#### 3. Database Changes (If Applicable)
+
+```bash
+# Apply database migrations
+npx supabase db push
+
+# Update TypeScript types
+npm run update-types
+
+# Check database in Supabase Studio: http://localhost:54323
+```
+
+#### 4. Post-Development Quality Validation
+
+```bash
+# 1. Format code
+npx prettier --write .
+
+# 2. Run linting
+npm run lint
+
+# 3. Build project
+npm run build
+
+# 4. Run tests
+npx playwright test
+```
+
+#### 5. Final Testing
+
+```bash
+# Start fresh dev server
+npm run dev
+
+# Test at http://localhost:3000
+```
+
+### Pre-Commit Checklist
+
+Before committing any changes:
+
+- [ ] `npm run lint` passes
+- [ ] `npm run build` succeeds
+- [ ] `npx prettier --write .` applied
+- [ ] `npx supabase db push` (if database changes)
+- [ ] `npm run update-types` (if schema changes)
+- [ ] `npx playwright test` passes
+- [ ] Manual browser testing complete
+- [ ] Stripe webhooks working (if billing changes)
+
+### Database Migration Workflow
+
+```bash
+# 1. Edit migration files in /supabase/migrations/
+# 2. Apply locally
+npx supabase db push
+# 3. Update types
+npm run update-types
+# 4. Test in Supabase Studio (http://localhost:54323)
+# 5. Verify RLS policies work
+# 6. Test with frontend
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Subscription not showing**: Ensure products are synced to database with `stripe trigger product.created`
+
+2. **Webhook errors**: Make sure Supabase services are running before starting Stripe CLI
+
+3. **Port conflicts**: All development uses port 3000 by default
+
+4. **Database connection issues**: Run `npx supabase db push` to apply all migrations
+
+### Setup Order Issues
+
+The most common problem is starting services in the wrong order. Always follow this sequence:
+
+1. ✅ Start Supabase stack
+2. ✅ Start Edge Functions
+3. ✅ Apply database migrations
+4. ✅ Start Stripe CLI webhook forwarding
+5. ✅ Start development server
+
+### Required System Requirements
+
+- **Node.js**: Version 22.18.0 (check `.nvmrc`)
+- **Docker**: Required for Supabase local development
+- **Stripe CLI**: Required for webhook testing
+
+## Production Deployment
+
+### Environment Configuration for Production
+
+Production requires configuring variables in **TWO** places:
+
+#### 1. Supabase Edge Function Secrets
+
+Go to [Supabase Dashboard Functions Settings](https://supabase.com/dashboard/project/YOUR_PROJECT_ID/settings/functions):
+
+```bash
+# Edge Function Secrets (for webhook processing)
+STRIPE_SECRET_KEY=sk_live_your_live_secret_key
+STRIPE_WEBHOOK_SIGNING_SECRET=whsec_your_production_webhook_secret
+STRIPE_FREE_PRICE_ID=price_your_live_price_id
+NCAT_API_URL=https://your-production-ncat-api.com
+NCAT_API_KEY=your_production_ncat_api_key
+OPENAI_API_KEY=sk-your_openai_key
+RESEND_API_KEY=re_your_resend_key
+FROM_EMAIL=noreply@yourdomain.com
+```
+
+#### 2. Hosting Platform Environment Variables
+
+**For Netlify/Vercel/Other Hosting** (client-side and API routes):
+
+```bash
+# Public variables (exposed to client)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_your_live_publishable_key
+NEXT_PUBLIC_BASE_URL=https://yourdomain.com
+
+# Server-side secrets
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+STRIPE_SECRET_KEY=sk_live_your_live_secret_key
+OPENAI_API_KEY=sk-your_openai_key
+RESEND_API_KEY=re_your_resend_key
+```
+
+### Production Webhook Setup
+
+**Stripe Webhook Configuration:**
+
+1. Go to [Stripe Dashboard Webhooks](https://dashboard.stripe.com/webhooks)
+2. Add endpoint: `https://YOUR_PROJECT_ID.supabase.co/functions/v1/stripe-webhook`
+3. Select events: `customer.*`, `invoice.*`, `product.*`, `price.*`, `customer.subscription.*`
+4. Copy the signing secret to **BOTH** Edge Function Secrets AND hosting platform variables
+
+### Key Production Notes:
+
+**🔑 Important Differences:**
+
+- **Local**: Use TEST keys (`pk_test_`, `sk_test_`)
+- **Production**: Use LIVE keys (`pk_live_`, `sk_live_`)
+- **Webhook Secret**: Different for local (Stripe CLI) vs production (Dashboard)
+- **Service Role Key**: Same for local and production (handle with extreme care)

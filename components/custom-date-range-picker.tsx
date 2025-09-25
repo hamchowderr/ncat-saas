@@ -113,7 +113,8 @@ export default function CalendarDateRangePicker({
                       className={cn(
                         "justify-start text-left font-normal",
                         !date && "text-muted-foreground"
-                      )}>
+                      )}
+                    >
                       <CalendarIcon />
                     </Button>
                   </TooltipTrigger>
@@ -140,7 +141,8 @@ export default function CalendarDateRangePicker({
               className={cn(
                 "justify-start text-left font-normal",
                 !date && "text-muted-foreground"
-              )}>
+              )}
+            >
               <CalendarIcon />
               {date?.from ? (
                 date.to ? (
@@ -162,14 +164,16 @@ export default function CalendarDateRangePicker({
               <ToggleGroup
                 type="single"
                 defaultValue="last28Days"
-                className="hidden w-28 flex-col lg:block">
+                className="hidden w-28 flex-col lg:block"
+              >
                 {dateFilterPresets.map((item, key) => (
                   <ToggleGroupItem
                     key={key}
                     className="text-muted-foreground w-full"
                     value={item.value}
                     onClick={() => changeHandle(item.value)}
-                    asChild>
+                    asChild
+                  >
                     <Button className="justify-start rounded-md">{item.name}</Button>
                   </ToggleGroupItem>
                 ))}
@@ -178,7 +182,8 @@ export default function CalendarDateRangePicker({
                 <SelectTrigger
                   className="mb-4 flex w-full lg:hidden"
                   size="sm"
-                  aria-label="Select a value">
+                  aria-label="Select a value"
+                >
                   <SelectValue placeholder="Last 28 Days" />
                 </SelectTrigger>
                 <SelectContent>

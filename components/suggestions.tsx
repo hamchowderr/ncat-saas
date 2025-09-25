@@ -1,42 +1,42 @@
-'use client'
+"use client";
 
-import { useGetSuggestions } from '@/hooks/use-suggestions'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Terminal } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { useMemo } from 'react'
+import { useGetSuggestions } from "@/hooks/use-suggestions";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useMemo } from "react";
 
-import ReactMarkdown from 'react-markdown'
-import { Skeleton } from '@/components/ui/skeleton'
+import ReactMarkdown from "react-markdown";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function SuggestionsManager({ projectRef }: { projectRef: string }) {
-  const { data: suggestions, isLoading, error } = useGetSuggestions(projectRef)
+  const { data: suggestions, isLoading, error } = useGetSuggestions(projectRef);
 
   const sortedSuggestions = useMemo(() => {
-    if (!suggestions) return []
-    const levelOrder = { ERROR: 1, WARN: 2, INFO: 3 }
+    if (!suggestions) return [];
+    const levelOrder = { ERROR: 1, WARN: 2, INFO: 3 };
     return [...suggestions].sort((a: any, b: any) => {
-      const levelA = levelOrder[a.level as keyof typeof levelOrder] || 99
-      const levelB = levelOrder[b.level as keyof typeof levelOrder] || 99
-      return levelA - levelB
-    })
-  }, [suggestions])
+      const levelA = levelOrder[a.level as keyof typeof levelOrder] || 99;
+      const levelB = levelOrder[b.level as keyof typeof levelOrder] || 99;
+      return levelA - levelB;
+    });
+  }, [suggestions]);
 
-  const getBadgeVariant = (level: 'ERROR' | 'WARN' | 'INFO') => {
+  const getBadgeVariant = (level: "ERROR" | "WARN" | "INFO") => {
     switch (level) {
-      case 'ERROR':
-        return 'destructive'
-      case 'WARN':
-        return 'secondary'
+      case "ERROR":
+        return "destructive";
+      case "WARN":
+        return "secondary";
       default:
-        return 'outline'
+        return "outline";
     }
-  }
+  };
 
   return (
-    <div className="p-6 pt-4 lg:p-12 lg:pt-12 max-w-3xl mx-auto">
-      <h2 className="text-base lg:text-xl font-semibold mb-1">Suggestions</h2>
-      <p className="text-muted-foreground mb-4 lg:mb-8 text-sm lg:text-base">
+    <div className="mx-auto max-w-3xl p-6 pt-4 lg:p-12 lg:pt-12">
+      <h2 className="mb-1 text-base font-semibold lg:text-xl">Suggestions</h2>
+      <p className="text-muted-foreground mb-4 text-sm lg:mb-8 lg:text-base">
         Improve your project&apos;s security and performance.
       </p>
       {isLoading && (
@@ -52,7 +52,7 @@ export function SuggestionsManager({ projectRef }: { projectRef: string }) {
           <Terminal className="h-4 w-4" />
           <AlertTitle>Error fetching suggestions</AlertTitle>
           <AlertDescription>
-            {(error as any)?.message || 'An unexpected error occurred. Please try again.'}
+            {(error as any)?.message || "An unexpected error occurred. Please try again."}
           </AlertDescription>
         </Alert>
       )}
@@ -63,18 +63,18 @@ export function SuggestionsManager({ projectRef }: { projectRef: string }) {
               {sortedSuggestions.map((suggestion: any) => (
                 <div
                   key={suggestion.cache_key}
-                  className="py-4 border-b last:border-b-0 group relative"
+                  className="group relative border-b py-4 last:border-b-0"
                 >
                   <div className="flex-1">
-                    <div className="flex justify-start items-start gap-4">
-                      <h4 className="font-semibold text-sm">{suggestion.title}</h4>
+                    <div className="flex items-start justify-start gap-4">
+                      <h4 className="text-sm font-semibold">{suggestion.title}</h4>
                       <div className="flex items-center gap-1">
                         <Badge variant={getBadgeVariant(suggestion.level)} className="shrink-0">
                           {suggestion.level}
                         </Badge>
                         {suggestion.type && (
                           <Badge
-                            variant={suggestion.type === 'security' ? 'destructive' : 'secondary'}
+                            variant={suggestion.type === "security" ? "destructive" : "secondary"}
                             className="shrink-0"
                           >
                             {suggestion.type.charAt(0).toUpperCase() + suggestion.type.slice(1)}
@@ -82,20 +82,20 @@ export function SuggestionsManager({ projectRef }: { projectRef: string }) {
                         )}
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground mt-2 prose prose-sm max-w-none">
+                    <div className="text-muted-foreground prose prose-sm mt-2 max-w-none text-sm">
                       <ReactMarkdown
                         components={{
                           code({ inline, children, ...props }: any) {
                             return inline ? (
-                              <code className="bg-muted px-1 rounded" {...props}>
+                              <code className="bg-muted rounded px-1" {...props}>
                                 {children}
                               </code>
                             ) : (
-                              <pre className="bg-muted p-2 rounded overflow-x-auto" {...props}>
+                              <pre className="bg-muted overflow-x-auto rounded p-2" {...props}>
                                 <code>{children}</code>
                               </pre>
-                            )
-                          },
+                            );
+                          }
                         }}
                       >
                         {suggestion.detail}
@@ -117,5 +117,5 @@ export function SuggestionsManager({ projectRef }: { projectRef: string }) {
         </div>
       )}
     </div>
-  )
+  );
 }

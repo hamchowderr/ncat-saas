@@ -166,6 +166,68 @@ CREATE POLICY "Service role can manage all billing customer records" ON "public"
 -- Grant INSERT and UPDATE permissions to authenticated users
 GRANT INSERT, UPDATE ON TABLE public.billing_customers TO authenticated;
 
+-- Billing Subscriptions RLS Policies
+-- Allow authenticated users to view subscriptions for their workspace
+CREATE POLICY "Users can view their workspace billing subscriptions" ON "public"."billing_subscriptions"
+    FOR SELECT TO authenticated
+    USING (
+        gateway_customer_id IN (
+            SELECT gateway_customer_id FROM billing_customers
+            WHERE workspace_id IN (
+                SELECT w.id FROM workspaces w
+                INNER JOIN workspace_members wm ON w.id = wm.workspace_id
+                WHERE wm.workspace_member_id = auth.uid()
+            )
+        )
+    );
+
+-- Allow authenticated users to insert subscriptions for their workspace
+CREATE POLICY "Users can insert billing subscriptions for their workspace" ON "public"."billing_subscriptions"
+    FOR INSERT TO authenticated
+    WITH CHECK (
+        gateway_customer_id IN (
+            SELECT gateway_customer_id FROM billing_customers
+            WHERE workspace_id IN (
+                SELECT w.id FROM workspaces w
+                INNER JOIN workspace_members wm ON w.id = wm.workspace_id
+                WHERE wm.workspace_member_id = auth.uid()
+            )
+        )
+    );
+
+-- Allow authenticated users to update subscriptions for their workspace
+CREATE POLICY "Users can update their workspace billing subscriptions" ON "public"."billing_subscriptions"
+    FOR UPDATE TO authenticated
+    USING (
+        gateway_customer_id IN (
+            SELECT gateway_customer_id FROM billing_customers
+            WHERE workspace_id IN (
+                SELECT w.id FROM workspaces w
+                INNER JOIN workspace_members wm ON w.id = wm.workspace_id
+                WHERE wm.workspace_member_id = auth.uid()
+            )
+        )
+    )
+    WITH CHECK (
+        gateway_customer_id IN (
+            SELECT gateway_customer_id FROM billing_customers
+            WHERE workspace_id IN (
+                SELECT w.id FROM workspaces w
+                INNER JOIN workspace_members wm ON w.id = wm.workspace_id
+                WHERE wm.workspace_member_id = auth.uid()
+            )
+        )
+    );
+
+-- Allow service role to manage all subscriptions (for webhooks)
+CREATE POLICY "Service role can manage all billing subscriptions" ON "public"."billing_subscriptions"
+    FOR ALL TO service_role
+    USING (true)
+    WITH CHECK (true);
+
+-- Grant permissions to authenticated users
+GRANT SELECT, INSERT, UPDATE ON TABLE public.billing_subscriptions TO authenticated;
+
 -- Update the handle_new_user function to run with SECURITY DEFINER to bypass RLS policies
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER

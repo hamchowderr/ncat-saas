@@ -87,7 +87,8 @@ export const columns: ColumnDef<ApiKey>[] = [
         <Button
           className="-ml-3"
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
           Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
@@ -102,7 +103,8 @@ export const columns: ColumnDef<ApiKey>[] = [
         <Button
           className="-ml-3"
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
           Api Key
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
@@ -129,7 +131,8 @@ export const columns: ColumnDef<ApiKey>[] = [
         <Button
           className="-ml-3"
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
           Created At
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
@@ -144,7 +147,8 @@ export const columns: ColumnDef<ApiKey>[] = [
         <Button
           className="-ml-3"
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
           Updated At
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
@@ -327,14 +331,16 @@ export default function ApiKeysDataTable({ data }: { data: ApiKey[] }) {
             variant="outline"
             size="sm"
             onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}>
+            disabled={!table.getCanPreviousPage()}
+          >
             <ChevronLeft />
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}>
+            disabled={!table.getCanNextPage()}
+          >
             <ChevronRight />
           </Button>
         </div>

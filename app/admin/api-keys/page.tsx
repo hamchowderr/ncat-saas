@@ -17,9 +17,7 @@ export async function generateMetadata() {
 }
 
 async function getApiKeys() {
-  const data = await fs.readFile(
-    path.join(process.cwd(), "app/admin/api-keys/data.json")
-  );
+  const data = await fs.readFile(path.join(process.cwd(), "app/admin/api-keys/data.json"));
   return JSON.parse(data.toString());
 }
 

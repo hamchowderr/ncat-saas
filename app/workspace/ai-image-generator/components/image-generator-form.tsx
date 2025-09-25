@@ -119,7 +119,8 @@ function CardFormContent({ onGenerate, isGenerating }: ImageGeneratorFormProps) 
             <Label>Style</Label>
             <Select
               value={formData.style}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, style: value }))}>
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, style: value }))}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -137,7 +138,8 @@ function CardFormContent({ onGenerate, isGenerating }: ImageGeneratorFormProps) 
             <Label>Aspect Ratio</Label>
             <Select
               value={formData.aspectRatio}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, aspectRatio: value }))}>
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, aspectRatio: value }))}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -158,7 +160,8 @@ function CardFormContent({ onGenerate, isGenerating }: ImageGeneratorFormProps) 
             <Label>Quality</Label>
             <Select
               value={formData.quality}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, quality: value }))}>
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, quality: value }))}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -178,7 +181,8 @@ function CardFormContent({ onGenerate, isGenerating }: ImageGeneratorFormProps) 
               value={formData.count.toString()}
               onValueChange={(value) =>
                 setFormData((prev) => ({ ...prev, count: parseInt(value) }))
-              }>
+              }
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -234,7 +238,8 @@ function CardFormContent({ onGenerate, isGenerating }: ImageGeneratorFormProps) 
                 variant="outline"
                 size="sm"
                 onClick={() => handleQuickPrompt(quick.label)}
-                className="justify-start">
+                className="justify-start"
+              >
                 <Icon className="h-3 w-3" />
                 {quick.label}
               </Button>

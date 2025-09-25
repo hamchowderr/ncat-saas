@@ -1,13 +1,13 @@
-import { Suspense } from 'react'
-import { CustomerPortal } from '@/components/billing/customer-portal'
-import { SubscriptionStatus } from '@/components/billing/subscription-status'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import { CreditCard, FileText, Settings } from 'lucide-react'
+import { Suspense } from "react";
+import { CustomerPortal } from "@/components/billing/customer-portal";
+import { SubscriptionStatus } from "@/components/billing/subscription-status";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CreditCard, FileText, Settings } from "lucide-react";
 
 export default function BillingPage() {
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="container mx-auto space-y-8 py-8">
       <div>
         <h1 className="text-3xl font-bold">Billing & Subscription</h1>
         <p className="text-muted-foreground mt-2">
@@ -15,7 +15,7 @@ export default function BillingPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {/* Subscription Status */}
         <div className="space-y-6">
           <Suspense
@@ -45,7 +45,8 @@ export default function BillingPage() {
                 Billing Management
               </CardTitle>
               <CardDescription>
-                Access Stripe Customer Portal to manage your subscription, payment methods, and billing history.
+                Access Stripe Customer Portal to manage your subscription, payment methods, and
+                billing history.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -92,14 +93,12 @@ export default function BillingPage() {
                 <FileText className="h-5 w-5" />
                 Billing History
               </CardTitle>
-              <CardDescription>
-                View and download your invoices and receipts.
-              </CardDescription>
+              <CardDescription>View and download your invoices and receipts.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Access your complete billing history, including invoices and receipts,
-                through the Customer Portal above.
+              <p className="text-muted-foreground text-sm">
+                Access your complete billing history, including invoices and receipts, through the
+                Customer Portal above.
               </p>
             </CardContent>
           </Card>
@@ -108,9 +107,7 @@ export default function BillingPage() {
           <Card>
             <CardHeader>
               <CardTitle>Need Help?</CardTitle>
-              <CardDescription>
-                Contact our support team for billing questions.
-              </CardDescription>
+              <CardDescription>Contact our support team for billing questions.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="text-sm">
@@ -126,5 +123,5 @@ export default function BillingPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -22,7 +22,8 @@ export function ChatListItem({ chat, active }: { chat: ChatItemProps; active: bo
         "group/item hover:bg-muted relative flex min-w-0 cursor-pointer items-center gap-4 px-6 py-4",
         { "dark:bg-muted! bg-gray-200!": active }
       )}
-      onClick={() => handleClick(chat)}>
+      onClick={() => handleClick(chat)}
+    >
       <Avatar className="overflow-visible md:size-10">
         <AvatarImage src={chat.user?.avatar} alt="avatar image" />
         <AvatarIndicator variant={chat.user?.online_status} />
@@ -50,7 +51,8 @@ export function ChatListItem({ chat, active }: { chat: ChatItemProps; active: bo
           "absolute end-0 top-0 bottom-0 flex items-center bg-linear-to-l from-50% px-4 opacity-0 group-hover/item:opacity-100",
           { "from-muted": !active },
           { "dark:from-muted from-gray-200": active }
-        )}>
+        )}
+      >
         <ChatUserDropdown>
           <Button size="icon" variant="outline" className="rounded-full">
             <Ellipsis />

@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { useQuery } from '@tanstack/react-query'
-import { runQuery } from '@/hooks/use-run-query'
+import { useQuery } from "@tanstack/react-query";
+import { runQuery } from "@/hooks/use-run-query";
 
 // GET User Counts by day
 const getUserCountsByDay = ({ projectRef, days }: { projectRef: string; days: number }) => {
@@ -28,20 +28,20 @@ const getUserCountsByDay = ({ projectRef, days }: { projectRef: string; days: nu
     ) u ON d.date = u.date
     ORDER BY
       d.date ASC;
-  `
+  `;
 
   return runQuery({
     projectRef,
     query: sql,
-    readOnly: true,
-  })
-}
+    readOnly: true
+  });
+};
 
 export const useGetUserCountsByDay = (projectRef: string, days: number) => {
   return useQuery({
-    queryKey: ['user-counts', projectRef, days],
+    queryKey: ["user-counts", projectRef, days],
     queryFn: () => getUserCountsByDay({ projectRef, days }),
     enabled: !!projectRef,
-    retry: false,
-  })
-}
+    retry: false
+  });
+};

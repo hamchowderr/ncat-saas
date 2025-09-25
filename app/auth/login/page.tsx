@@ -1,4 +1,4 @@
-import { UnifiedAuthForm } from '@/components/unified-auth-form'
+import { UnifiedAuthForm } from "@/components/unified-auth-form";
 
 export default function Page() {
   return (
@@ -7,5 +7,5 @@ export default function Page() {
         <UnifiedAuthForm />
       </div>
     </div>
-  )
+  );
 }

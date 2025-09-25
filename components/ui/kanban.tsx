@@ -612,7 +612,8 @@ const KanbanBoard = React.forwardRef<HTMLDivElement, KanbanBoardProps>((props, f
           context.orientation === "horizontal"
             ? horizontalListSortingStrategy
             : verticalListSortingStrategy
-        }>
+        }
+      >
         <BoardPrimitive
           aria-orientation={context.orientation}
           data-orientation={context.orientation}
@@ -734,7 +735,8 @@ const KanbanColumn = React.forwardRef<HTMLDivElement, KanbanColumnProps>((props,
           context.orientation === "horizontal"
             ? horizontalListSortingStrategy
             : verticalListSortingStrategy
-        }>
+        }
+      >
         <ColumnPrimitive
           id={id}
           data-disabled={disabled}
@@ -1000,7 +1002,8 @@ function KanbanOverlay(props: KanbanOverlayProps) {
       dropAnimation={dropAnimation}
       modifiers={context.modifiers}
       className={cn(!context.flatCursor && "cursor-grabbing")}
-      {...overlayProps}>
+      {...overlayProps}
+    >
       <KanbanOverlayContext.Provider value={true}>
         {context.activeId && children
           ? typeof children === "function"

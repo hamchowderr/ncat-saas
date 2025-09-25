@@ -71,7 +71,8 @@ export default function Page() {
                           buttonVariants({ variant: "outline" }),
                           "w-[200px] appearance-none font-normal"
                         )}
-                        {...field}>
+                        {...field}
+                      >
                         <option value="inter">Inter</option>
                         <option value="manrope">Manrope</option>
                         <option value="system">System</option>
@@ -95,7 +96,8 @@ export default function Page() {
                   <RadioGroup
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    className="flex max-w-md gap-6 pt-2">
+                    className="flex max-w-md gap-6 pt-2"
+                  >
                     <FormItem>
                       <FormLabel className="[&:has([data-state=checked])>div]:border-primary flex-col">
                         <FormControl>

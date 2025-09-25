@@ -1,80 +1,76 @@
-'use client'
+"use client";
 
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
-import {
-  useCreateSecrets,
-  useDeleteSecrets,
-  useGetSecrets,
-} from '@/hooks/use-secrets'
-import { secretsSchema } from '@/lib/schemas/secrets'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { AlertTriangle, Minus, PlusIcon, Key } from 'lucide-react'
-import { useFieldArray, useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+  FormMessage
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useCreateSecrets, useDeleteSecrets, useGetSecrets } from "@/hooks/use-secrets";
+import { secretsSchema } from "@/lib/schemas/secrets";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertTriangle, Minus, PlusIcon, Key } from "lucide-react";
+import { useFieldArray, useForm } from "react-hook-form";
+import { z } from "zod";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export function SecretsManager({ projectRef }: { projectRef: string }) {
-  const { data: secrets, isLoading, error } = useGetSecrets(projectRef)
-  const { mutate: createSecrets, isPending: isCreating } = useCreateSecrets()
-  const { mutate: deleteSecrets, isPending: isDeleting } = useDeleteSecrets()
+  const { data: secrets, isLoading, error } = useGetSecrets(projectRef);
+  const { mutate: createSecrets, isPending: isCreating } = useCreateSecrets();
+  const { mutate: deleteSecrets, isPending: isDeleting } = useDeleteSecrets();
   const form = useForm<z.infer<typeof secretsSchema>>({
     resolver: zodResolver(secretsSchema),
     defaultValues: {
-      secrets: [{ name: '', value: '' }],
-    },
-  })
+      secrets: [{ name: "", value: "" }]
+    }
+  });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: 'secrets',
-  })
+    name: "secrets"
+  });
 
   const handleCreateSecrets = (formData: z.infer<typeof secretsSchema>) => {
     createSecrets(
       {
         projectRef,
-        secrets: formData.secrets,
+        secrets: formData.secrets
       },
       {
         onSuccess: () => {
-          form.reset({ secrets: [{ name: '', value: '' }] })
-        },
+          form.reset({ secrets: [{ name: "", value: "" }] });
+        }
       }
-    )
-  }
+    );
+  };
 
   const handleDeleteSecret = (secretName: string) => {
     if (window.confirm(`Are you sure you want to delete the secret "${secretName}"?`)) {
       deleteSecrets({
         projectRef,
-        secretNames: [secretName],
-      })
+        secretNames: [secretName]
+      });
     }
-  }
+  };
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-4xl mx-auto p-12 space-y-4">
+      <div className="mx-auto w-full max-w-4xl space-y-4 p-12">
         <Skeleton className="h-48 w-full" />
         <Skeleton className="h-16 w-full" />
         <Skeleton className="h-16 w-full" />
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
-      <div className="mx-6 lg:mx-8 mt-8">
+      <div className="mx-6 mt-8 lg:mx-8">
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Error loading secrets</AlertTitle>
@@ -83,13 +79,13 @@ export function SecretsManager({ projectRef }: { projectRef: string }) {
           </AlertDescription>
         </Alert>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-6 pt-4 lg:p-12 lg:pt-12">
+    <div className="mx-auto w-full max-w-3xl p-6 pt-4 lg:p-12 lg:pt-12">
       <div className="mb-16">
-        <h2 className="text-base lg:text-xl font-semibold mb-1">Add New Secret</h2>
+        <h2 className="mb-1 text-base font-semibold lg:text-xl">Add New Secret</h2>
         <p className="text-muted-foreground mb-6 text-sm lg:text-base">
           Add sensitive information like API keys that your app needs to work securely.
         </p>
@@ -124,7 +120,7 @@ export function SecretsManager({ projectRef }: { projectRef: string }) {
                   )}
                 />
                 <div className="w-8">
-                  {index === 0 && <FormLabel className="opacity-0 mb-4">Remove</FormLabel>}
+                  {index === 0 && <FormLabel className="mb-4 opacity-0">Remove</FormLabel>}
                   <Button
                     type="button"
                     variant="outline"
@@ -142,7 +138,7 @@ export function SecretsManager({ projectRef }: { projectRef: string }) {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => append({ name: '', value: '' })}
+                onClick={() => append({ name: "", value: "" })}
               >
                 <PlusIcon className="mr-2 h-4 w-4" />
                 Add Secret
@@ -150,24 +146,24 @@ export function SecretsManager({ projectRef }: { projectRef: string }) {
             </div>
 
             <Button type="submit" disabled={isCreating} className="mt-6">
-              {isCreating ? 'Creating...' : 'Create Secrets'}
+              {isCreating ? "Creating..." : "Create Secrets"}
             </Button>
           </form>
         </Form>
       </div>
 
       <div>
-        <h2 className="font-semibold mb-4 lg:text-lg">Existing secrets</h2>
+        <h2 className="mb-4 font-semibold lg:text-lg">Existing secrets</h2>
         {secrets && secrets.length > 0 ? (
           secrets.map((secret) => (
             <div
               key={secret.name}
-              className="flex items-center justify-between py-4 border-b last:border-b-0"
+              className="flex items-center justify-between border-b py-4 last:border-b-0"
             >
               <div>
                 <p className="font-mono text-sm tracking-wider">{secret.name}</p>
                 {secret.updated_at && (
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Last updated: {new Date(secret.updated_at).toLocaleString()}
                   </p>
                 )}
@@ -191,5 +187,5 @@ export function SecretsManager({ projectRef }: { projectRef: string }) {
         )}
       </div>
     </div>
-  )
+  );
 }

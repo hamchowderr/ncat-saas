@@ -1,9 +1,12 @@
 interface ConfirmationEmailProps {
-  confirmationUrl: string
-  userEmail: string
+  confirmationUrl: string;
+  userEmail: string;
 }
 
-export function generateConfirmationEmailHtml({ confirmationUrl, userEmail }: ConfirmationEmailProps): string {
+export function generateConfirmationEmailHtml({
+  confirmationUrl,
+  userEmail
+}: ConfirmationEmailProps): string {
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -141,10 +144,13 @@ export function generateConfirmationEmailHtml({ confirmationUrl, userEmail }: Co
       </div>
     </body>
     </html>
-  `
+  `;
 }
 
-export function generateConfirmationEmailText({ confirmationUrl, userEmail }: ConfirmationEmailProps): string {
+export function generateConfirmationEmailText({
+  confirmationUrl,
+  userEmail
+}: ConfirmationEmailProps): string {
   return `
 Welcome to NCAT SaaS!
 
@@ -162,5 +168,5 @@ This confirmation link will expire in 24 hours. If you didn't create an account 
 This email was sent to ${userEmail}
 
 © 2024 NCAT SaaS. All rights reserved.
-  `
+  `;
 }

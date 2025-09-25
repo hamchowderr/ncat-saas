@@ -65,7 +65,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 className="mt-4 w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
                 side={isMobile ? "bottom" : "right"}
                 align="end"
-                sideOffset={4}>
+                sideOffset={4}
+              >
                 <DropdownMenuLabel>Organizations</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {loading ? (
@@ -82,7 +83,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">{workspace.name}</span>
                       <span className="text-muted-foreground text-xs capitalize">
-                        {workspace.workspace_member_role || 'Member'}
+                        {workspace.workspace_member_role || "Member"}
                       </span>
                     </div>
                   </DropdownMenuItem>

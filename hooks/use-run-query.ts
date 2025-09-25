@@ -1,44 +1,44 @@
-'use client'
+"use client";
 
-import { client } from '@/lib/management-api'
-import { useMutation } from '@tanstack/react-query'
-import { type AxiosError } from 'axios'
-import { toast } from 'sonner'
+import { client } from "@/lib/management-api";
+import { useMutation } from "@tanstack/react-query";
+import { type AxiosError } from "axios";
+import { toast } from "sonner";
 
 // RUN SQL Query
 export const runQuery = async ({
   projectRef,
   query,
-  readOnly,
+  readOnly
 }: {
-  projectRef: string
-  query: string
-  readOnly?: boolean
+  projectRef: string;
+  query: string;
+  readOnly?: boolean;
 }) => {
-  const { data, error } = await client.POST('/v1/projects/{ref}/database/query', {
+  const { data, error } = await client.POST("/v1/projects/{ref}/database/query", {
     params: {
       path: {
-        ref: projectRef,
-      },
+        ref: projectRef
+      }
     },
     body: {
       query,
-      read_only: readOnly,
-    },
-  })
+      read_only: readOnly
+    }
+  });
 
   if (error) {
-    throw error
+    throw error;
   }
 
-  return data as any
-}
+  return data as any;
+};
 
 export const useRunQuery = () => {
   return useMutation({
     mutationFn: runQuery,
     onError: (error: AxiosError<{ message: string }>) => {
-      toast.error(error.response?.data?.message || 'There was a problem with your query.')
-    },
-  })
-}
+      toast.error(error.response?.data?.message || "There was a problem with your query.");
+    }
+  });
+};

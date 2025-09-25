@@ -69,7 +69,8 @@ function PromptScrollButton({
         className
       )}
       onClick={handleScroll}
-      {...props}>
+      {...props}
+    >
       <ChevronDown className="h-4 w-4" />
     </Button>
   );

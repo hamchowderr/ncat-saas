@@ -77,7 +77,7 @@ Create API routes for managing subscription plans:
 
 ```typescript
 // app/api/billing/checkout/route.ts
-import Stripe from 'stripe';
+import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -86,17 +86,17 @@ export async function POST(req: Request) {
 
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
-    payment_method_types: ['card'],
-    mode: 'subscription',
+    payment_method_types: ["card"],
+    mode: "subscription",
     line_items: [
       {
         price: priceId,
-        quantity: 1,
-      },
+        quantity: 1
+      }
     ],
     success_url: `${process.env.NEXT_PUBLIC_URL}/dashboard?success=true`,
     cancel_url: `${process.env.NEXT_PUBLIC_URL}/pricing?canceled=true`,
-    allow_promotion_codes: true,
+    allow_promotion_codes: true
   });
 
   return Response.json({ url: session.url });
@@ -143,7 +143,7 @@ export function CheckoutButton({ priceId, planName, customerId }: CheckoutButton
 
 ```typescript
 // app/api/billing/portal/route.ts
-import Stripe from 'stripe';
+import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -152,7 +152,7 @@ export async function POST(req: Request) {
 
   const session = await stripe.billingPortal.sessions.create({
     customer: customerId,
-    return_url: `${process.env.NEXT_PUBLIC_URL}/dashboard/billing`,
+    return_url: `${process.env.NEXT_PUBLIC_URL}/dashboard/billing`
   });
 
   return Response.json({ url: session.url });
@@ -197,20 +197,21 @@ export function CustomerPortal({ customerId }: CustomerPortalProps) {
 
 ```typescript
 // hooks/use-subscription.ts
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/client'
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/client";
 
 export function useSubscription(userId: string) {
-  const [subscription, setSubscription] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [subscription, setSubscription] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = createClient()
+    const supabase = createClient();
 
     async function fetchSubscription() {
       const { data } = await supabase
-        .from('billing_subscriptions')
-        .select(`
+        .from("billing_subscriptions")
+        .select(
+          `
           *,
           billing_customers!inner(
             workspace_id,
@@ -220,19 +221,20 @@ export function useSubscription(userId: string) {
           ),
           billing_products(name, description, features),
           billing_prices(amount, currency, recurring_interval)
-        `)
-        .eq('billing_customers.workspaces.users.user_id', userId)
-        .eq('status', 'active')
-        .single()
+        `
+        )
+        .eq("billing_customers.workspaces.users.user_id", userId)
+        .eq("status", "active")
+        .single();
 
-      setSubscription(data)
-      setLoading(false)
+      setSubscription(data);
+      setLoading(false);
     }
 
-    fetchSubscription()
-  }, [userId])
+    fetchSubscription();
+  }, [userId]);
 
-  return { subscription, loading }
+  return { subscription, loading };
 }
 ```
 
@@ -242,23 +244,17 @@ export function useSubscription(userId: string) {
 
 ```typescript
 // lib/billing/usage-tracker.ts
-import { createClient } from '@/lib/client'
+import { createClient } from "@/lib/client";
 
-export async function trackUsage(
-  customerId: string,
-  feature: string,
-  amount: number = 1
-) {
-  const supabase = createClient()
+export async function trackUsage(customerId: string, feature: string, amount: number = 1) {
+  const supabase = createClient();
 
-  await supabase
-    .from('billing_usage_logs')
-    .insert({
-      gateway_customer_id: customerId,
-      feature,
-      usage_amount: amount,
-      timestamp: new Date().toISOString()
-    })
+  await supabase.from("billing_usage_logs").insert({
+    gateway_customer_id: customerId,
+    feature,
+    usage_amount: amount,
+    timestamp: new Date().toISOString()
+  });
 }
 
 // Usage examples:
@@ -276,34 +272,36 @@ export async function checkUsageLimit(
   feature: string,
   requestedAmount: number = 1
 ): Promise<{ allowed: boolean; currentUsage: number; limit: number }> {
-  const supabase = createClient()
+  const supabase = createClient();
 
   // Get current subscription limits
   const { data: subscription } = await supabase
-    .from('billing_subscriptions')
-    .select(`
+    .from("billing_subscriptions")
+    .select(
+      `
       billing_products(features),
       billing_customers!inner(gateway_customer_id)
-    `)
-    .eq('billing_customers.gateway_customer_id', customerId)
-    .eq('status', 'active')
-    .single()
+    `
+    )
+    .eq("billing_customers.gateway_customer_id", customerId)
+    .eq("status", "active")
+    .single();
 
-  const limits = subscription?.billing_products?.features || {}
-  const limit = limits[feature] || 0
+  const limits = subscription?.billing_products?.features || {};
+  const limit = limits[feature] || 0;
 
   // Get current usage for this billing period
   const { data: usage } = await supabase
-    .from('billing_usage_logs')
-    .select('usage_amount')
-    .eq('gateway_customer_id', customerId)
-    .eq('feature', feature)
-    .gte('timestamp', getCurrentBillingPeriodStart())
+    .from("billing_usage_logs")
+    .select("usage_amount")
+    .eq("gateway_customer_id", customerId)
+    .eq("feature", feature)
+    .gte("timestamp", getCurrentBillingPeriodStart());
 
-  const currentUsage = usage?.reduce((sum, log) => sum + log.usage_amount, 0) || 0
-  const allowed = (currentUsage + requestedAmount) <= limit
+  const currentUsage = usage?.reduce((sum, log) => sum + log.usage_amount, 0) || 0;
+  const allowed = currentUsage + requestedAmount <= limit;
 
-  return { allowed, currentUsage, limit }
+  return { allowed, currentUsage, limit };
 }
 ```
 
@@ -417,6 +415,7 @@ NEXT_PUBLIC_URL=http://localhost:3000
 5. **Payment Methods**: Enable desired payment options
 
 This integration will provide a complete subscription management system with:
+
 - ✅ Subscription plan selection
 - ✅ Secure checkout flow
 - ✅ Customer self-service portal

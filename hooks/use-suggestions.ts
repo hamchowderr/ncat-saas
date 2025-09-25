@@ -1,53 +1,53 @@
-'use client'
+"use client";
 
-import { client } from '@/lib/management-api'
-import { useQuery } from '@tanstack/react-query'
+import { client } from "@/lib/management-api";
+import { useQuery } from "@tanstack/react-query";
 
 // GET Suggestions
 const getSuggestions = async (projectRef: string) => {
   const [
     { data: performanceData, error: performanceError },
-    { data: securityData, error: securityError },
+    { data: securityData, error: securityError }
   ] = await Promise.all([
-    client.GET('/v1/projects/{ref}/advisors/performance', {
+    client.GET("/v1/projects/{ref}/advisors/performance", {
       params: {
         path: {
-          ref: projectRef,
-        },
-      },
+          ref: projectRef
+        }
+      }
     }),
-    client.GET('/v1/projects/{ref}/advisors/security', {
+    client.GET("/v1/projects/{ref}/advisors/security", {
       params: {
         path: {
-          ref: projectRef,
-        },
-      },
-    }),
-  ])
+          ref: projectRef
+        }
+      }
+    })
+  ]);
   if (performanceError) {
-    throw performanceError
+    throw performanceError;
   }
   if (securityError) {
-    throw securityError
+    throw securityError;
   }
 
   // Add type to each suggestion
   const performanceLints = (performanceData?.lints || []).map((lint) => ({
     ...lint,
-    type: 'performance' as const,
-  }))
+    type: "performance" as const
+  }));
   const securityLints = (securityData?.lints || []).map((lint) => ({
     ...lint,
-    type: 'security' as const,
-  }))
-  return [...performanceLints, ...securityLints]
-}
+    type: "security" as const
+  }));
+  return [...performanceLints, ...securityLints];
+};
 
 export const useGetSuggestions = (projectRef: string) => {
   return useQuery({
-    queryKey: ['suggestions', projectRef],
+    queryKey: ["suggestions", projectRef],
     queryFn: () => getSuggestions(projectRef),
     enabled: !!projectRef,
-    retry: false,
-  })
-}
+    retry: false
+  });
+};

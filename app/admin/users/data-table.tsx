@@ -98,7 +98,8 @@ export const columns: ColumnDef<User>[] = [
         <Button
           className="-ml-3"
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
           Role
           <ArrowUpDown />
         </Button>
@@ -113,7 +114,8 @@ export const columns: ColumnDef<User>[] = [
         <Button
           className="-ml-3"
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
           Plan
           <ArrowUpDown />
         </Button>
@@ -128,7 +130,8 @@ export const columns: ColumnDef<User>[] = [
         <Button
           className="-ml-3"
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
           Email
           <ArrowUpDown />
         </Button>
@@ -143,7 +146,8 @@ export const columns: ColumnDef<User>[] = [
         <Button
           className="-ml-3"
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
           Country
           <ArrowUpDown />
         </Button>
@@ -158,7 +162,8 @@ export const columns: ColumnDef<User>[] = [
         <Button
           className="-ml-3"
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
           Status
           <ArrowUpDown />
         </Button>
@@ -319,7 +324,8 @@ export default function UsersDataTable({ data }: { data: User[] }) {
                           <Checkbox id={status.value} />
                           <label
                             htmlFor={status.value}
-                            className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
                             {status.label}
                           </label>
                         </div>
@@ -349,7 +355,8 @@ export default function UsersDataTable({ data }: { data: User[] }) {
                           <Checkbox id={plan.value} />
                           <label
                             htmlFor={plan.value}
-                            className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
                             {plan.label}
                           </label>
                         </div>
@@ -380,12 +387,14 @@ export default function UsersDataTable({ data }: { data: User[] }) {
                         onSelect={(currentValue) => {
                           // setValue(currentValue === value ? "" : currentValue);
                           // setOpen(false);
-                        }}>
+                        }}
+                      >
                         <div className="flex items-center space-x-3 py-1">
                           <Checkbox id={role.value} />
                           <label
                             htmlFor={role.value}
-                            className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
                             {role.label}
                           </label>
                         </div>
@@ -413,7 +422,8 @@ export default function UsersDataTable({ data }: { data: User[] }) {
                     key={column.id}
                     className="capitalize"
                     checked={column.getIsVisible()}
-                    onCheckedChange={(value) => column.toggleVisibility(value)}>
+                    onCheckedChange={(value) => column.toggleVisibility(value)}
+                  >
                     {column.id}
                   </DropdownMenuCheckboxItem>
                 );
@@ -469,14 +479,16 @@ export default function UsersDataTable({ data }: { data: User[] }) {
             variant="outline"
             size="sm"
             onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}>
+            disabled={!table.getCanPreviousPage()}
+          >
             Previous
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}>
+            disabled={!table.getCanNextPage()}
+          >
             Next
           </Button>
         </div>

@@ -15,20 +15,22 @@ export async function generateMetadata() {
 async function getJobs() {
   const supabase = createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
   if (!user) {
     return [];
   }
 
   const { data: jobs, error } = await supabase
-    .from('jobs')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false });
+    .from("jobs")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error('Error fetching jobs:', error);
+    console.error("Error fetching jobs:", error);
     return [];
   }
 

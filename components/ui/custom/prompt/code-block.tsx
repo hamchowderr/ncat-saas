@@ -17,7 +17,8 @@ function CodeBlock({ children, className, ...props }: CodeBlockProps) {
         "border-border bg-card text-card-foreground rounded-xl",
         className
       )}
-      {...props}>
+      {...props}
+    >
       {children}
     </div>
   );

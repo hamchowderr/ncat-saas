@@ -119,7 +119,8 @@ export default function Page() {
                           className={cn(
                             "w-[240px] pl-3 text-left font-normal",
                             !field.value && "text-muted-foreground"
-                          )}>
+                          )}
+                        >
                           {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -157,7 +158,8 @@ export default function Page() {
                           className={cn(
                             "w-[200px] justify-between",
                             !field.value && "text-muted-foreground"
-                          )}>
+                          )}
+                        >
                           {field.value
                             ? languages.find((language) => language.value === field.value)?.label
                             : "Select language"}
@@ -177,7 +179,8 @@ export default function Page() {
                                 key={language.value}
                                 onSelect={() => {
                                   form.setValue("language", language.value);
-                                }}>
+                                }}
+                              >
                                 <CheckIcon
                                   className={cn(
                                     "mr-2 h-4 w-4",

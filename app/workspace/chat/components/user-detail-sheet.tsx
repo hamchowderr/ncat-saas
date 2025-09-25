@@ -80,7 +80,8 @@ export function UserDetailSheet({ user }: { user: UserPropsTypes }) {
                             <div>
                               <Link
                                 href={item.path ?? "#"}
-                                className="flex aspect-square w-20 items-center justify-center rounded-lg bg-green-200">
+                                className="flex aspect-square w-20 items-center justify-center rounded-lg bg-green-200"
+                              >
                                 <SheetIcon className="h-8 w-8 text-green-500" />
                               </Link>
                             </div>
@@ -89,7 +90,8 @@ export function UserDetailSheet({ user }: { user: UserPropsTypes }) {
                             <div>
                               <a
                                 href="#"
-                                className="flex aspect-square w-20 items-center justify-center rounded-lg bg-orange-200">
+                                className="flex aspect-square w-20 items-center justify-center rounded-lg bg-orange-200"
+                              >
                                 <FileText className="h-8 w-8 text-orange-500" />
                               </a>
                             </div>
@@ -98,7 +100,8 @@ export function UserDetailSheet({ user }: { user: UserPropsTypes }) {
                             <div>
                               <a
                                 href="#"
-                                className="flex aspect-square w-20 items-center justify-center rounded-lg bg-orange-200">
+                                className="flex aspect-square w-20 items-center justify-center rounded-lg bg-orange-200"
+                              >
                                 <FileText className="h-8 w-8 text-orange-500" />
                               </a>
                             </div>
@@ -118,7 +121,8 @@ export function UserDetailSheet({ user }: { user: UserPropsTypes }) {
                   <a
                     href={user.website}
                     target="_blank"
-                    className="text-muted-foreground hover:text-primary hover:underline">
+                    className="text-muted-foreground hover:text-primary hover:underline"
+                  >
                     {user.website}
                   </a>
                 </div>
@@ -134,11 +138,13 @@ export function UserDetailSheet({ user }: { user: UserPropsTypes }) {
                       variant="outline"
                       className="size-12 rounded-full"
                       size="icon"
-                      asChild>
+                      asChild
+                    >
                       <Link
                         href="#"
                         target="_blank"
-                        className="flex items-center justify-center rounded-full *:h-5 *:w-5">
+                        className="flex items-center justify-center rounded-full *:h-5 *:w-5"
+                      >
                         {item.name === "Facebook" && <Facebook />}
                         {item.name === "X" && <X />}
                         {item.name === "Dribbble" && <Dribbble />}

@@ -17,12 +17,19 @@ import {
   SidebarMenuItem,
   useSidebar
 } from "@/components/ui/sidebar";
-import { CreditCard, LogOut, UserCircle2Icon, MonitorIcon, PaletteIcon, BadgeCheck } from "lucide-react";
+import {
+  CreditCard,
+  LogOut,
+  UserCircle2Icon,
+  MonitorIcon,
+  PaletteIcon,
+  BadgeCheck
+} from "lucide-react";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import Link from "next/link";
-import { createClient } from '@/lib/client';
-import { useRouter } from 'next/navigation';
-import { useUser } from '@/hooks/use-user';
+import { createClient } from "@/lib/client";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/hooks/use-user";
 
 const userData = {
   name: "Toby Belhome",
@@ -38,16 +45,16 @@ export function NavUser() {
   // Debug user data
   React.useEffect(() => {
     if (user) {
-      console.log('User data in sidebar:', user);
-      console.log('Avatar URL:', user.user_metadata?.avatar_url);
-      console.log('User metadata:', user.user_metadata);
+      console.log("User data in sidebar:", user);
+      console.log("Avatar URL:", user.user_metadata?.avatar_url);
+      console.log("User metadata:", user.user_metadata);
     }
   }, [user]);
 
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    window.location.href = '/auth/login';
+    window.location.href = "/auth/login";
   };
 
   if (loading) {
@@ -71,14 +78,24 @@ export function NavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            >
               <Avatar className="rounded-full">
-                <AvatarImage src={user?.user_metadata?.avatar_url || userData.avatar} alt={user?.user_metadata?.full_name || user?.email} />
-                <AvatarFallback className="rounded-lg">{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                <AvatarImage
+                  src={user?.user_metadata?.avatar_url || userData.avatar}
+                  alt={user?.user_metadata?.full_name || user?.email}
+                />
+                <AvatarFallback className="rounded-lg">
+                  {user?.email?.charAt(0).toUpperCase() || "U"}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}</span>
-                <span className="text-muted-foreground truncate text-xs">{user?.email || 'No email'}</span>
+                <span className="truncate font-medium">
+                  {user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User"}
+                </span>
+                <span className="text-muted-foreground truncate text-xs">
+                  {user?.email || "No email"}
+                </span>
               </div>
               <DotsVerticalIcon className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -87,16 +104,26 @@ export function NavUser() {
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
             align="end"
-            sideOffset={4}>
+            sideOffset={4}
+          >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user?.user_metadata?.avatar_url || userData.avatar} alt={user?.user_metadata?.full_name || user?.email} />
-                  <AvatarFallback className="rounded-lg">{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                  <AvatarImage
+                    src={user?.user_metadata?.avatar_url || userData.avatar}
+                    alt={user?.user_metadata?.full_name || user?.email}
+                  />
+                  <AvatarFallback className="rounded-lg">
+                    {user?.email?.charAt(0).toUpperCase() || "U"}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}</span>
-                  <span className="text-muted-foreground truncate text-xs">{user?.email || 'No email'}</span>
+                  <span className="truncate font-medium">
+                    {user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User"}
+                  </span>
+                  <span className="text-muted-foreground truncate text-xs">
+                    {user?.email || "No email"}
+                  </span>
                 </div>
               </div>
             </DropdownMenuLabel>

@@ -33,7 +33,8 @@ export function PresetSelector() {
                   <span
                     key={key}
                     className="size-2 rounded-full"
-                    style={{ backgroundColor: color }}></span>
+                    style={{ backgroundColor: color }}
+                  ></span>
                 ))}
               </div>
               {theme.name}

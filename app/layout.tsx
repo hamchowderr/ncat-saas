@@ -37,12 +37,14 @@ export default async function RootLayout({
       <body
         suppressHydrationWarning
         className={cn("bg-background group/layout font-sans", fontVariables)}
-        {...bodyAttributes}>
+        {...bodyAttributes}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
           enableSystem
-          disableTransitionOnChange>
+          disableTransitionOnChange
+        >
           <ActiveThemeProvider initialTheme={themeSettings}>
             {children}
             <Toaster position="top-center" richColors />

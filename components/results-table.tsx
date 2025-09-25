@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import {
   Table,
@@ -6,21 +6,21 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { cn } from '@/lib/utils'
+  TableRow
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 interface ResultsTableProps {
-  data: any[]
-  onRowClick?: (row: any) => void
+  data: any[];
+  onRowClick?: (row: any) => void;
 }
 
 export function ResultsTable({ data, onRowClick }: ResultsTableProps) {
   if (!data || data.length === 0) {
-    return <p className="p-4 text-center">The query returned no results.</p>
+    return <p className="p-4 text-center">The query returned no results.</p>;
   }
 
-  const headers = Object.keys(data[0])
+  const headers = Object.keys(data[0]);
 
   return (
     <div className="overflow-auto">
@@ -28,7 +28,7 @@ export function ResultsTable({ data, onRowClick }: ResultsTableProps) {
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             {headers.map((header) => (
-              <TableHead className="first:pl-6 lg:first:pl-8 last:pr-6 lg:last:pr-8" key={header}>
+              <TableHead className="first:pl-6 last:pr-6 lg:first:pl-8 lg:last:pr-8" key={header}>
                 {header}
               </TableHead>
             ))}
@@ -39,15 +39,15 @@ export function ResultsTable({ data, onRowClick }: ResultsTableProps) {
             <TableRow
               key={rowIndex}
               onClick={() => onRowClick?.(row)}
-              className={cn(onRowClick && 'cursor-pointer hover:bg-muted/50 group')}
+              className={cn(onRowClick && "hover:bg-muted/50 group cursor-pointer")}
             >
               {headers.map((header) => (
                 <TableCell
-                  className="first:pl-6 lg:first:pl-8 last:pr-6 lg:last:pr-8 text-xs text-muted-foreground group-hover:text-foreground min-w-[8rem]"
+                  className="text-muted-foreground group-hover:text-foreground min-w-[8rem] text-xs first:pl-6 last:pr-6 lg:first:pl-8 lg:last:pr-8"
                   key={`${rowIndex}-${header}`}
                 >
-                  <div className="text-xs font-mono w-fit max-w-96 truncate">
-                    {JSON.stringify(row[header]).replace(/^"|"$/g, '')}
+                  <div className="w-fit max-w-96 truncate font-mono text-xs">
+                    {JSON.stringify(row[header]).replace(/^"|"$/g, "")}
                   </div>
                 </TableCell>
               ))}
@@ -56,5 +56,5 @@ export function ResultsTable({ data, onRowClick }: ResultsTableProps) {
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }

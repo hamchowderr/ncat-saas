@@ -7,11 +7,7 @@ import { generateAvatarFallback } from "@/lib/utils";
 import useChatStore from "../useChatStore";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  CallDialog,
-  ChatUserDropdown,
-  VideoCallDialog
-} from "./index";
+import { CallDialog, ChatUserDropdown, VideoCallDialog } from "./index";
 import { Avatar, AvatarFallback, AvatarImage, AvatarIndicator } from "@/components/ui/avatar";
 import { UserPropsTypes } from "../types";
 
@@ -25,7 +21,8 @@ export function ChatHeader({ user }: { user: UserPropsTypes }) {
           size="sm"
           variant="outline"
           className="flex size-10 p-0 lg:hidden"
-          onClick={() => setSelectedChat(null)}>
+          onClick={() => setSelectedChat(null)}
+        >
           <ArrowLeft />
         </Button>
         <Avatar className="overflow-visible lg:size-10">

@@ -195,7 +195,8 @@ export const ImageViewBlock: React.FC<NodeViewProps> = ({
     <NodeViewWrapper
       ref={containerRef}
       data-drag-handle
-      className="relative text-center leading-none">
+      className="relative text-center leading-none"
+    >
       <div
         className="group/node-image relative mx-auto rounded-md object-contain"
         style={{
@@ -203,11 +204,13 @@ export const ImageViewBlock: React.FC<NodeViewProps> = ({
           width: currentWidth,
           maxHeight: MAX_HEIGHT,
           aspectRatio: `${imageState.naturalSize.width} / ${imageState.naturalSize.height}`
-        }}>
+        }}
+      >
         <div
           className={cn("relative flex h-full cursor-default flex-col items-center gap-2 rounded", {
             "outline-primary outline outline-offset-1": selected || isResizing
-          })}>
+          })}
+        >
           <div className="h-full contain-paint">
             <div className="relative h-full">
               {imageState.isServerUploading && !imageState.error && (
@@ -225,7 +228,8 @@ export const ImageViewBlock: React.FC<NodeViewProps> = ({
 
               <ControlledZoom
                 isZoomed={imageState.isZoomed}
-                onZoomChange={() => setImageState((prev) => ({ ...prev, isZoomed: false }))}>
+                onZoomChange={() => setImageState((prev) => ({ ...prev, isZoomed: false }))}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   className={cn("h-auto rounded object-contain transition-shadow", {

@@ -38,7 +38,7 @@ export const columns: ColumnDef<Job>[] = [
     accessorKey: "nca_job_id",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Job ID" />,
     cell: ({ row }) => (
-      <div className="font-mono text-xs max-w-[120px] truncate">
+      <div className="max-w-[120px] truncate font-mono text-xs">
         {row.getValue("nca_job_id") || "N/A"}
       </div>
     ),
@@ -48,32 +48,28 @@ export const columns: ColumnDef<Job>[] = [
   {
     accessorKey: "nca_build_number",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Build Number" />,
-    cell: ({ row }) => (
-      <div className="text-xs">
-        {row.getValue("nca_build_number") || "N/A"}
-      </div>
-    )
+    cell: ({ row }) => <div className="text-xs">{row.getValue("nca_build_number") || "N/A"}</div>
   },
   {
     accessorKey: "processing_status",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => {
       const status = row.getValue("processing_status") as string;
-      
+
       return (
-        <Badge 
+        <Badge
           className={cn(
             "text-xs",
-            status === 'completed' && 'bg-green-100 text-green-800 hover:bg-green-100',
-            status === 'failed' && 'bg-red-100 text-red-800 hover:bg-red-100',
-            status === 'error' && 'bg-red-100 text-red-800 hover:bg-red-100',
-            status === 'processing' && 'bg-blue-100 text-blue-800 hover:bg-blue-100',
-            status === 'pending' && 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
-            !status && 'bg-gray-100 text-gray-800 hover:bg-gray-100'
+            status === "completed" && "bg-green-100 text-green-800 hover:bg-green-100",
+            status === "failed" && "bg-red-100 text-red-800 hover:bg-red-100",
+            status === "error" && "bg-red-100 text-red-800 hover:bg-red-100",
+            status === "processing" && "bg-blue-100 text-blue-800 hover:bg-blue-100",
+            status === "pending" && "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
+            !status && "bg-gray-100 text-gray-800 hover:bg-gray-100"
           )}
           variant="outline"
         >
-          {status || 'Unknown'}
+          {status || "Unknown"}
         </Badge>
       );
     },
@@ -86,11 +82,7 @@ export const columns: ColumnDef<Job>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Total Time" />,
     cell: ({ row }) => {
       const totalTime = row.getValue("nca_total_time") as number;
-      return (
-        <div className="text-xs">
-          {totalTime ? `${totalTime}ms` : "N/A"}
-        </div>
-      );
+      return <div className="text-xs">{totalTime ? `${totalTime}ms` : "N/A"}</div>;
     }
   },
   {
@@ -108,11 +100,9 @@ export const columns: ColumnDef<Job>[] = [
     cell: ({ row }) => {
       const error = row.getValue("error_message") as string;
       return error ? (
-        <div className="max-w-[150px] truncate text-xs text-red-600">
-          {error}
-        </div>
+        <div className="max-w-[150px] truncate text-xs text-red-600">{error}</div>
       ) : (
-        <span className="text-xs text-muted-foreground">No errors</span>
+        <span className="text-muted-foreground text-xs">No errors</span>
       );
     }
   },
@@ -121,11 +111,7 @@ export const columns: ColumnDef<Job>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
     cell: ({ row }) => {
       const date = new Date(row.getValue("created_at"));
-      return (
-        <div className="text-xs">
-          {date.toLocaleString()}
-        </div>
-      );
+      return <div className="text-xs">{date.toLocaleString()}</div>;
     }
   },
   {

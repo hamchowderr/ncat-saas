@@ -15,14 +15,8 @@
     },
     "preserveOutput": "always",
     "reporter": [
-      [
-        "html",
-        null
-      ],
-      [
-        "list",
-        null
-      ],
+      ["html", null],
+      ["list", null],
       [
         "json",
         {
@@ -47,9 +41,7 @@
         "name": "chromium",
         "testDir": "C:/Users/HamCh/code/ncat-saas/ncat-saas/tests/e2e",
         "testIgnore": [],
-        "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
-        ],
+        "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
         "timeout": 30000
       }
     ],

@@ -66,9 +66,11 @@ function Input({
           setValue: onValueChange ?? handleChange,
           maxHeight,
           onSubmit
-        }}>
+        }}
+      >
         <div
-          className={cn("border-input bg-background rounded-3xl border p-2 shadow-xs", className)}>
+          className={cn("border-input bg-background rounded-3xl border p-2 shadow-xs", className)}
+        >
           {children}
         </div>
       </PromptInputContext.Provider>
