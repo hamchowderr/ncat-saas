@@ -32,21 +32,22 @@ export function useWorkspace() {
       try {
         const supabase = createClient();
 
-        // Get the user's workspace with their membership role
+        // Get the user's workspace via workspace_members table
         const { data, error } = await supabase
-          .from("workspaces")
+          .from("workspace_members")
           .select(
             `
-            id,
-            slug,
-            name,
-            created_at,
-            workspace_members!inner(workspace_member_role),
-            workspace_application_settings(membership_type)
+            workspace_member_role,
+            workspaces!inner(
+              id,
+              slug,
+              name,
+              created_at,
+              workspace_application_settings(membership_type)
+            )
           `
           )
-          .eq("id", user.id)
-          .eq("workspace_members.workspace_member_id", user.id)
+          .eq("workspace_member_id", user.id)
           .single();
 
         if (error) {
@@ -55,17 +56,17 @@ export function useWorkspace() {
           return;
         }
 
-        if (data) {
+        console.log("🔧 useWorkspace: Raw workspace data received:", data);
+
+        if (data && data.workspaces) {
           const workspaceData: WorkspaceWithMembership = {
-            id: data.id,
-            slug: data.slug,
-            name: data.name,
-            created_at: data.created_at,
-            workspace_member_role: Array.isArray(data.workspace_members)
-              ? data.workspace_members[0]?.workspace_member_role
-              : undefined,
-            membership_type: Array.isArray(data.workspace_application_settings)
-              ? data.workspace_application_settings[0]?.membership_type
+            id: data.workspaces.id,
+            slug: data.workspaces.slug,
+            name: data.workspaces.name,
+            created_at: data.workspaces.created_at,
+            workspace_member_role: data.workspace_member_role,
+            membership_type: Array.isArray(data.workspaces.workspace_application_settings)
+              ? data.workspaces.workspace_application_settings[0]?.membership_type
               : undefined
           };
           setWorkspace(workspaceData);
@@ -91,19 +92,20 @@ export function useWorkspace() {
       const supabase = createClient();
 
       const { data, error } = await supabase
-        .from("workspaces")
+        .from("workspace_members")
         .select(
           `
-          id,
-          slug,
-          name,
-          created_at,
-          workspace_members!inner(workspace_member_role),
-          workspace_application_settings(membership_type)
+          workspace_member_role,
+          workspaces!inner(
+            id,
+            slug,
+            name,
+            created_at,
+            workspace_application_settings(membership_type)
+          )
         `
         )
-        .eq("id", user.id)
-        .eq("workspace_members.workspace_member_id", user.id)
+        .eq("workspace_member_id", user.id)
         .single();
 
       if (error) {
@@ -111,17 +113,15 @@ export function useWorkspace() {
         return;
       }
 
-      if (data) {
+      if (data && data.workspaces) {
         const workspaceData: WorkspaceWithMembership = {
-          id: data.id,
-          slug: data.slug,
-          name: data.name,
-          created_at: data.created_at,
-          workspace_member_role: Array.isArray(data.workspace_members)
-            ? data.workspace_members[0]?.workspace_member_role
-            : undefined,
-          membership_type: Array.isArray(data.workspace_application_settings)
-            ? data.workspace_application_settings[0]?.membership_type
+          id: data.workspaces.id,
+          slug: data.workspaces.slug,
+          name: data.workspaces.name,
+          created_at: data.workspaces.created_at,
+          workspace_member_role: data.workspace_member_role,
+          membership_type: Array.isArray(data.workspaces.workspace_application_settings)
+            ? data.workspaces.workspace_application_settings[0]?.membership_type
             : undefined
         };
         setWorkspace(workspaceData);

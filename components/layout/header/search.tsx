@@ -18,9 +18,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { navItems } from "@/components/layout/sidebar/nav-main";
+import { isUserAdmin } from "@/lib/admin";
 
 export default function Search() {
   const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -32,6 +34,15 @@ export default function Search() {
     };
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
+  }, []);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const adminStatus = await isUserAdmin();
+      setIsAdmin(adminStatus);
+    };
+
+    checkAdminStatus();
   }, []);
 
   return (
@@ -63,25 +74,33 @@ export default function Search() {
         <CommandInput placeholder="Type a command or search..." />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
-          {navItems.map((route) => (
-            <React.Fragment key={route.title}>
-              <CommandGroup heading={route.title}>
-                {route.items.map((item, key) => (
-                  <CommandItem
-                    key={key}
-                    onSelect={() => {
-                      setOpen(false);
-                      router.push(item.href);
-                    }}
-                  >
-                    {item.icon && <item.icon />}
-                    <span>{item.title}</span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-              <CommandSeparator />
-            </React.Fragment>
-          ))}
+          {navItems
+            .filter((route) => {
+              // Filter out admin section for non-admin users
+              if (route.title === "Admin" && !isAdmin) {
+                return false;
+              }
+              return true;
+            })
+            .map((route) => (
+              <React.Fragment key={route.title}>
+                <CommandGroup heading={route.title}>
+                  {route.items.map((item, key) => (
+                    <CommandItem
+                      key={key}
+                      onSelect={() => {
+                        setOpen(false);
+                        router.push(item.href);
+                      }}
+                    >
+                      {item.icon && <item.icon />}
+                      <span>{item.title}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+                <CommandSeparator />
+              </React.Fragment>
+            ))}
         </CommandList>
       </CommandDialog>
     </div>

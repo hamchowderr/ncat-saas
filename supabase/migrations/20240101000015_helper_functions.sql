@@ -20,10 +20,10 @@ RETURNS BOOLEAN AS $$
 BEGIN
     RETURN EXISTS (
         SELECT 1 
-        FROM public.workspace_members 
-        WHERE workspace_member_id = user_id 
+        FROM public.workspace_members
+        WHERE workspace_member_id = user_id
         AND workspace_members.workspace_id = is_workspace_admin.workspace_id
-        AND role = 'admin'
+        AND workspace_member_role = 'admin'
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

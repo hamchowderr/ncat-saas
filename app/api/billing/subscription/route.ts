@@ -6,8 +6,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-08-27.basil"
 });
 
-// Free plan configuration
-const FREE_PLAN_PRICE_ID = "price_1SAgo7CCFNRAwpJserQa3BZG";
+// Dynamic free plan configuration - no hardcoded IDs!
 
 export async function POST(req: NextRequest) {
   try {
@@ -93,12 +92,29 @@ export async function POST(req: NextRequest) {
       customer = newCustomer;
     }
 
-    // Create free subscription
+    // Get the free plan price dynamically from database
+    const { data: freePlan, error: freePlanError } = await supabase
+      .from("billing_prices")
+      .select("gateway_price_id, gateway_product_id")
+      .eq("amount", 0)  // Free plan has $0 amount
+      .eq("gateway_name", "stripe")
+      .eq("active", true)
+      .single();
+
+    if (freePlanError || !freePlan) {
+      console.error("No free plan found in database:", freePlanError);
+      return NextResponse.json(
+        { error: "Free plan not available. Please contact support." },
+        { status: 500 }
+      );
+    }
+
+    // Create free subscription with dynamic price ID
     const subscription = await stripe.subscriptions.create({
       customer: customer.gateway_customer_id,
       items: [
         {
-          price: FREE_PLAN_PRICE_ID,
+          price: freePlan.gateway_price_id,  // Dynamic price ID from database
           quantity: 1
         }
       ],

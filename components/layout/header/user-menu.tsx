@@ -114,9 +114,11 @@ export default function UserMenu() {
               Account
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <CreditCard />
-            Billing
+          <DropdownMenuItem asChild>
+            <Link href="/billing">
+              <CreditCard />
+              Billing
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/settings/appearance">

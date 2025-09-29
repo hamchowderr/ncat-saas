@@ -28,7 +28,7 @@ export default function Page() {
         type: "signup",
         email: email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/auth/onboarding`
+          emailRedirectTo: `${window.location.origin}/auth/confirm?next=/auth/onboarding`
         }
       });
 
@@ -71,15 +71,19 @@ export default function Page() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>Check your inbox</span>
+                  <span>Check your inbox (may take a few minutes to arrive)</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>Look in your spam folder</span>
+                  <span>Look in your spam/junk folder if not in inbox</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>Click the confirmation link</span>
+                  <span>Click the &quot;Confirm your email&quot; button in the email</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span>You&apos;ll be automatically taken to complete your setup</span>
                 </div>
               </div>
 

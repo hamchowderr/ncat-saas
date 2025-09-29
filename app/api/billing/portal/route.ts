@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     // Create a billing portal session
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: returnUrl || `${process.env.NEXT_PUBLIC_SITE_URL}/billing`
+      return_url: returnUrl || `${process.env.NEXT_PUBLIC_BASE_URL}/billing`
     });
 
     return NextResponse.json({ url: session.url });
@@ -41,73 +41,37 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Find the billing customer for this user
-    let { data: customer, error: customerError } = await supabase
+    // Find the existing billing customer for this user using service role to bypass RLS
+    const serviceClient = createServiceRoleClient();
+    const { data: customer, error: customerError } = await serviceClient
       .from("billing_customers")
       .select("gateway_customer_id")
-      .eq("workspace_id", user.id) // Assuming workspace_id maps to user_id
+      .eq("workspace_id", user.id)
       .eq("gateway_name", "stripe")
       .single();
 
-    // If no customer exists, or customer ID starts with "pending_", create one automatically
-    if (customerError || !customer || customer.gateway_customer_id.startsWith("pending_")) {
-      console.log("Creating Stripe customer for user:", user.id, user.email);
-
-      // Create Stripe customer
-      const stripeCustomer = await stripe.customers.create({
+    // Check if customer exists and has a valid Stripe customer ID
+    if (customerError || !customer || !customer.gateway_customer_id.startsWith("cus_")) {
+      console.error("No valid Stripe customer found for user:", {
+        userId: user.id,
         email: user.email,
-        metadata: {
-          user_id: user.id,
-          workspace_id: user.id
-        }
+        customerError: customerError?.message,
+        customer: customer?.gateway_customer_id
       });
 
-      // Save to database using service role client to bypass RLS policies
-      const serviceClient = createServiceRoleClient();
-      console.log("🔧 Debug: Using service role client for billing customer creation");
-      console.log("🔧 Debug: Service role key exists:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-
-      // Use upsert with service role client to handle both insert and update cases
-      console.log("🔧 Debug: Using upsert to create/update billing customer record");
-      const { data: newCustomer, error: createError } = await serviceClient
-        .from("billing_customers")
-        .upsert(
-          {
-            gateway_customer_id: stripeCustomer.id,
-            workspace_id: user.id,
-            gateway_name: "stripe",
-            billing_email: user.email || "",
-            default_currency: "usd",
-            metadata: {
-              status: "active",
-              updated_at: new Date().toISOString()
-            }
-          },
-          {
-            onConflict: "workspace_id,gateway_name"
-          }
-        )
-        .select("gateway_customer_id")
-        .single();
-
-      if (createError) {
-        console.error("Error creating billing customer:", createError);
-        return NextResponse.json(
-          {
-            error: "Failed to create billing customer",
-            debug: { error: createError.message }
-          },
-          { status: 500 }
-        );
-      }
-
-      customer = newCustomer;
+      return NextResponse.json(
+        {
+          error: "Billing account not found. Please contact support.",
+          debug: "Customer should have been created during onboarding"
+        },
+        { status: 404 }
+      );
     }
 
-    // Create a billing portal session
+    // Create a billing portal session with the existing customer
     const session = await stripe.billingPortal.sessions.create({
       customer: customer.gateway_customer_id,
-      return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/billing`
+      return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/billing`
     });
 
     return NextResponse.json({ url: session.url });

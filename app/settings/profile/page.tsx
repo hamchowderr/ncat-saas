@@ -4,6 +4,7 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
+import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,11 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useUser } from "@/hooks/use-user";
+import { useWorkspace } from "@/hooks/use-workspace";
+import { createClient } from "@/lib/client";
+import { Separator } from "@/components/ui/separator";
 
 const profileFormSchema = z.object({
   username: z
@@ -54,16 +59,13 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-// This can come from your database or API.
-const defaultValues: Partial<ProfileFormValues> = {
-  bio: "I own a computer.",
-  urls: [{ value: "https://shadcn.com" }, { value: "http://twitter.com/shadcn" }]
-};
-
 export default function Page() {
+  const { user, loading: userLoading } = useUser();
+  const { workspace, loading: workspaceLoading } = useWorkspace();
+  const [loading, setLoading] = useState(true);
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues,
     mode: "onChange"
   });
 
@@ -72,64 +74,126 @@ export default function Page() {
     control: form.control
   });
 
-  function onSubmit(data: ProfileFormValues) {
-    toast("You submitted the following values:", {
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      )
-    });
+  useEffect(() => {
+    async function loadUserProfile() {
+      if (userLoading || workspaceLoading) return;
+      if (!user || !workspace) return;
+
+      try {
+        const supabase = createClient();
+
+        // Get user profile data
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+
+        // Set form default values with real user data
+        form.reset({
+          username: profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "",
+          email: user.email || "",
+          bio: "",
+          urls: [{ value: "" }]
+        });
+      } catch (error) {
+        console.error("Error loading user profile:", error);
+        // Set fallback values
+        form.reset({
+          username: user.user_metadata?.full_name || user.email?.split("@")[0] || "",
+          email: user.email || "",
+          bio: "",
+          urls: [{ value: "" }]
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadUserProfile();
+  }, [user, workspace, userLoading, workspaceLoading, form]);
+
+  async function onSubmit(data: ProfileFormValues) {
+    if (!user) return;
+
+    try {
+      const supabase = createClient();
+
+      // Update user profile
+      const { error } = await supabase
+        .from("user_profiles")
+        .upsert({
+          id: user.id,
+          full_name: data.username
+        });
+
+      if (error) throw error;
+
+      toast.success("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile. Please try again.");
+    }
+  }
+
+  if (loading || userLoading || workspaceLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Loading Profile...</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
+            <div className="h-4 bg-muted rounded w-1/2 animate-pulse"></div>
+            <div className="h-4 bg-muted rounded w-2/3 animate-pulse"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
-    <Card>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input placeholder="shadcn" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    This is your public display name. It can be your real name or a pseudonym. You
-                    can only change this once every 30 days.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Display Name</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a verified email to display" />
-                      </SelectTrigger>
+                      <Input placeholder="Enter your display name" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="m@example.com">m@example.com</SelectItem>
-                      <SelectItem value="m@google.com">m@google.com</SelectItem>
-                      <SelectItem value="m@support.com">m@support.com</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    You can manage verified email addresses in your{" "}
-                    <Link href="/examples/forms">email settings</Link>.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormDescription>
+                      This is your public display name. It can be your real name or a pseudonym.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email Address</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled />
+                    </FormControl>
+                    <FormDescription>
+                      Your email address is managed through your authentication settings and cannot be changed here.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             <FormField
               control={form.control}
               name="bio"
@@ -179,10 +243,35 @@ export default function Page() {
                 Add URL
               </Button>
             </div>
-            <Button type="submit">Update profile</Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+              <Button type="submit">Update profile</Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      {/* Workspace Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Workspace Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="font-medium">Workspace Name</span>
+            <span className="text-muted-foreground">{workspace?.name || "Loading..."}</span>
+          </div>
+          <Separator />
+          <div className="flex items-center justify-between">
+            <span className="font-medium">User ID</span>
+            <span className="text-muted-foreground font-mono text-sm">{user?.id || "Loading..."}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="font-medium">Account Created</span>
+            <span className="text-muted-foreground">
+              {user?.created_at ? new Date(user.created_at).toLocaleDateString() : "Loading..."}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

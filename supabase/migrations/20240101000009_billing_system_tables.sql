@@ -45,7 +45,8 @@ gateway_name TEXT NOT NULL,
 default_currency TEXT,
 billing_email TEXT NOT NULL,
 metadata JSONB DEFAULT '{}',
-UNIQUE (gateway_name, gateway_customer_id)
+UNIQUE (gateway_name, gateway_customer_id),
+UNIQUE (workspace_id, gateway_name)
 );
 
 -- Billing Invoices Table
@@ -115,6 +116,23 @@ feature TEXT NOT NULL,
 usage_amount INT NOT NULL,
 timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+
+-- Stripe Webhook Events Table (for duplicate prevention)
+CREATE TABLE IF NOT EXISTS public.stripe_webhook_events (
+    id SERIAL PRIMARY KEY,
+    stripe_event_id TEXT UNIQUE NOT NULL,
+    event_type TEXT NOT NULL,
+    processed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Index for fast lookups
+CREATE INDEX IF NOT EXISTS idx_stripe_webhook_events_stripe_event_id
+ON public.stripe_webhook_events(stripe_event_id);
+
+-- Index for cleanup queries (optional - for removing old events)
+CREATE INDEX IF NOT EXISTS idx_stripe_webhook_events_processed_at
+ON public.stripe_webhook_events(processed_at);
 
 -- Billing Customers RLS Policies
 -- Allow authenticated users to view their own billing customer records

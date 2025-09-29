@@ -1,7 +1,5 @@
-// Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import Stripe from "npm:stripe@12.0.0";
-import { createClient } from "npm:@supabase/supabase-js@2.39.3";
+import Stripe from "https://esm.sh/stripe@18.5.0?target=deno";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4?target=deno";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") as string, {
   // This is needed to use the Fetch API rather than relying on the Node http
@@ -13,10 +11,13 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") as string, {
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
 // Initialize Supabase client
-const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-);
+// For Edge Functions, we need to use the internal Docker network
+const supabaseUrl = Deno.env.get("SUPABASE_URL") || "http://supabase_kong_ncat-saas:8000";
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU";
+
+console.log("Connecting to Supabase:", supabaseUrl);
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 console.log("Stripe Webhook Function booted!");
 
@@ -41,6 +42,28 @@ Deno.serve(async (request) => {
   }
 
   console.log(`🔔 Event received: ${receivedEvent.id} - ${receivedEvent.type}`);
+
+  // Check if we've already processed this event to prevent duplicates
+  const { data: existingEvent } = await supabase
+    .from("stripe_webhook_events")
+    .select("id")
+    .eq("stripe_event_id", receivedEvent.id)
+    .single();
+
+  if (existingEvent) {
+    console.log(`⚠️ Event ${receivedEvent.id} already processed, skipping`);
+    return new Response(JSON.stringify({ received: true, status: "already_processed" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+
+  // Log this event as being processed
+  await supabase.from("stripe_webhook_events").insert({
+    stripe_event_id: receivedEvent.id,
+    event_type: receivedEvent.type,
+    processed_at: new Date().toISOString()
+  });
 
   try {
     // Handle different event types
@@ -70,7 +93,21 @@ Deno.serve(async (request) => {
       case "invoice.updated":
       case "invoice.payment_succeeded":
       case "invoice.payment_failed":
+      case "invoice.paid":
+      case "invoice.finalized":
         await handleInvoiceEvent(receivedEvent.data.object as Stripe.Invoice);
+        break;
+
+      case "payment_intent.created":
+      case "payment_intent.succeeded":
+      case "payment_intent.payment_failed":
+      case "payment_intent.canceled":
+        await handlePaymentIntentEvent(receivedEvent.data.object as Stripe.PaymentIntent);
+        break;
+
+      case "charge.succeeded":
+      case "charge.failed":
+        await handleChargeEvent(receivedEvent.data.object as Stripe.Charge);
         break;
 
       default:
@@ -88,12 +125,6 @@ Deno.serve(async (request) => {
 });
 
 async function handleProductEvent(product: Stripe.Product) {
-  // Filter: Only sync products with specific metadata
-  if (!product.metadata?.sync_to_app || product.metadata.sync_to_app !== "true") {
-    console.log(`⏭️ Product ${product.id} skipped (not marked for sync)`);
-    return;
-  }
-
   const { error } = await supabase.from("billing_products").upsert({
     gateway_product_id: product.id,
     gateway_name: "stripe",
@@ -113,21 +144,6 @@ async function handleProductEvent(product: Stripe.Product) {
 }
 
 async function handlePriceEvent(price: Stripe.Price) {
-  // Filter: Only sync prices for products we care about
-  if (!price.metadata?.sync_to_app || price.metadata.sync_to_app !== "true") {
-    // Check if the parent product should be synced
-    const { data: product } = await supabase
-      .from("billing_products")
-      .select("gateway_product_id")
-      .eq("gateway_product_id", price.product as string)
-      .single();
-
-    if (!product) {
-      console.log(`⏭️ Price ${price.id} skipped (product not synced)`);
-      return;
-    }
-  }
-
   const { error } = await supabase.from("billing_prices").upsert({
     gateway_price_id: price.id,
     gateway_product_id: price.product as string,
@@ -216,18 +232,49 @@ async function handleCustomerEvent(customer: Stripe.Customer) {
       throw error;
     }
   } else {
-    const { error } = await supabase.from("billing_customers").upsert({
-      gateway_customer_id: customer.id,
-      workspace_id: userId,
-      gateway_name: "stripe",
-      default_currency: customer.currency || "usd",
-      billing_email: customer.email || "",
-      metadata: customer.metadata || {}
-    });
+    // Check if customer already exists
+    const { data: existingCustomer } = await supabase
+      .from("billing_customers")
+      .select("*")
+      .eq("gateway_customer_id", customer.id)
+      .eq("gateway_name", "stripe")
+      .single();
 
-    if (error) {
-      console.error("Error upserting customer:", error);
-      throw error;
+    if (existingCustomer) {
+      // Update existing customer
+      const { error } = await supabase
+        .from("billing_customers")
+        .update({
+          default_currency: customer.currency || "usd",
+          billing_email: customer.email || "",
+          metadata: {
+            ...existingCustomer.metadata,
+            stripe_customer_updated: true,
+            stripe_metadata: customer.metadata || {}
+          }
+        })
+        .eq("gateway_customer_id", customer.id)
+        .eq("gateway_name", "stripe");
+
+      if (error) {
+        console.error("Error updating existing customer:", error);
+        throw error;
+      }
+    } else {
+      // Insert new customer
+      const { error } = await supabase.from("billing_customers").insert({
+        gateway_customer_id: customer.id,
+        workspace_id: userId,
+        gateway_name: "stripe",
+        default_currency: customer.currency || "usd",
+        billing_email: customer.email || "",
+        metadata: customer.metadata || {}
+      });
+
+      if (error) {
+        console.error("Error inserting new customer:", error);
+        throw error;
+      }
     }
   }
 
@@ -252,28 +299,61 @@ async function handleSubscriptionEvent(subscription: Stripe.Subscription) {
   const currentPeriodStart = safeTimestampToDate(subscription.current_period_start);
   const currentPeriodEnd = safeTimestampToDate(subscription.current_period_end);
 
-  // If both dates are null, use current date as fallback for start
-  const fallbackDate = new Date().toISOString().split("T")[0];
+  // If dates are null, create proper start and end dates for monthly subscription
+  let finalStartDate = currentPeriodStart;
+  let finalEndDate = currentPeriodEnd;
 
-  const { error } = await supabase.from("billing_subscriptions").upsert({
+  if (!finalStartDate || !finalEndDate) {
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+
+    finalStartDate = finalStartDate || startDate.toISOString().split("T")[0];
+    finalEndDate = finalEndDate || endDate.toISOString().split("T")[0];
+  }
+
+  const subscriptionData = {
     gateway_subscription_id: subscription.id,
     gateway_customer_id: subscription.customer as string,
     gateway_name: "stripe",
     gateway_product_id: subscription.items.data[0]?.price.product as string,
     gateway_price_id: subscription.items.data[0]?.price.id,
     status: subscription.status,
-    current_period_start: currentPeriodStart || fallbackDate,
-    current_period_end: currentPeriodEnd || fallbackDate,
+    current_period_start: finalStartDate,
+    current_period_end: finalEndDate,
     currency: subscription.currency,
     is_trial: subscription.trial_end ? true : false,
     trial_ends_at: safeTimestampToDate(subscription.trial_end),
     cancel_at_period_end: subscription.cancel_at_period_end,
     quantity: subscription.items.data[0]?.quantity || 1
-  });
+  };
+
+  const { error } = await supabase
+    .from("billing_subscriptions")
+    .upsert(subscriptionData, {
+      onConflict: "gateway_subscription_id,gateway_name"
+    });
 
   if (error) {
-    console.error("Error upserting subscription:", error);
-    throw error;
+    // If foreign key constraint fails due to missing product, wait and retry once
+    if (error.code === "23503" && error.details?.includes("billing_products")) {
+      console.warn("Product not found, retrying subscription sync after delay...", error.details);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      const { error: retryError } = await supabase
+        .from("billing_subscriptions")
+        .upsert(subscriptionData, {
+          onConflict: "gateway_subscription_id,gateway_name"
+        });
+
+      if (retryError) {
+        console.error("Error upserting subscription after retry:", retryError);
+        throw retryError;
+      }
+    } else {
+      console.error("Error upserting subscription:", error);
+      throw error;
+    }
   }
 
   console.log(`✅ Subscription ${subscription.id} synced`);
@@ -311,4 +391,48 @@ async function handleInvoiceEvent(invoice: Stripe.Invoice) {
   }
 
   console.log(`✅ Invoice ${invoice.id} synced`);
+}
+
+async function handlePaymentIntentEvent(paymentIntent: Stripe.PaymentIntent) {
+  // For now, just log payment intent events - charges will be tracked separately
+  console.log(`🔔 Payment Intent ${paymentIntent.id} ${paymentIntent.status} - amount: ${paymentIntent.amount} ${paymentIntent.currency}`);
+}
+
+async function handleChargeEvent(charge: Stripe.Charge) {
+  // Helper function to safely convert Unix timestamp to ISO date string
+  const safeTimestampToDate = (timestamp: number | null): string | null => {
+    if (!timestamp || timestamp <= 0) return null;
+    try {
+      return new Date(timestamp * 1000).toISOString();
+    } catch (error) {
+      console.warn("Invalid timestamp:", timestamp);
+      return null;
+    }
+  };
+
+  // Skip charges without customers (test data or standalone charges)
+  if (!charge.customer) {
+    console.log(`⏭️ Charge ${charge.id} skipped (no customer - likely test data)`);
+    return;
+  }
+
+  const { error } = await supabase.from("billing_one_time_payments").upsert({
+    gateway_charge_id: charge.id,
+    gateway_customer_id: charge.customer as string,
+    gateway_name: "stripe",
+    amount: charge.amount,
+    currency: charge.currency,
+    status: charge.status,
+    charge_date: safeTimestampToDate(charge.created),
+    gateway_invoice_id: charge.invoice as string || null,
+    gateway_product_id: null, // Would need to be derived from invoice line items
+    gateway_price_id: null    // Would need to be derived from invoice line items
+  });
+
+  if (error) {
+    console.error("Error upserting charge:", error);
+    throw error;
+  }
+
+  console.log(`✅ Charge ${charge.id} synced`);
 }

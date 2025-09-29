@@ -23,11 +23,21 @@ npm install --legacy-peer-deps
 
 ### Supabase Commands
 
-- `npx supabase start` - Start local Supabase stack
+#### Local Development Commands
+- `npx supabase start` - Start local Supabase stack (Docker containers)
 - `npx supabase stop` - Stop local Supabase stack
 - `npx supabase status` - Check local services status
-- `npx supabase db push` - Push migrations to database
+- `npx supabase db reset` - Reset local database (drop all data and re-run migrations)
+- `npx supabase db push` - Push local migrations to local database
 - `npx supabase functions serve` - Serve Edge Functions locally
+
+#### Cloud/Production Commands
+- `npx supabase link --project-ref YOUR_PROJECT_ID` - Link local project to cloud Supabase project
+- `npx supabase db push --linked` - Push migrations to linked cloud database
+- `npx supabase functions deploy` - Deploy all Edge Functions to cloud
+- `npx supabase functions deploy FUNCTION_NAME` - Deploy specific Edge Function to cloud
+- `npx supabase db pull` - Pull schema changes from cloud to local
+- `npx supabase gen types typescript --linked` - Generate types from cloud database
 
 ### Stripe CLI Commands
 
@@ -152,6 +162,50 @@ The app uses **Supabase Auth** with SSR middleware for session management:
 - **Protected routes**: All routes except `/auth/*` require authentication
 - **Auto-redirect**: Unauthenticated users are redirected to `/auth/login`
 
+### Role-Based Access Control (RBAC)
+
+**Admin Detection Pattern:**
+
+The application implements role-based access control using the `isUserAdmin()` function from `lib/admin.ts`:
+
+```typescript
+import { isUserAdmin } from "@/lib/admin";
+
+// Component-level admin checking
+const [isAdmin, setIsAdmin] = useState<boolean>(false);
+
+useEffect(() => {
+  const checkAdminStatus = async () => {
+    const adminStatus = await isUserAdmin();
+    setIsAdmin(adminStatus);
+  };
+  checkAdminStatus();
+}, []);
+
+// Conditional rendering based on admin status
+if (route.title === "Admin" && !isAdmin) {
+  return false; // Hide admin sections from non-admin users
+}
+```
+
+**Implementation Examples:**
+
+1. **Command Palette Filtering** (`components/layout/header/search.tsx:78-84`):
+   - Admin navigation sections hidden from non-admin users
+   - Uses async admin status checking with state management
+
+2. **Database-level Security** (`supabase/migrations/20240101000015_helper_functions.sql`):
+   - `is_application_admin(user_id)` - Check if user has app-level admin role
+   - `is_workspace_admin(user_id, workspace_id)` - Check workspace-specific admin rights
+   - `is_workspace_member(user_id, workspace_id)` - Verify workspace membership
+
+**RBAC Best Practices:**
+
+- Always check admin status asynchronously in `useEffect`
+- Filter UI components client-side for better UX
+- Enforce permissions server-side via RLS policies
+- Use database helper functions for consistent permission checking
+
 ### Theme System
 
 Custom theming system supporting:
@@ -186,14 +240,15 @@ Real-time notification system with comprehensive management:
 ### Database Integration
 
 - **Supabase**: Primary database and auth provider
-- **Migrations**: Database migrations stored in `/supabase/migrations` (25+ migration files)
+- **Migrations**: Database migrations stored in `/supabase/migrations` (23 migration files with consolidated schema)
 - **Admin Panel**: Built-in database management interface
 - **Real-time**: Leverages Supabase real-time subscriptions for live updates
-- **Edge Functions**: 20+ Supabase Edge Functions for media processing and file operations
+- **Edge Functions**: 21 Supabase Edge Functions for media processing and file operations
+- **Schema Organization**: Migrations are numbered 000-022 covering core system, billing, and storage setup
 
 ### Supabase Edge Functions Architecture
 
-The application uses extensive Supabase Edge Functions for media processing:
+The application uses 21 Supabase Edge Functions for comprehensive media processing and system operations:
 
 **Media Processing Functions:**
 
@@ -201,26 +256,65 @@ The application uses extensive Supabase Edge Functions for media processing:
 - `media-convert-mp3` - Specialized MP3 audio conversion
 - `media-transcribe` - Audio/video transcription
 - `media-silence` - Audio silence detection and processing
-- `video-caption` - Video captioning
+- `video-caption` - Video captioning and subtitle generation
 - `video-cut`, `video-split`, `video-trim` - Video editing operations
-- `video-thumbnail` - Thumbnail generation
-- `image-convert-video` - Image to video conversion
-- `audio-concatenate`, `video-concatenate` - Media concatenation
+- `video-thumbnail` - Thumbnail generation from video content
+- `image-convert-video` - Convert images to video format
+- `audio-concatenate`, `video-concatenate` - Media file concatenation
 
 **File Operations:**
 
-- `file-upload` - Secure file upload handling
-- `s3-upload` - Cloud storage integration
-- `media-download` - File download management
-- `media-metadata` - Metadata extraction
+- `file-upload` - Secure file upload handling with progress tracking
+- `s3-upload` - Cloud storage integration for external providers
+- `media-download` - File download management and serving
+- `media-metadata` - Extract metadata from media files
 
-**Utility Functions:**
+**System Functions:**
 
-- `ffmpeg-compose` - Advanced video composition
-- `code-execute-python` - Remote Python code execution
-- `ncat-webhook` - NCA Toolkit API webhook handler
-- `stripe-webhook` - Payment processing webhooks
-- `send-email` - Email delivery system (supports custom templates)
+- `ffmpeg-compose` - Advanced video composition and effects
+- `code-execute-python` - Remote Python code execution environment
+- `ncat-webhook` - NCA Toolkit API webhook handler for processing jobs
+- `stripe-webhook` - Payment processing and subscription webhooks
+- `send-email` - Email delivery system with custom template support
+
+**Function Development Notes:**
+
+- All functions integrate with NCA Toolkit API for processing
+- Edge Functions handle authentication via JWT tokens
+- Real-time job status updates via Supabase subscriptions
+- Error handling and retry logic built into each function
+
+**Webhook Handler Improvements (`stripe-webhook` function):**
+
+1. **Duplicate Event Prevention**:
+   - Tracks processed events in `stripe_webhook_events` table
+   - Prevents duplicate processing of same Stripe event
+   - Returns early with success status for already-processed events
+
+2. **Race Condition Handling**:
+   - Built-in retry logic for foreign key constraint failures
+   - Automatic 1-2 second delays when products/customers don't exist yet
+   - Graceful handling of webhook event ordering issues
+
+3. **Robust Date Handling**:
+   - Safe timestamp conversion with null checks and validation
+   - Fallback date generation for invalid Stripe timestamps
+   - Proper monthly period calculation for subscription billing cycles
+
+4. **Error Recovery Patterns**:
+   ```typescript
+   // Example: Price sync with product dependency retry
+   if (error.code === "23503" && error.details?.includes("billing_products")) {
+     console.warn("Product not found, retrying after delay...");
+     await new Promise(resolve => setTimeout(resolve, 1000));
+     // Retry the operation once
+   }
+   ```
+
+5. **upsert() Best Practices**:
+   - Always specify `onConflict` parameter for proper upsert behavior
+   - Use appropriate conflict resolution columns for each table
+   - Handle both insert and update scenarios gracefully
 
 ### API Integration
 
@@ -274,8 +368,7 @@ STRIPE_SECRET_KEY=sk_test_51...
 # Get this by running: stripe listen --forward-to http://127.0.0.1:54321/functions/v1/stripe-webhook
 STRIPE_WEBHOOK_SIGNING_SECRET=whsec_...
 
-# Free plan price ID (create in Stripe Dashboard with metadata: sync_to_app: "true")
-STRIPE_FREE_PRICE_ID=price_1SAgo7CCFNRAwpJserQa3BZG
+# No hardcoded price IDs needed - system uses dynamic database queries
 
 # ================================
 # LOCAL DEVELOPMENT SETTINGS
@@ -338,7 +431,6 @@ Go to your [Supabase Dashboard Functions Settings](https://supabase.com/dashboar
 # Edge Function Secrets (for webhook processing)
 STRIPE_SECRET_KEY=sk_live_your_live_secret_key
 STRIPE_WEBHOOK_SIGNING_SECRET=whsec_your_production_webhook_secret
-STRIPE_FREE_PRICE_ID=price_your_live_price_id
 NCAT_API_URL=https://your-production-ncat-api.com
 NCAT_API_KEY=your_production_ncat_api_key
 OPENAI_API_KEY=sk-your_openai_key
@@ -387,7 +479,7 @@ RESEND_API_KEY=re_your_resend_key
 
 ### Prettier Configuration
 
-The project uses Prettier for code formatting with these settings:
+The project uses Prettier for code formatting with these settings in `.prettierrc`:
 
 - Semi-colons: enabled
 - Tab width: 2 spaces
@@ -401,7 +493,7 @@ The project uses Prettier for code formatting with these settings:
 
 Uses Next.js default ESLint configuration with custom plugins:
 
-- ESLint plugin for readable Tailwind CSS classes
+- ESLint plugin for readable Tailwind CSS classes (`eslint-plugin-readable-tailwind`)
 - Standard Next.js rules with some customizations
 - Configuration managed through Next.js built-in ESLint setup
 
@@ -619,6 +711,7 @@ When creating or modifying database schema:
 ```bash
 # 1. Create migration file (if needed)
 # Edit existing migration files in /supabase/migrations/
+# Current schema includes 23 migrations (000-022)
 
 # 2. Apply migrations locally
 npx supabase db push
@@ -635,6 +728,13 @@ npm run update-types
 # 6. Test with application
 # Verify frontend components work with schema changes
 ```
+
+**Migration Organization:**
+- `000-001`: Core Supabase setup and extensions
+- `002-008`: Core system tables (enums, users, workspaces, projects, AI chat, marketing, feedback)
+- `009`: Billing system tables with Stripe integration
+- `010-014`: Settings, storage, and security policies
+- `015-022`: Helper functions, RLS policies, and job tracking
 
 ### Edge Function Development Workflow
 
@@ -674,6 +774,45 @@ npx supabase functions logs function-name
 - **Onboarding Flow**: Organization setup is required before workspace access
 - **Billing Integration**: Free subscription creation is part of user onboarding
 - **Error Handling**: Graceful fallbacks for billing failures during onboarding
+
+### Key Development Lessons Learned
+
+**Database Migration Best Practices:**
+- **ALWAYS fix migration files directly** for local development (never use workarounds)
+- RLS policy column name mismatches should be corrected in helper functions
+- Use `npx supabase db push` after every migration file change
+- Test migration changes in Supabase Studio before proceeding
+
+**Stripe Integration Patterns:**
+- Create customers during onboarding, NOT in billing portal access
+- Always sync products before prices to avoid foreign key constraints
+- Use MCP tools to create $0 prices for free plans
+- Filter products using metadata (`sync_to_app: true`) to prevent unrelated data sync
+
+**Webhook Development Approach:**
+- Implement duplicate event prevention for all webhook handlers
+- Add retry logic for race conditions (foreign key constraints)
+- Use proper `onConflict` parameters in all upsert operations
+- Handle invalid timestamps with fallback date generation
+
+**Component Development Philosophy:**
+- Filter technical metadata from user-facing components
+- Implement role-based filtering using async admin status checks
+- Always divide Stripe amounts by 100 for proper currency display
+- Use existing design patterns and components rather than creating new ones
+
+**Error Resolution Methodology:**
+1. Read error messages carefully - they usually indicate exactly what's wrong
+2. For RLS/database errors, check migration files first
+3. For billing errors, verify Stripe product/price sync status
+4. For foreign key errors, ensure proper data creation order
+5. For UI issues, check if technical metadata is leaking to user interface
+
+**Development Environment Standards:**
+- Always run services in correct order: Supabase → Edge Functions → Stripe CLI → Dev Server
+- Use consistent port 3000 for all development
+- Verify webhook forwarding is working before testing billing features
+- Check database tables in Supabase Studio after webhook events
 
 ### Component Architecture
 
@@ -734,7 +873,7 @@ Key tables include:
 **Key Features:**
 
 - Automatic Stripe customer creation during onboarding
-- Free plan assignment (Price ID: `price_1SAgo7CCFNRAwpJserQa3BZG`)
+- Dynamic price resolution: System automatically finds free plan ($0 price) from database
 - Workspace-based billing (one subscription per workspace)
 - Service role client for secure database operations
 - Comprehensive error handling and rollback logic
@@ -777,6 +916,63 @@ const htmlContent = generateConfirmationEmailHtml({
 
 ## Troubleshooting Guide
 
+### Critical Billing System Issues
+
+#### "Free plan not available" Error During Onboarding
+
+**Problem**: User signup fails with "Free plan not available. Please contact support."
+
+**Root Cause**: Missing $0 price in database for free plan product
+
+**Solution**:
+1. Check if free plan product exists: Use Stripe MCP to list products
+2. Create $0 price for free plan:
+   ```bash
+   # Use Stripe MCP to create price with amount: 0, currency: "usd"
+   # Or use Stripe CLI: stripe prices create --unit-amount=0 --currency=usd --product=prod_xxx
+   ```
+3. Verify webhook sync: Check `billing_prices` table has amount=0 entry
+
+#### Foreign Key Constraint Violations in Billing
+
+**Problem**: `foreign key constraint fails...billing_products` during webhook processing
+
+**Root Cause**: Race condition - prices syncing before products exist
+
+**Solution**:
+1. Always sync products before prices:
+   ```bash
+   stripe trigger product.created
+   stripe trigger price.created
+   ```
+2. Webhook handler has built-in retry logic for this issue
+3. Verify products exist in `billing_products` table before testing subscriptions
+
+#### "Column 'role' does not exist" RLS Policy Error
+
+**Problem**: Database queries fail with role column reference error
+
+**Root Cause**: RLS policy using incorrect column name `role` instead of `workspace_member_role`
+
+**Solution**:
+1. **ALWAYS fix in migration files** (best practice for local development)
+2. Edit `supabase/migrations/20240101000015_helper_functions.sql`
+3. Change `role` to `workspace_member_role` in all helper functions
+4. Apply with `npx supabase db push`
+
+**CRITICAL**: Never use workarounds - fix migration files directly for local development
+
+#### Billing Portal Access Issues
+
+**Problem**: "No valid Stripe customer found" when accessing billing portal
+
+**Root Cause**: Customer creation should happen during onboarding, not portal access
+
+**Best Practice**:
+- Create Stripe customers during user onboarding in `/api/billing/subscription`
+- Billing portal should only lookup existing customers
+- Use service role client to bypass RLS when needed for existing customer queries
+
 ### Subscription Not Showing Issue
 
 If subscriptions exist in Stripe but don't display in the application:
@@ -814,6 +1010,57 @@ To prevent syncing unrelated Stripe products to your database:
 2. **Webhook handler automatically filters** products without this metadata
 
 3. **For existing products**: Update them with the metadata to enable sync
+
+### Syncing Existing Stripe Products
+
+If you have existing products in Stripe that need to be synced:
+
+#### Method 1: Add Metadata and Trigger Webhooks
+1. **Add sync metadata to existing products** in Stripe Dashboard:
+   - Go to Products in Stripe Dashboard
+   - Edit each product you want to sync
+   - Add metadata: `sync_to_app` = `true`, `app_name` = `ncat-saas`
+
+2. **Trigger webhook events** to sync existing products:
+   ```bash
+   # For each existing product, trigger update event
+   stripe products update prod_YOUR_PRODUCT_ID --metadata[sync_to_app]=true --metadata[app_name]=ncat-saas
+
+   # This automatically triggers product.updated webhook
+   # Repeat for each price associated with the product
+   stripe prices update price_YOUR_PRICE_ID --metadata[tier]=free
+   ```
+
+#### Method 2: Use Stripe MCP (Recommended)
+1. **List existing products**: Use Stripe MCP to see what products exist
+2. **Update metadata**: Use Stripe MCP to add sync metadata to desired products
+3. **Verify sync**: Check `billing_products` and `billing_prices` tables in Supabase Studio
+
+### UI/UX Issues in Billing Components
+
+#### Technical Metadata Showing in Plan Features
+
+**Problem**: Raw technical data like `sync_to_app` showing in subscription status
+
+**Solution**: Filter technical metadata in billing components:
+```typescript
+// Filter out technical metadata
+const filteredFeatures = Object.entries(features).filter(([key]) =>
+  !key.startsWith('sync_') &&
+  !key.includes('_to_') &&
+  !key.includes('app') &&
+  key !== 'tier'
+);
+```
+
+#### Duplicate Dollar Signs and Date Formatting
+
+**Problem**: Price display shows "$$10.00" and dates show same month twice
+
+**Solutions**:
+1. **Price formatting**: Remove DollarSign icon when using formatPrice function that already includes $
+2. **Stripe amounts**: Always divide by 100 (Stripe uses cents)
+3. **Date handling**: Ensure webhook creates proper monthly periods, not duplicate fallback dates
 
 ### Port Configuration Issues
 
