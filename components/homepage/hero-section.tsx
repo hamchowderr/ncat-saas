@@ -136,7 +136,7 @@ export function HeroSection() {
           variants={floatingVariants}
           animate="animate"
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          className="mt-16 max-w-4xl mx-auto"
+          className="mt-32 max-w-4xl mx-auto"
         >
           <div className="relative">
             <motion.div

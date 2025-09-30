@@ -12,7 +12,7 @@ export async function generateMetadata() {
 
 export default function Page() {
   return (
-    <div className="m-auto flex h-[calc(100vh-var(--header-height)-3rem)] w-full max-w-(--breakpoint-md) items-center justify-center">
+    <div className="flex h-[calc(100vh-var(--header-height)-3rem)] w-full">
       <AppRender />
     </div>
   );

@@ -52,8 +52,12 @@ export async function GET(request: Request) {
           !workspace?.name;
 
         // Route to onboarding if user has default workspace name
-        if (isDefaultName && (next === "/workspace/file-manager" || next === "/auth/onboarding")) {
+        // Never redirect authenticated users to homepage
+        if (isDefaultName) {
           next = "/auth/onboarding";
+        } else if (next === "/" || next === "/auth/onboarding") {
+          // If user is fully onboarded, don't send them to homepage or onboarding
+          next = "/workspace/file-manager";
         }
       }
 

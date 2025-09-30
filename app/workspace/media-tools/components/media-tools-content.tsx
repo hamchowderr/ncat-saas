@@ -1,313 +1,113 @@
 "use client";
 
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Video,
-  Image as ImageIcon,
-  Music,
-  FileText,
-  Scissors,
-  Download,
-  Upload,
-  Wand2,
-  Zap,
-  Camera,
-  Mic,
-  Edit3
-} from "lucide-react";
+import { Video, Music, ImageIcon, Code, Wand2, Upload } from "lucide-react";
 
+// Import extracted tools
+import { AudioConcatenateTool } from "./tools/audio/audio-concatenate-tool";
+import { SilenceDetectionTool } from "./tools/audio/silence-detection-tool";
+import { ImageToVideoTool } from "./tools/image/image-to-video-tool";
+import { PythonExecutionTool } from "./tools/code/python-execution-tool";
+import { VideoCaptionTool } from "./tools/video/video-caption-tool";
+import { VideoTrimTool } from "./tools/video/video-trim-tool";
+import { VideoSplitTool } from "./tools/video/video-split-tool";
+import { VideoCutTool } from "./tools/video/video-cut-tool";
+import { VideoThumbnailTool } from "./tools/video/video-thumbnail-tool";
+import { VideoConcatenateTool } from "./tools/video/video-concatenate-tool";
+import { MediaConvertTool } from "./tools/media/media-convert-tool";
+import { MediaToMp3Tool } from "./tools/media/media-to-mp3-tool";
+import { MediaTranscribeTool } from "./tools/media/media-transcribe-tool";
+import { MediaMetadataTool } from "./tools/media/media-metadata-tool";
+import { S3UploadTool } from "./tools/storage/s3-upload-tool";
+
+/**
+ * Media Tools Content - Modular Version
+ *
+ * This component serves as the main orchestrator for all media processing tools.
+ * Each tool is a self-contained component in its own file under ./tools/
+ *
+ * Directory Structure:
+ * - tools/audio/     - Audio processing tools
+ * - tools/video/     - Video processing tools
+ * - tools/image/     - Image processing tools
+ * - tools/code/      - Code execution tools
+ * - tools/media/     - Media conversion and processing tools
+ * - tools/storage/   - Cloud storage tools
+ */
 export function MediaToolsContent() {
   return (
     <div className="space-y-8">
-      {/* Video Processing */}
+      {/* Video Processing Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <Video className="h-5 w-5 text-blue-600" />
           <h2 className="text-xl font-semibold">Video Processing</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-sm">Video Caption</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Adds customizable captions to videos with various styling options
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-sm">Video Concatenate</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Combines multiple videos into a single continuous video file
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Camera className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-sm">Video Thumbnail</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Extracts a thumbnail image from a specific timestamp in a video
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Scissors className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-sm">Video Cut</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Cuts specified segments from a video file with optional encoding settings
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Edit3 className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-sm">Video Split</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Splits a video into multiple segments based on specified start and end times
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Wand2 className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-sm">Video Trim</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Trims a video by keeping only the content between specified start and end times
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          <VideoCaptionTool />
+          <VideoTrimTool />
+          <VideoSplitTool />
+          <VideoCutTool />
+          <VideoThumbnailTool />
+          <VideoConcatenateTool />
         </div>
       </div>
 
-      {/* Audio Processing */}
+      {/* Audio Processing Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <Music className="h-5 w-5 text-green-600" />
           <h2 className="text-xl font-semibold">Audio Processing</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-green-600" />
-                <CardTitle className="text-sm">Audio Concatenate</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Combines multiple audio files into a single audio file
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          <AudioConcatenateTool />
+          <SilenceDetectionTool />
         </div>
       </div>
 
-      {/* Image Processing */}
+      {/* Image Processing Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <ImageIcon className="h-5 w-5 text-purple-600" />
           <h2 className="text-xl font-semibold">Image Processing</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Video className="h-4 w-4 text-purple-600" />
-                <CardTitle className="text-sm">Image to Video</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Transforms a static image into a video with custom duration and zoom effects
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Camera className="h-4 w-4 text-purple-600" />
-                <CardTitle className="text-sm">Webpage Screenshot</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Captures screenshots of web pages using Playwright with advanced options
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          <ImageToVideoTool />
         </div>
       </div>
 
-      {/* Media Processing */}
+      {/* Media Tools Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <FileText className="h-5 w-5 text-orange-600" />
-          <h2 className="text-xl font-semibold">Media Processing</h2>
+          <Wand2 className="h-5 w-5 text-orange-600" />
+          <h2 className="text-xl font-semibold">Media Tools</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Wand2 className="h-4 w-4 text-orange-600" />
-                <CardTitle className="text-sm">Media Convert</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Converts media files from one format to another with customizable codec options
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Music className="h-4 w-4 text-orange-600" />
-                <CardTitle className="text-sm">Convert to MP3</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Converts various media formats specifically to MP3 audio
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Download className="h-4 w-4 text-orange-600" />
-                <CardTitle className="text-sm">Media Download</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Downloads media content from various online sources using yt-dlp
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-orange-600" />
-                <CardTitle className="text-sm">Media Feedback</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Provides a web interface for collecting and displaying feedback on media content
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Mic className="h-4 w-4 text-orange-600" />
-                <CardTitle className="text-sm">Media Transcribe</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Transcribes or translates audio/video content from a provided media URL
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-orange-600" />
-                <CardTitle className="text-sm">Media Silence</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Detects silence intervals in a given media file
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Edit3 className="h-4 w-4 text-orange-600" />
-                <CardTitle className="text-sm">Media Metadata</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Extracts comprehensive metadata from media files including format, codecs,
-                resolution, and bitrates
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          <MediaConvertTool />
+          <MediaToMp3Tool />
+          <MediaTranscribeTool />
+          <MediaMetadataTool />
         </div>
       </div>
 
-      {/* Code Execution */}
+      {/* Code Execution Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <FileText className="h-5 w-5 text-indigo-600" />
+          <Code className="h-5 w-5 text-indigo-600" />
           <h2 className="text-xl font-semibold">Code Execution</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-indigo-600" />
-                <CardTitle className="text-sm">Execute Python</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Executes Python code remotely and returns the execution results
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          <PythonExecutionTool />
         </div>
       </div>
 
-      {/* FFmpeg */}
+      {/* Cloud Storage Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <Wand2 className="h-5 w-5 text-red-600" />
-          <h2 className="text-xl font-semibold">FFmpeg</h2>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Edit3 className="h-4 w-4 text-red-600" />
-                <CardTitle className="text-sm">FFmpeg Compose</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Provides a flexible interface to FFmpeg for complex media processing operations
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-      </div>
-
-      {/* Cloud Storage */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Upload className="h-5 w-5 text-teal-600" />
+          <Upload className="h-5 w-5 text-gray-600" />
           <h2 className="text-xl font-semibold">Cloud Storage</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Upload className="h-4 w-4 text-teal-600" />
-                <CardTitle className="text-sm">S3 Upload</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                Uploads files to Amazon S3 storage by streaming directly from a URL
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          <S3UploadTool />
         </div>
       </div>
     </div>

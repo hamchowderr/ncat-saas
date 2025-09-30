@@ -5,7 +5,7 @@ export async function generateMetadata() {
   return generateMeta({
     title: "Media Tools",
     description: "NCA Toolkit API endpoints for media processing and content creation.",
-    canonical: "/dashboard/apps/files/media-tools"
+    canonical: "/workspace/media-tools"
   });
 }
 

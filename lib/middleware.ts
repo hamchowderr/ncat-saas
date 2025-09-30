@@ -44,6 +44,44 @@ export async function updateSession(request: NextRequest) {
     data: { user: fullUser }
   } = await supabase.auth.getUser();
 
+  // Redirect authenticated users away from homepage to their appropriate destination
+  if (user && request.nextUrl.pathname === "/") {
+    const url = request.nextUrl.clone();
+
+    // Check if user's email is confirmed
+    if (fullUser && !fullUser.email_confirmed_at) {
+      url.pathname = "/auth/sign-up-success";
+      return NextResponse.redirect(url);
+    }
+
+    // Check if user needs onboarding
+    try {
+      const { data: workspace } = await supabase
+        .from("workspaces")
+        .select("name")
+        .eq("id", user.sub)
+        .single();
+
+      const isDefaultName =
+        workspace?.name?.endsWith("'s Workspace") ||
+        workspace?.name?.endsWith("-workspace") ||
+        !workspace?.name;
+
+      if (isDefaultName) {
+        url.pathname = "/auth/onboarding";
+      } else {
+        url.pathname = "/workspace/file-manager";
+      }
+
+      return NextResponse.redirect(url);
+    } catch (error) {
+      console.error("Error checking workspace in middleware:", error);
+      // Fallback to workspace if error
+      url.pathname = "/workspace/file-manager";
+      return NextResponse.redirect(url);
+    }
+  }
+
   if (
     !user &&
     !request.nextUrl.pathname.startsWith("/login") &&

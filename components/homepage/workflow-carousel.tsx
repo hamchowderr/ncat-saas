@@ -134,7 +134,7 @@ export function WorkflowCarousel() {
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="mb-12"
           >
-            <Card className="overflow-hidden border-0 shadow-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl">
+            <Card className="overflow-hidden border-0 shadow-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl">
               <CardContent className="p-0">
                 <div className="grid lg:grid-cols-2 gap-0">
                   {/* Left side - Content */}
@@ -204,7 +204,7 @@ export function WorkflowCarousel() {
                   </div>
 
                   {/* Right side - Visual */}
-                  <div className={`bg-gradient-to-br ${currentWorkflow.bgColor} flex items-center justify-center p-8 lg:p-12 min-h-[400px]`}>
+                  <div className={`bg-gradient-to-br ${currentWorkflow.bgColor} flex items-center justify-center p-8 lg:p-12 min-h-[400px] rounded-b-2xl lg:rounded-b-none lg:rounded-r-2xl`}>
                     <motion.div
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}

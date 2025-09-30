@@ -60,24 +60,67 @@ npm install --legacy-peer-deps
 
 #### Setup Webhooks for Local Testing
 
+**CRITICAL: Services must be started in this exact order:**
+
 1. **Install Stripe CLI** from [stripe.com/docs/stripe-cli](https://stripe.com/docs/stripe-cli)
 2. **Login to Stripe**: `stripe login`
 3. **Start Supabase locally**: `npx supabase start`
-4. **Serve Edge Functions**: `npx supabase functions serve`
-5. **Forward webhooks**: `stripe listen --forward-to http://127.0.0.1:54321/functions/v1/stripe-webhook`
+4. **Serve Edge Functions**: `npx supabase functions serve` (REQUIRED - keep running in separate terminal)
+5. **Forward webhooks**: `stripe listen --forward-to http://127.0.0.1:54321/functions/v1/stripe-webhook` (keep running in separate terminal)
 6. **Copy webhook signing secret** and add to `.env.local` as `STRIPE_WEBHOOK_SIGNING_SECRET`
 
-#### Testing Product and Price Creation
+**Important Notes:**
+- Edge Functions MUST be running (`npx supabase functions serve`) before Stripe webhooks will sync
+- Stripe CLI MUST be forwarding webhooks for product/price sync to work
+- Keep both terminals running during development
+
+#### Syncing Existing Stripe Products to Database
+
+**CRITICAL: Follow these exact steps to sync products and prices:**
 
 ```bash
-# Create a test product
-stripe trigger product.created
+# Step 1: Add sync metadata to products (this enables filtering)
+stripe products update YOUR_PRODUCT_ID -d "metadata[sync_to_app]=true" -d "metadata[app_name]=ncat-saas"
 
-# Create a test price for that product
-stripe trigger price.created
+# Example for NCAT products:
+stripe products update prod_T8JMLAOjYY3fVV -d "metadata[sync_to_app]=true" -d "metadata[app_name]=ncat-saas"  # Free Plan
+stripe products update prod_T8JMB6xPmiHq7f -d "metadata[sync_to_app]=true" -d "metadata[app_name]=ncat-saas"  # Pro Plan
+stripe products update prod_T8JM2tfJbN0viA -d "metadata[sync_to_app]=true" -d "metadata[app_name]=ncat-saas"  # Business Plan
 
-# Verify in Supabase Studio at http://localhost:54323
-# Check billing_products and billing_prices tables
+# Step 2: Trigger price webhooks to sync prices
+stripe prices update YOUR_PRICE_ID -d "metadata[tier]=free"
+
+# Example for NCAT prices:
+stripe prices update price_1SCQNWCCFNRAwpJsa20Nj8Mj -d "metadata[plan]=free"     # Free Plan - $0/month
+stripe prices update price_1SCAlRCCFNRAwpJsKhicPvU7 -d "metadata[tier]=pro"     # Pro Plan - $25/month
+stripe prices update price_1SCAmWCCFNRAwpJsmdHZ3wZK -d "metadata[tier]=business" # Business Plan - $50/month
+
+# Step 3: Verify sync in Supabase Studio
+# Open http://localhost:54323
+# Check billing_products table (should have 3 products)
+# Check billing_prices table (should have 3 prices including $0 free plan)
+```
+
+**Verification Commands:**
+
+```bash
+# List your Stripe products
+stripe products list --limit 10
+
+# List prices for a specific product
+stripe prices list --product YOUR_PRODUCT_ID
+
+# Check recent Stripe events
+stripe events list --limit 5
+```
+
+**Webhook Handler Logs:**
+
+When Edge Functions are running, you'll see logs like:
+```
+[Info] 🔔 Event received: evt_XXX - price.updated
+[Info] ✅ Price price_1SCQNWCCFNRAwpJsa20Nj8Mj synced
+[Info] ✅ Product prod_T8JMLAOjYY3fVV synced
 ```
 
 #### Testing Customer and Subscription Flow
@@ -237,6 +280,71 @@ Real-time notification system with comprehensive management:
 - **Bulk operations**: Mark all as read, bulk delete functionality
 - **Schema enhancements**: Recent migration adds type, message, and link fields
 
+### AI Chat Persistence System
+
+**Complete Implementation (AI SDK 5 Compatible):**
+
+The application includes a full-featured chat persistence system that automatically saves conversations to the database:
+
+**Architecture:**
+- **Database Table**: `chats` table stores conversation history with UIMessage[] format
+- **Auto-save**: Messages automatically saved after each AI response via `onFinish` callback
+- **Chat Sessions**: Each conversation has a unique ID generated with AI SDK's `generateId()`
+- **Metadata Tracking**: Stores model info, token counts, message counts, and timestamps
+
+**Key Files:**
+- `lib/types/chat.ts` - TypeScript interfaces for chat persistence
+- `app/api/chat/sessions/route.ts` - Create and list chat sessions (POST/GET)
+- `app/api/chat/sessions/[id]/route.ts` - Load, update, delete individual chats (GET/PUT/DELETE)
+- `app/api/chat/route.ts` - Main chat endpoint with auto-save via `onFinish`
+- `components/chat/chat-history-sidebar.tsx` - UI for browsing and loading past conversations
+- `app/workspace/ai-chat/app-render.tsx` - Main chat interface with session management
+
+**Database Schema (`chats` table):**
+```sql
+- id (text) - Unique chat session ID
+- user_id (uuid) - Owner of the chat
+- project_id (uuid, nullable) - Optional project association
+- title (text) - Chat session title (auto-generated from first message)
+- messages (jsonb) - Array of UIMessage objects from AI SDK 5
+- metadata (jsonb) - {model, totalTokens, promptTokens, completionTokens, messageCount}
+- created_at (timestamp) - Session creation time
+- updated_at (timestamp) - Last message time (auto-updated via trigger)
+```
+
+**Features:**
+- ✅ Automatic chat creation on first message
+- ✅ Real-time message persistence after each response
+- ✅ Chat history sidebar with delete functionality
+- ✅ Load previous conversations
+- ✅ New chat button to start fresh sessions
+- ✅ Support for text + image generation messages
+- ✅ Token usage tracking and metadata
+- ✅ Row Level Security (RLS) policies for user data isolation
+
+**Usage Pattern:**
+```typescript
+// Chat component automatically handles persistence
+const { messages, sendMessage } = useChat({
+  api: "/api/chat",
+  body: { chatId: currentChatId } // Pass chat ID for auto-save
+});
+
+// Create new chat session
+const response = await fetch("/api/chat/sessions", {
+  method: "POST",
+  body: JSON.stringify({ messages, metadata })
+});
+
+// Load existing chat
+const response = await fetch(`/api/chat/sessions/${chatId}`);
+const { messages } = await response.json();
+setMessages(messages);
+```
+
+**Migration File:**
+- `20240101000006_ai_chat_system_tables.sql` - Complete chat table with AI SDK 5 support (consolidated)
+
 ### Database Integration
 
 - **Supabase**: Primary database and auth provider
@@ -244,7 +352,7 @@ Real-time notification system with comprehensive management:
 - **Admin Panel**: Built-in database management interface
 - **Real-time**: Leverages Supabase real-time subscriptions for live updates
 - **Edge Functions**: 21 Supabase Edge Functions for media processing and file operations
-- **Schema Organization**: Migrations are numbered 000-022 covering core system, billing, and storage setup
+- **Schema Organization**: Migrations are numbered 000-022 covering core system, billing, storage, and AI chat persistence
 
 ### Supabase Edge Functions Architecture
 
@@ -551,6 +659,40 @@ All routes are protected by default except authentication routes. The middleware
 - Resend functionality built into confirmation page
 - 24-hour expiration for confirmation links
 - Automatic routing to onboarding after confirmation
+
+**CRITICAL: Email Confirmation URL Configuration**
+
+The `supabase/config.toml` file MUST be configured correctly for email confirmations to work:
+
+```toml
+[auth]
+site_url = "http://localhost:3000"  # For local development
+additional_redirect_urls = ["http://localhost:3000"]  # Match site_url
+```
+
+**Common Issues & Solutions:**
+
+1. **Issue**: Email links use `127.0.0.1:3000` instead of `localhost:3000`
+   - **Cause**: `site_url` in `config.toml` set to `127.0.0.1`
+   - **Fix**: Change to `localhost:3000` and restart Supabase (`npx supabase stop && npx supabase start`)
+
+2. **Issue**: Confirmation code appears in URL on homepage (`/?code=...`)
+   - **Cause**: `emailRedirectTo` pointing to wrong route (e.g., `/auth/confirm` instead of `/auth/callback`)
+   - **Fix**: Ensure `unified-auth-form.tsx` uses `/auth/callback`:
+     ```typescript
+     emailRedirectTo: `${window.location.origin}/auth/callback?next=/auth/onboarding`
+     ```
+
+3. **Issue**: Authenticated users see homepage instead of workspace
+   - **Cause**: Homepage not checking authentication status
+   - **Fix**: Already implemented - middleware and server-side checks redirect authenticated users
+
+**After changing `supabase/config.toml`:**
+```bash
+npx supabase stop
+npx supabase start
+# Wait for services to fully start before testing
+```
 
 ### Development Workflow
 
@@ -1010,6 +1152,49 @@ To prevent syncing unrelated Stripe products to your database:
 2. **Webhook handler automatically filters** products without this metadata
 
 3. **For existing products**: Update them with the metadata to enable sync
+
+### Stripe Prices Not Syncing to Database
+
+**Problem**: Products are synced but prices aren't appearing in `billing_prices` table
+
+**Root Cause**: Edge Functions not running when webhook events are triggered
+
+**Solution**:
+
+1. **Ensure Edge Functions are running**:
+   ```bash
+   npx supabase functions serve
+   # Keep this terminal running - DO NOT close it
+   ```
+
+2. **Verify Stripe CLI is forwarding webhooks**:
+   ```bash
+   stripe listen --forward-to http://127.0.0.1:54321/functions/v1/stripe-webhook
+   # Keep this terminal running in a separate window
+   ```
+
+3. **Trigger price sync webhooks**:
+   ```bash
+   # Update each price to trigger price.updated webhook
+   stripe prices update price_YOUR_PRICE_ID -d "metadata[tier]=free"
+   stripe prices update price_YOUR_PRICE_ID -d "metadata[tier]=pro"
+   ```
+
+4. **Check Edge Function logs** for sync confirmation:
+   ```
+   [Info] 🔔 Event received: evt_XXX - price.updated
+   [Info] ✅ Price price_1SCQNWCCFNRAwpJsa20Nj8Mj synced
+   ```
+
+5. **Verify in database**:
+   - Open Supabase Studio: http://localhost:54323
+   - Check `billing_prices` table
+   - Should see prices with correct `amount` values (in cents)
+
+**CRITICAL REMINDERS**:
+- Edge Functions (`npx supabase functions serve`) MUST be running BEFORE triggering webhooks
+- Both Stripe CLI and Edge Functions must stay running during development
+- If you restart Supabase, you must also restart Edge Functions
 
 ### Syncing Existing Stripe Products
 

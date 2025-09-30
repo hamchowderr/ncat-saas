@@ -27,7 +27,7 @@ export function generateMeta({
     description: description,
     metadataBase: new URL(`https://shadcnuikit.com`),
     alternates: {
-      canonical: `/dashboard${canonical}`
+      canonical: canonical
     },
     openGraph: {
       images: [`https://bundui-images.netlify.app/seo.jpg`]

@@ -43,7 +43,7 @@ export function UnifiedAuthForm({ className, defaultMode = "login", ...props }: 
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/confirm?next=/auth/onboarding`
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=/auth/onboarding`
           }
         });
         if (error) throw error;
