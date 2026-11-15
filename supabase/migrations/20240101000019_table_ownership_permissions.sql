@@ -12,7 +12,16 @@ ALTER TABLE "public"."account_delete_tokens" OWNER TO "postgres";
 ALTER TABLE "public"."files" OWNER TO "postgres";
 ALTER TABLE "public"."projects" OWNER TO "postgres";
 ALTER TABLE "public"."project_comments" OWNER TO "postgres";
-ALTER TABLE "public"."chats" OWNER TO "postgres";
+
+-- Mastra AI Chat tables
+ALTER TABLE "public"."mastra_threads" OWNER TO "postgres";
+ALTER TABLE "public"."mastra_messages" OWNER TO "postgres";
+ALTER TABLE "public"."mastra_resources" OWNER TO "postgres";
+ALTER TABLE "public"."mastra_working_memory" OWNER TO "postgres";
+-- mastra_workflow_snapshot is auto-created by Mastra PostgresStore
+ALTER TABLE "public"."mastra_evals" OWNER TO "postgres";
+ALTER TABLE "public"."mastra_traces" OWNER TO "postgres";
+ALTER TABLE "public"."mastra_scorers" OWNER TO "postgres";
 ALTER TABLE "public"."marketing_author_profiles" OWNER TO "postgres";
 ALTER TABLE "public"."marketing_tags" OWNER TO "postgres";
 ALTER TABLE "public"."marketing_blog_posts" OWNER TO "postgres";

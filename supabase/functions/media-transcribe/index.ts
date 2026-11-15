@@ -1,12 +1,22 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.39.3";
+import {
+  validateRequiredString,
+  buildErrorResponse,
+  buildSuccessResponse,
+  parseNcatResponse,
+  replaceLocalhostUrl
+} from "../_shared/validation.ts";
 
 const NCAT_API_URL = Deno.env.get("NCAT_API_URL");
+const NCAT_API_KEY = Deno.env.get("NCAT_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const WEBHOOK_URL = Deno.env.get("WEBHOOK_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 interface MediaTranscribeRequest {
   media_url: string;
+  source_file_id?: string;
   task?: string;
   response_type?: string;
   include_text?: boolean;
@@ -46,62 +56,79 @@ Deno.serve(async (req) => {
       return new Response("media_url is required", { status: 400 });
     }
 
+    // Replace localhost/127.0.0.1 URLs with host.docker.internal for NCAT API (running in Docker)
+    const processedMediaUrl = replaceLocalhostUrl(body.media_url);
+
     const ncatPayload = {
-      media_url: body.media_url,
+      media_url: processedMediaUrl,
       task: body.task,
       response_type: body.response_type,
       include_text: body.include_text,
       include_srt: body.include_srt,
       include_segments: body.include_segments,
-      webhook_url: `${SUPABASE_URL}/functions/v1/ncat-webhook`,
+      webhook_url: replaceLocalhostUrl(`${WEBHOOK_URL}/functions/v1/ncat-webhook`),
       id: body.custom_id || `media-transcribe-${Date.now()}`
     };
 
     const ncatResponse = await fetch(`${NCAT_API_URL}/v1/media/transcribe`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": NCAT_API_KEY!
+      },
       body: JSON.stringify(ncatPayload)
     });
 
-    if (!ncatResponse.ok) {
-      const errorText = await ncatResponse.text();
-      console.error("NCAT API error:", errorText);
-      return new Response("Failed to transcribe media", { status: 500 });
+    // Parse NCAT API response with error handling
+    const parseResult = await parseNcatResponse(ncatResponse);
+    if (!parseResult.success) {
+      return parseResult.error!;
     }
 
-    const ncatResult = await ncatResponse.json();
+    const ncatResult = parseResult.data;
 
     if (ncatResult.job_id) {
-      await supabase.from("jobs").insert({
-        user_id: user.id,
-        nca_job_id: ncatResult.job_id,
-        custom_id: body.custom_id || `media-transcribe-${Date.now()}`,
-        processing_status: "processing"
-      });
+      const { data: jobRecord, error: insertError } = await supabase
+        .from("jobs")
+        .insert({
+          user_id: user.id,
+          nca_job_id: ncatResult.job_id,
+          nca_endpoint: "/v1/media/transcribe",
+          custom_id: body.custom_id || `media-transcribe-${Date.now()}`,
+          processing_status: "processing"
+        })
+        .select("id")
+        .single();
+
+      if (insertError) {
+        console.error("❌ Failed to create job record:", insertError);
+      } else if (jobRecord && body.source_file_id) {
+        const { error: jobFileError } = await supabase.from("job_files").insert({
+          job_id: jobRecord.id,
+          file_id: body.source_file_id,
+          file_role: "input",
+          sequence_number: 1
+        });
+
+        if (jobFileError) {
+          console.warn("⚠️ Could not create job_files record:", jobFileError.message);
+        } else {
+          console.log(`✅ Linked source file ${body.source_file_id} to job ${jobRecord.id}`);
+        }
+      }
     }
 
-    return new Response(
-      JSON.stringify({
+    return buildSuccessResponse({
         success: true,
-        nca_job_id: ncatResult.job_id,
+        job_id: ncatResult.job_id,
         message: "Media transcription started successfully"
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" }
-      }
-    );
+      });
   } catch (error) {
     console.error("Media transcribe error:", error);
-    return new Response(
-      JSON.stringify({
-        error: "Internal server error",
-        message: error.message
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" }
-      }
+    return buildErrorResponse(
+      "Internal server error",
+      error instanceof Error ? error.message : "An unexpected error occurred",
+      500
     );
   }
 });

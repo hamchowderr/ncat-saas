@@ -25,6 +25,7 @@ active BOOLEAN NOT NULL DEFAULT TRUE,
 tier TEXT,
 free_trial_days INT,
 gateway_name TEXT NOT NULL,
+metadata JSONB DEFAULT '{}',
 UNIQUE(gateway_name, gateway_price_id)
 );
 
@@ -250,7 +251,7 @@ GRANT SELECT, INSERT, UPDATE ON TABLE public.billing_subscriptions TO authentica
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 SECURITY DEFINER -- This makes the function run with the privileges of the function owner (postgres)
-SET search_path = public
+SET search_path = ''
 AS $$
 DECLARE
     new_workspace_id UUID;
@@ -268,58 +269,58 @@ BEGIN
     workspace_slug := lower(split_part(NEW.email, '@', 1)) || '-workspace';
 
     -- 1. Create user profile
-    INSERT INTO public.user_profiles (id, full_name, avatar_url)
+    INSERT INTO "public"."user_profiles" ("id", "full_name", "avatar_url")
     VALUES (
-        NEW.id,
+        NEW."id",
         user_name,
-        NEW.raw_user_meta_data->>'avatar_url'
+        NEW."raw_user_meta_data"->>'avatar_url'
     );
 
     -- 2. Create personal workspace for the user
-    INSERT INTO public.workspaces (id, slug, name, created_at)
+    INSERT INTO "public"."workspaces" ("id", "slug", "name", "created_at")
     VALUES (
-        NEW.id, -- Use user ID as workspace ID for personal workspaces
+        NEW."id", -- Use user ID as workspace ID for personal workspaces
         workspace_slug,
         user_name || '''s Workspace',
         NOW()
     )
-    RETURNING id INTO new_workspace_id;
+    RETURNING "id" INTO new_workspace_id;
 
     -- 3. Add user as owner of their workspace
-    INSERT INTO public.workspace_members (
-        id,
-        workspace_id,
-        workspace_member_id,
-        workspace_member_role,
-        added_at
+    INSERT INTO "public"."workspace_members" (
+        "id",
+        "workspace_id",
+        "workspace_member_id",
+        "workspace_member_role",
+        "added_at"
     ) VALUES (
-        gen_random_uuid(),
+        "extensions"."gen_random_uuid"(),
         new_workspace_id,
-        NEW.id,
+        NEW."id",
         'owner', -- Assuming 'owner' is a valid role
         NOW()
     );
 
     -- 4. Create pending billing customer record
     -- This will now run with definer's privileges (postgres role) bypassing RLS
-    INSERT INTO public.billing_customers (
-        gateway_customer_id,
-        workspace_id,
-        gateway_name,
-        billing_email,
-        default_currency,
-        metadata
+    INSERT INTO "public"."billing_customers" (
+        "gateway_customer_id",
+        "workspace_id",
+        "gateway_name",
+        "billing_email",
+        "default_currency",
+        "metadata"
     ) VALUES (
-        'pending_' || NEW.id::text,
+        'pending_' || NEW."id"::text,
         new_workspace_id,
         'stripe',
-        NEW.email,
+        NEW."email",
         'usd',
-        jsonb_build_object(
+        "jsonb_build_object"(
             'status', 'pending_stripe_creation',
             'free_subscription_needed', true,
             'created_at', NOW(),
-            'user_email', NEW.email,
+            'user_email', NEW."email",
             'user_name', user_name
         )
     );

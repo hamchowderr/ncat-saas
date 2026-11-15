@@ -14,6 +14,12 @@ SELECT TO authenticated USING (
         ),
         id
     )
+    -- Allow app admins to read ALL workspaces (for impersonation/debugging)
+    OR "public"."is_application_admin"(
+        (
+            SELECT auth.uid()
+        )
+    )
 );
 
 CREATE POLICY "Workspace members can update their workspaces" ON "public"."workspaces" FOR

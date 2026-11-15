@@ -1,29 +1,65 @@
 -- Migration 11: Storage Bucket Configuration
--- Creates storage buckets for different asset types
+-- Creates storage buckets for different asset types with security constraints
 
--- Create Project Assets Bucket
-INSERT INTO STORAGE.buckets (id, name)
-VALUES ('project-assets', 'project-assets') ON CONFLICT DO NOTHING;
+-- Create Project Assets Bucket (100MB limit, media + PDF)
+INSERT INTO STORAGE.buckets (id, name, file_size_limit, allowed_mime_types)
+VALUES ('project-assets', 'project-assets', 104857600, ARRAY['video/*', 'audio/*', 'image/*', 'application/pdf'])
+ON CONFLICT (id) DO UPDATE SET
+  file_size_limit = 104857600,
+  allowed_mime_types = ARRAY['video/*', 'audio/*', 'image/*', 'application/pdf'];
 
--- Create User Assets Bucket
-INSERT INTO STORAGE.buckets (id, name)
-VALUES ('user-assets', 'user-assets') ON CONFLICT DO NOTHING;
+-- Create User Assets Bucket (100MB limit, media + PDF)
+INSERT INTO STORAGE.buckets (id, name, file_size_limit, allowed_mime_types)
+VALUES ('user-assets', 'user-assets', 104857600, ARRAY['video/*', 'audio/*', 'image/*', 'application/pdf'])
+ON CONFLICT (id) DO UPDATE SET
+  file_size_limit = 104857600,
+  allowed_mime_types = ARRAY['video/*', 'audio/*', 'image/*', 'application/pdf'];
 
--- Create Public User Assets Bucket
-INSERT INTO STORAGE.buckets (id, name, public)
-VALUES ('public-user-assets', 'public-user-assets', TRUE) ON CONFLICT DO NOTHING;
+-- Create Public User Assets Bucket (100MB limit, media + PDF)
+INSERT INTO STORAGE.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('public-user-assets', 'public-user-assets', TRUE, 104857600, ARRAY['video/*', 'audio/*', 'image/*', 'application/pdf'])
+ON CONFLICT (id) DO UPDATE SET
+  public = TRUE,
+  file_size_limit = 104857600,
+  allowed_mime_types = ARRAY['video/*', 'audio/*', 'image/*', 'application/pdf'];
 
--- Create Public Assets Bucket
-INSERT INTO STORAGE.buckets (id, name, public)
-VALUES ('public-assets', 'public-assets', TRUE) ON CONFLICT DO NOTHING;
+-- Create Public Assets Bucket (10MB limit, images + video)
+INSERT INTO STORAGE.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('public-assets', 'public-assets', TRUE, 10485760, ARRAY['image/*', 'video/*'])
+ON CONFLICT (id) DO UPDATE SET
+  public = TRUE,
+  file_size_limit = 10485760,
+  allowed_mime_types = ARRAY['image/*', 'video/*'];
 
--- Create Marketing Assets Bucket
-INSERT INTO STORAGE.buckets (id, name, public)
-VALUES ('marketing-assets', 'marketing-assets', TRUE) ON CONFLICT DO NOTHING;
+-- Create Marketing Assets Bucket (10MB limit, images + video)
+INSERT INTO STORAGE.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('marketing-assets', 'marketing-assets', TRUE, 10485760, ARRAY['image/*', 'video/*'])
+ON CONFLICT (id) DO UPDATE SET
+  public = TRUE,
+  file_size_limit = 10485760,
+  allowed_mime_types = ARRAY['image/*', 'video/*'];
 
--- Create Files Bucket for general uploads
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('files', 'files', true) ON CONFLICT DO NOTHING;
+-- Create Changelog Assets Bucket (10MB limit, images + video)
+INSERT INTO STORAGE.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('changelog-assets', 'changelog-assets', FALSE, 10485760, ARRAY['image/*', 'video/*'])
+ON CONFLICT (id) DO UPDATE SET
+  file_size_limit = 10485760,
+  allowed_mime_types = ARRAY['image/*', 'video/*'];
+
+-- Create OpenAI Images Bucket (20MB limit, images only)
+INSERT INTO STORAGE.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('openai-images', 'openai-images', FALSE, 20971520, ARRAY['image/png', 'image/jpeg', 'image/webp'])
+ON CONFLICT (id) DO UPDATE SET
+  file_size_limit = 20971520,
+  allowed_mime_types = ARRAY['image/png', 'image/jpeg', 'image/webp'];
+
+-- Create Files Bucket for general uploads (100MB limit, all media + PDF)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('files', 'files', true, 104857600, ARRAY['video/*', 'audio/*', 'image/*', 'application/pdf', 'text/plain', 'text/vtt', 'application/json', 'application/octet-stream'])
+ON CONFLICT (id) DO UPDATE SET
+  public = true,
+  file_size_limit = 104857600,
+  allowed_mime_types = ARRAY['video/*', 'audio/*', 'image/*', 'application/pdf', 'text/plain', 'text/vtt', 'application/json', 'application/octet-stream'];
 
 -- Storage policies for project-assets bucket
 CREATE POLICY "Users can view own project assets" ON STORAGE.objects

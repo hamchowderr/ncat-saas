@@ -1,8 +1,17 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.39.3";
+import {
+  validateRequiredString,
+  buildErrorResponse,
+  buildSuccessResponse,
+  parseNcatResponse,
+  replaceLocalhostUrl
+} from "../_shared/validation.ts";
 
 const NCAT_API_URL = Deno.env.get("NCAT_API_URL");
+const NCAT_API_KEY = Deno.env.get("NCAT_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const WEBHOOK_URL = Deno.env.get("WEBHOOK_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 interface PythonExecuteRequest {
@@ -62,7 +71,7 @@ Deno.serve(async (req) => {
     const ncatPayload = {
       code: body.code,
       timeout: body.timeout || 30,
-      webhook_url: `${SUPABASE_URL}/functions/v1/ncat-webhook`,
+      webhook_url: replaceLocalhostUrl(`${WEBHOOK_URL}/functions/v1/ncat-webhook`),
       id: body.custom_id || `python-exec-${Date.now()}`
     };
 
@@ -70,52 +79,43 @@ Deno.serve(async (req) => {
     const ncatResponse = await fetch(`${NCAT_API_URL}/v1/code/execute/python`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "x-api-key": NCAT_API_KEY!
       },
       body: JSON.stringify(ncatPayload)
     });
 
-    if (!ncatResponse.ok) {
-      const errorText = await ncatResponse.text();
-      console.error("NCAT API error:", errorText);
-      return new Response("Failed to execute Python code", { status: 500 });
+    // Parse NCAT API response with error handling
+    const parseResult = await parseNcatResponse(ncatResponse);
+    if (!parseResult.success) {
+      return parseResult.error!;
     }
 
-    const ncatResult = await ncatResponse.json();
+    const ncatResult = parseResult.data;
 
     // Create job record with NCAT job ID for tracking
     if (ncatResult.job_id) {
       await supabase.from("jobs").insert({
         user_id: user.id,
         nca_job_id: ncatResult.job_id,
+        nca_endpoint: "/v1/code/execute/python",
         custom_id: body.custom_id || `python-exec-${Date.now()}`,
         processing_status: "processing"
       });
     }
 
     // Return response to client
-    return new Response(
-      JSON.stringify({
+    return buildSuccessResponse({
         success: true,
-        nca_job_id: ncatResult.job_id,
+        job_id: ncatResult.job_id,
         message: "Python code execution started successfully"
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" }
-      }
-    );
+      });
   } catch (error) {
     console.error("Python execute error:", error);
-    return new Response(
-      JSON.stringify({
-        error: "Internal server error",
-        message: error.message
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" }
-      }
+    return buildErrorResponse(
+      "Internal server error",
+      error instanceof Error ? error.message : "An unexpected error occurred",
+      500
     );
   }
 });

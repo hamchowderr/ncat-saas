@@ -230,7 +230,6 @@ export const ImageViewBlock: React.FC<NodeViewProps> = ({
                 isZoomed={imageState.isZoomed}
                 onZoomChange={() => setImageState((prev) => ({ ...prev, isZoomed: false }))}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   className={cn("h-auto rounded object-contain transition-shadow", {
                     "opacity-0": !imageState.imageLoaded || imageState.error

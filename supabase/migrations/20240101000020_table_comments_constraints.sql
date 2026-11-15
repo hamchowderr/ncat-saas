@@ -11,7 +11,12 @@ COMMENT ON TABLE "public"."user_notifications" IS 'User notification messages an
 COMMENT ON TABLE "public"."account_delete_tokens" IS 'Tokens for account deletion verification';
 COMMENT ON TABLE "public"."projects" IS 'User projects and associated metadata';
 COMMENT ON TABLE "public"."project_comments" IS 'Comments and discussions on projects';
-COMMENT ON TABLE "public"."chats" IS 'AI chat conversations and history';
+
+-- Mastra AI Chat table comments (defined in migration 006, additional ones here)
+-- mastra_workflow_snapshot is auto-created by Mastra PostgresStore
+COMMENT ON TABLE "public"."mastra_evals" IS 'Evaluation results and metadata';
+COMMENT ON TABLE "public"."mastra_traces" IS 'Telemetry and tracing data for AI operations';
+COMMENT ON TABLE "public"."mastra_scorers" IS 'Scoring and evaluation data';
 COMMENT ON TABLE "public"."marketing_author_profiles" IS 'Author profiles for blog content';
 COMMENT ON TABLE "public"."marketing_tags" IS 'Content tags for categorization';
 COMMENT ON TABLE "public"."marketing_blog_posts" IS 'Blog posts and articles';

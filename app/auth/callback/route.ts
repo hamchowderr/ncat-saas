@@ -46,10 +46,15 @@ export async function GET(request: Request) {
           .single();
 
         // Check if workspace name indicates default/unset state
+        // Only trigger onboarding if workspace is literally "User's Workspace" or empty
+        // This allows seeded workspaces like "Admin's Workspace" to skip onboarding
+        const userNameFromEmail = user.email?.split("@")[0] || "User";
+        const defaultWorkspaceName = `${userNameFromEmail}'s Workspace`;
+
         const isDefaultName =
-          workspace?.name?.endsWith("'s Workspace") ||
-          workspace?.name?.endsWith("-workspace") ||
-          !workspace?.name;
+          !workspace?.name ||
+          workspace.name === defaultWorkspaceName ||
+          workspace.name === "User's Workspace";
 
         // Route to onboarding if user has default workspace name
         // Never redirect authenticated users to homepage

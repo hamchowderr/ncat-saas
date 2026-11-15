@@ -43,7 +43,7 @@ BEGIN
     VALUES (NEW.id, NEW.raw_user_meta_data->>'full_name');
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Trigger to automatically create profile on user signup
 CREATE OR REPLACE TRIGGER on_auth_user_created
@@ -57,7 +57,7 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = '';
 
 -- Triggers for updated_at
 

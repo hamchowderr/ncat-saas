@@ -36,7 +36,7 @@ type OnboardingFormValues = z.infer<typeof onboardingSchema>;
 export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { user } = useUser();
+  const { data: user } = useUser();
   const { refreshWorkspace } = useWorkspace();
 
   const form = useForm<OnboardingFormValues>({

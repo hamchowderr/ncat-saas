@@ -1,43 +1,31 @@
-import { generateMeta } from "@/lib/utils";
-import path from "path";
-import { promises as fs } from "fs";
-import { ChatItemProps, UserPropsTypes } from "./types";
+"use client";
 
 import { ChatSidebar, ChatContent } from "./components";
+import { useWorkspaceConversations } from "@/hooks/use-workspace-conversations";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export async function generateMetadata() {
-  return generateMeta({
-    title: "Chat App",
-    description:
-      "A template to create chat and messaging apps for your customers or users. Built with shadcn/ui, Next.js and Tailwind CSS.",
-    canonical: "/apps/chat"
-  });
-}
+export default function Page() {
+  const { conversations, loading } = useWorkspaceConversations();
 
-async function getChats() {
-  const data = await fs.readFile(path.join(process.cwd(), "app/workspace/chat/data/chats.json"));
-  return JSON.parse(data.toString());
-}
-
-async function getChatUser(id: number) {
-  const data = await fs.readFile(path.join(process.cwd(), "app/workspace/chat/data/contacts.json"));
-
-  return JSON.parse(data.toString()).find((item: UserPropsTypes) => item.id === id);
-}
-
-export default async function Page() {
-  const chats = await getChats();
-
-  const chats_with_user = await Promise.all(
-    chats.map(async (item: ChatItemProps) => {
-      item.user = await getChatUser(item.user_id);
-      return item;
-    })
-  );
+  if (loading) {
+    return (
+      <div className="flex h-[calc(100vh-var(--header-height)-3rem)] w-full">
+        <div className="w-full lg:w-96 p-4 space-y-4">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </div>
+        <div className="grow p-4">
+          <Skeleton className="h-full w-full" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-[calc(100vh-var(--header-height)-3rem)] w-full">
-      <ChatSidebar chats={chats_with_user} />
+      <ChatSidebar conversations={conversations} />
       <div className="grow">
         <ChatContent />
       </div>

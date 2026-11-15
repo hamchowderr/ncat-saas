@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
 import { SiteHeader } from "@/components/layout/header";
+import { ImpersonationBanner } from "@/components/layout/impersonation-banner";
 
 export default async function WorkspaceLayout({
   children
@@ -28,6 +29,7 @@ export default async function WorkspaceLayout({
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />
+        <ImpersonationBanner />
         <div className="flex flex-1 flex-col">
           <div className="@container/main p-4 xl:group-data-[theme-content-layout=centered]/layout:container xl:group-data-[theme-content-layout=centered]/layout:mx-auto">
             {children}

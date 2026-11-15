@@ -13,7 +13,9 @@ const cryptoProvider = Stripe.createSubtleCryptoProvider();
 // Initialize Supabase client
 // For Edge Functions, we need to use the internal Docker network
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "http://supabase_kong_ncat-saas:8000";
-const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU";
+const supabaseKey =
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ||
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU";
 
 console.log("Connecting to Supabase:", supabaseUrl);
 
@@ -23,6 +25,14 @@ console.log("Stripe Webhook Function booted!");
 
 Deno.serve(async (request) => {
   const signature = request.headers.get("Stripe-Signature");
+  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SIGNING_SECRET");
+
+  // DEBUG: Log what we're receiving
+  console.log("🔍 DEBUG - Signature received:", signature ? "YES" : "NO");
+  console.log(
+    "🔍 DEBUG - Webhook secret loaded:",
+    webhookSecret ? `YES (${webhookSecret.substring(0, 15)}...)` : "NO"
+  );
 
   // First step is to verify the event. The .text() method must be used as the
   // verification relies on the raw request body rather than the parsed JSON.
@@ -32,12 +42,14 @@ Deno.serve(async (request) => {
     receivedEvent = await stripe.webhooks.constructEventAsync(
       body,
       signature!,
-      Deno.env.get("STRIPE_WEBHOOK_SIGNING_SECRET")!,
+      webhookSecret!,
       undefined,
       cryptoProvider
     );
   } catch (err) {
     console.error("Webhook signature verification failed:", err.message);
+    console.error("🔍 DEBUG - Signature header:", signature);
+    console.error("🔍 DEBUG - Body length:", body.length);
     return new Response(err.message, { status: 400 });
   }
 
@@ -125,15 +137,18 @@ Deno.serve(async (request) => {
 });
 
 async function handleProductEvent(product: Stripe.Product) {
-  const { error } = await supabase.from("billing_products").upsert({
-    gateway_product_id: product.id,
-    gateway_name: "stripe",
-    name: product.name,
-    description: product.description,
-    features: product.metadata,
-    active: product.active,
-    is_visible_in_ui: product.active
-  });
+  const { error } = await supabase.from("billing_products").upsert(
+    {
+      gateway_product_id: product.id,
+      gateway_name: "stripe",
+      name: product.name,
+      description: product.description,
+      features: product.metadata,
+      active: product.active,
+      is_visible_in_ui: product.active
+    },
+    { onConflict: "gateway_product_id" }
+  );
 
   if (error) {
     console.error("Error upserting product:", error);
@@ -144,18 +159,21 @@ async function handleProductEvent(product: Stripe.Product) {
 }
 
 async function handlePriceEvent(price: Stripe.Price) {
-  const { error } = await supabase.from("billing_prices").upsert({
-    gateway_price_id: price.id,
-    gateway_product_id: price.product as string,
-    currency: price.currency,
-    amount: price.unit_amount || 0,
-    recurring_interval: price.recurring?.interval || "one_time",
-    recurring_interval_count: price.recurring?.interval_count || 1,
-    active: price.active,
-    tier: price.metadata?.tier || null,
-    free_trial_days: price.recurring?.trial_period_days || null,
-    gateway_name: "stripe"
-  });
+  const { error } = await supabase.from("billing_prices").upsert(
+    {
+      gateway_price_id: price.id,
+      gateway_product_id: price.product as string,
+      currency: price.currency,
+      amount: price.unit_amount || 0,
+      recurring_interval: price.recurring?.interval || "one_time",
+      recurring_interval_count: price.recurring?.interval_count || 1,
+      active: price.active,
+      tier: price.metadata?.tier || null,
+      free_trial_days: price.recurring?.trial_period_days || null,
+      gateway_name: "stripe"
+    },
+    { onConflict: "gateway_price_id" }
+  );
 
   if (error) {
     // If foreign key constraint fails, it might be a race condition - wait and retry once
@@ -163,18 +181,21 @@ async function handlePriceEvent(price: Stripe.Price) {
       console.warn("Product not found, retrying price sync after delay...", error.details);
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const { error: retryError } = await supabase.from("billing_prices").upsert({
-        gateway_price_id: price.id,
-        gateway_product_id: price.product as string,
-        currency: price.currency,
-        amount: price.unit_amount || 0,
-        recurring_interval: price.recurring?.interval || "one_time",
-        recurring_interval_count: price.recurring?.interval_count || 1,
-        active: price.active,
-        tier: price.metadata?.tier || null,
-        free_trial_days: price.recurring?.trial_period_days || null,
-        gateway_name: "stripe"
-      });
+      const { error: retryError } = await supabase.from("billing_prices").upsert(
+        {
+          gateway_price_id: price.id,
+          gateway_product_id: price.product as string,
+          currency: price.currency,
+          amount: price.unit_amount || 0,
+          recurring_interval: price.recurring?.interval || "one_time",
+          recurring_interval_count: price.recurring?.interval_count || 1,
+          active: price.active,
+          tier: price.metadata?.tier || null,
+          free_trial_days: price.recurring?.trial_period_days || null,
+          gateway_name: "stripe"
+        },
+        { onConflict: "gateway_price_id" }
+      );
 
       if (retryError) {
         console.error("Error upserting price after retry:", retryError);
@@ -328,11 +349,9 @@ async function handleSubscriptionEvent(subscription: Stripe.Subscription) {
     quantity: subscription.items.data[0]?.quantity || 1
   };
 
-  const { error } = await supabase
-    .from("billing_subscriptions")
-    .upsert(subscriptionData, {
-      onConflict: "gateway_subscription_id,gateway_name"
-    });
+  const { error } = await supabase.from("billing_subscriptions").upsert(subscriptionData, {
+    onConflict: "gateway_subscription_id,gateway_name"
+  });
 
   if (error) {
     // If foreign key constraint fails due to missing product, wait and retry once
@@ -395,7 +414,9 @@ async function handleInvoiceEvent(invoice: Stripe.Invoice) {
 
 async function handlePaymentIntentEvent(paymentIntent: Stripe.PaymentIntent) {
   // For now, just log payment intent events - charges will be tracked separately
-  console.log(`🔔 Payment Intent ${paymentIntent.id} ${paymentIntent.status} - amount: ${paymentIntent.amount} ${paymentIntent.currency}`);
+  console.log(
+    `🔔 Payment Intent ${paymentIntent.id} ${paymentIntent.status} - amount: ${paymentIntent.amount} ${paymentIntent.currency}`
+  );
 }
 
 async function handleChargeEvent(charge: Stripe.Charge) {
@@ -424,9 +445,9 @@ async function handleChargeEvent(charge: Stripe.Charge) {
     currency: charge.currency,
     status: charge.status,
     charge_date: safeTimestampToDate(charge.created),
-    gateway_invoice_id: charge.invoice as string || null,
+    gateway_invoice_id: (charge.invoice as string) || null,
     gateway_product_id: null, // Would need to be derived from invoice line items
-    gateway_price_id: null    // Would need to be derived from invoice line items
+    gateway_price_id: null // Would need to be derived from invoice line items
   });
 
   if (error) {

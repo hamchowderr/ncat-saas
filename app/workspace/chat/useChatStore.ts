@@ -1,17 +1,19 @@
-import { ChatItemProps } from "./types";
 import { create, StateCreator } from "zustand";
+import { Conversation } from "@/hooks/use-workspace-conversations";
 
 interface UseChatStore {
-  selectedChat: ChatItemProps | null;
+  selectedConversation: Conversation | null;
   showProfileSheet: boolean;
-  setSelectedChat: (chat: ChatItemProps | null) => void;
+  setSelectedConversation: (conversation: Conversation | null) => void;
+  setShowProfileSheet: (value: boolean) => void;
   toggleProfileSheet: (value: boolean) => void;
 }
 
 const chatStore: StateCreator<UseChatStore> = (set) => ({
-  selectedChat: null,
+  selectedConversation: null,
   showProfileSheet: false,
-  setSelectedChat: (chat) => set(() => ({ selectedChat: chat })),
+  setSelectedConversation: (conversation) => set(() => ({ selectedConversation: conversation })),
+  setShowProfileSheet: (value) => set({ showProfileSheet: value }),
   toggleProfileSheet: (value) => set({ showProfileSheet: value })
 });
 

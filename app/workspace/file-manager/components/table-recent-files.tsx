@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import {
   MoreHorizontal,
@@ -16,6 +16,7 @@ import {
   ImageIcon
 } from "lucide-react";
 import { format } from "date-fns";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/client";
 import { Database } from "@/lib/database.types";
 import { toast } from "sonner";
@@ -36,6 +37,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const supabase = createClient();
@@ -74,43 +76,12 @@ function getFileIcon(mimeType: string | null) {
 }
 
 export function TableRecentFiles() {
-  const [fileList, setFileList] = useState<FileRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchRecentFiles();
-
-    // Set up periodic refresh every 30 seconds
-    const interval = setInterval(() => {
-      fetchRecentFiles();
-    }, 30000);
-
-    // Set up real-time subscription to file changes
-    const channel = supabase
-      .channel("file-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "files"
-        },
-        () => {
-          // Refresh the file list when any changes occur
-          fetchRecentFiles();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      clearInterval(interval);
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const fetchRecentFiles = async () => {
-    try {
-      // Get session to ensure proper authentication for RLS
+  // Fetch recent files using React Query with 30-second refetch interval
+  const { data: fileList = [], isLoading } = useQuery({
+    queryKey: ["recentFiles"],
+    queryFn: async () => {
       const {
         data: { session },
         error: sessionError
@@ -118,14 +89,12 @@ export function TableRecentFiles() {
 
       if (sessionError) {
         console.error("Session error:", sessionError);
-        setLoading(false);
-        return;
+        throw sessionError;
       }
 
       if (!session?.user) {
         console.error("No authenticated session");
-        setLoading(false);
-        return;
+        return [];
       }
 
       const { data: files, error } = await supabase
@@ -137,15 +106,38 @@ export function TableRecentFiles() {
 
       if (error) {
         console.error("Error fetching files:", error);
-      } else {
-        setFileList(files || []);
+        throw error;
       }
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+
+      return files || [];
+    },
+    retry: 1,
+    staleTime: 30 * 1000, // Data fresh for 30 seconds
+    refetchInterval: 30 * 1000 // Auto-refetch every 30 seconds
+  });
+
+  // Set up real-time subscription to file changes
+  useEffect(() => {
+    const channel = supabase
+      .channel("file-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "files"
+        },
+        () => {
+          // Invalidate cache when file changes occur
+          queryClient.invalidateQueries({ queryKey: ["recentFiles"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const downloadFile = async (file: FileRecord) => {
     try {
@@ -195,37 +187,43 @@ export function TableRecentFiles() {
     }
   };
 
-  const deleteFile = async (file: FileRecord) => {
-    try {
+  // Delete mutation with automatic cache invalidation
+  const deleteMutation = useMutation({
+    mutationFn: async (file: FileRecord) => {
       // Delete from database first
       const { error: dbError } = await supabase.from("files").delete().eq("id", file.id);
 
       if (dbError) {
         console.error("Error deleting from database:", dbError);
-        toast.error("Failed to delete file");
-        return;
+        throw new Error("Failed to delete file from database");
       }
 
       // Then delete from storage
       const { error: storageError } = await supabase.storage
-        .from(file.bucket || "files") // Use file's bucket or default to 'files'
+        .from(file.bucket || "files")
         .remove([file.file_path]);
 
       if (storageError) {
         console.error("Error deleting from storage:", storageError);
-        // Note: File is already deleted from database
+        // Note: File is already deleted from database, so this is non-critical
       }
 
-      // Update local state and refresh
-      setFileList(fileList.filter((f) => f.id !== file.id));
+      return file;
+    },
+    onSuccess: () => {
+      // Invalidate both recentFiles and fileStats queries
+      queryClient.invalidateQueries({ queryKey: ["recentFiles"] });
+      queryClient.invalidateQueries({ queryKey: ["fileStats"] });
       toast.success("File deleted successfully");
-
-      // Force refresh to ensure consistency
-      setTimeout(() => fetchRecentFiles(), 500);
-    } catch (error) {
-      console.error("Error:", error);
+    },
+    onError: (error) => {
+      console.error("Error deleting file:", error);
       toast.error("Failed to delete file");
     }
+  });
+
+  const deleteFile = (file: FileRecord) => {
+    deleteMutation.mutate(file);
   };
 
   return (
@@ -254,12 +252,28 @@ export function TableRecentFiles() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={4} className="py-8 text-center">
-                  Loading recent files...
-                </TableCell>
-              </TableRow>
+            {isLoading ? (
+              <>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Skeleton className="h-4 w-4 rounded" />
+                        <Skeleton className="h-4 w-48" />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Skeleton className="h-8 w-8 rounded ml-auto" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </>
             ) : fileList.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-muted-foreground py-8 text-center">

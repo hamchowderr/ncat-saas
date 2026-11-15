@@ -44,13 +44,15 @@ CREATE TABLE IF NOT EXISTS "public"."marketing_blog_posts" (
 -- Marketing Blog Post Tags Relationship Table
 CREATE TABLE IF NOT EXISTS "public"."marketing_blog_post_tags_relationship" (
 "blog_post_id" "uuid" NOT NULL REFERENCES "public"."marketing_blog_posts"("id") ON DELETE CASCADE,
-"tag_id" "uuid" NOT NULL REFERENCES "public"."marketing_tags"("id") ON DELETE CASCADE
+"tag_id" "uuid" NOT NULL REFERENCES "public"."marketing_tags"("id") ON DELETE CASCADE,
+PRIMARY KEY ("blog_post_id", "tag_id")
 );
 
 -- Marketing Blog Author Posts Table
 CREATE TABLE IF NOT EXISTS "public"."marketing_blog_author_posts" (
 "author_id" "uuid" NOT NULL REFERENCES "public"."marketing_author_profiles"("id") ON DELETE CASCADE,
-"post_id" "uuid" NOT NULL REFERENCES "public"."marketing_blog_posts"("id") ON DELETE CASCADE
+"post_id" "uuid" NOT NULL REFERENCES "public"."marketing_blog_posts"("id") ON DELETE CASCADE,
+PRIMARY KEY ("author_id", "post_id")
 );
 
 -- Marketing Changelog Table
@@ -67,5 +69,6 @@ CREATE TABLE IF NOT EXISTS "public"."marketing_changelog" (
 -- Marketing Changelog Author Relationship Table
 CREATE TABLE IF NOT EXISTS "public"."marketing_changelog_author_relationship" (
 "author_id" "uuid" NOT NULL REFERENCES "public"."marketing_author_profiles"("id") ON DELETE CASCADE,
-"changelog_id" "uuid" NOT NULL REFERENCES "public"."marketing_changelog"("id") ON DELETE CASCADE
+"changelog_id" "uuid" NOT NULL REFERENCES "public"."marketing_changelog"("id") ON DELETE CASCADE,
+PRIMARY KEY ("author_id", "changelog_id")
 );

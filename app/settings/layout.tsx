@@ -23,10 +23,6 @@ const sidebarNavItems = [
     href: "/settings/profile"
   },
   {
-    title: "Account",
-    href: "/settings/account"
-  },
-  {
     title: "Billing",
     href: "/billing"
   },
@@ -37,6 +33,10 @@ const sidebarNavItems = [
   {
     title: "Display",
     href: "/settings/display"
+  },
+  {
+    title: "Integrations",
+    href: "/settings/integrations"
   }
 ];
 

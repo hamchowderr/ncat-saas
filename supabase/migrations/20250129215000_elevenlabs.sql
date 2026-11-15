@@ -46,7 +46,7 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ language 'plpgsql' SET search_path = '';
 
 -- Enable Row Level Security
 ALTER TABLE elevenlabs_voices ENABLE ROW LEVEL SECURITY;

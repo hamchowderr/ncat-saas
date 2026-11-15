@@ -36,7 +36,7 @@ type OnboardingFormValues = z.infer<typeof onboardingSchema>;
 export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { user, loading } = useUser();
+  const { data: user, isLoading: userLoading } = useUser();
   const { refreshWorkspace } = useWorkspace();
 
   const form = useForm<OnboardingFormValues>({
@@ -48,7 +48,7 @@ export default function OnboardingPage() {
 
   const onSubmit = async (data: OnboardingFormValues) => {
     // Wait for user to load if it's still loading
-    if (loading) {
+    if (userLoading) {
       toast.error("Please wait while we load your account information.");
       return;
     }
@@ -57,7 +57,10 @@ export default function OnboardingPage() {
       console.error("No user found in onboarding - attempting to refresh session");
       // Try to refresh the session
       const supabase = createClient();
-      const { data: { session }, error } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error
+      } = await supabase.auth.getSession();
 
       if (error || !session) {
         console.error("Session refresh failed:", error);
@@ -129,16 +132,14 @@ export default function OnboardingPage() {
   };
 
   // Show loading state while user loads
-  if (loading) {
+  if (userLoading) {
     return (
       <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
         <div className="w-full max-w-md">
           <Card>
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">Loading...</CardTitle>
-              <CardDescription>
-                Please wait while we load your account information.
-              </CardDescription>
+              <CardDescription>Please wait while we load your account information.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex justify-center">

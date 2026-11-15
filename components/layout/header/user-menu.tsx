@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  BadgeCheck,
   ChevronRightIcon,
   CreditCard,
   LogOut,
@@ -30,16 +29,7 @@ import { useUser } from "@/hooks/use-user";
 
 export default function UserMenu() {
   const router = useRouter();
-  const { user, loading } = useUser();
-
-  // Debug user data
-  React.useEffect(() => {
-    if (user) {
-      console.log("User data in header:", user);
-      console.log("Avatar URL:", user.user_metadata?.avatar_url);
-      console.log("User metadata:", user.user_metadata);
-    }
-  }, [user]);
+  const { data: user, isLoading } = useUser();
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -47,7 +37,7 @@ export default function UserMenu() {
     window.location.href = "/auth/login";
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Avatar>
         <AvatarFallback className="rounded-lg">...</AvatarFallback>
@@ -106,12 +96,6 @@ export default function UserMenu() {
             <Link href="/settings/profile">
               <UserCircle2Icon />
               Profile
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/settings/account">
-              <BadgeCheck />
-              Account
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>

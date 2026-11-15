@@ -2,16 +2,10 @@ import { createClient } from "@/lib/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { type FileError, type FileRejection, useDropzone } from "react-dropzone";
 import { toast } from "sonner";
+import { checkUploadAllowed, formatBytes } from "@/lib/storage-quota";
+import { useWorkspace } from "./use-workspace";
 
 const supabase = createClient();
-
-// Debug Supabase client initialization
-console.log("🔧 Supabase client initialized:", supabase);
-console.log("🔧 Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-console.log(
-  "🔧 Supabase Anon Key exists:",
-  !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY
-);
 
 interface FileWithPreview extends File {
   preview?: string;
@@ -72,6 +66,7 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
     upsert = false
   } = options;
 
+  const { data: workspace } = useWorkspace();
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ name: string; message: string }[]>([]);
@@ -89,10 +84,6 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
 
   const onDrop = useCallback(
     (acceptedFiles: File[], fileRejections: FileRejection[]) => {
-      console.log("📁 Files dropped/selected:");
-      console.log("Accepted files:", acceptedFiles);
-      console.log("Rejected files:", fileRejections);
-
       const validFiles = acceptedFiles
         .filter((file) => !files.find((x) => x.name === file.name))
         .map((file) => {
@@ -110,16 +101,13 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
       // Check if adding new files would exceed maxFiles limit
       const totalFiles = files.length + validFiles.length + invalidFiles.length;
       if (totalFiles > maxFiles) {
-        console.log(`⚠️ File limit exceeded. Max: ${maxFiles}, Attempted: ${totalFiles}`);
         // Only add files up to the limit
         const remainingSlots = maxFiles - files.length;
         const filesToAdd = [...validFiles, ...invalidFiles].slice(0, remainingSlots);
         const newFiles = [...files, ...filesToAdd];
-        console.log("Updated files list (limited):", newFiles);
         setFiles(newFiles);
       } else {
         const newFiles = [...files, ...validFiles, ...invalidFiles];
-        console.log("Updated files list:", newFiles);
         setFiles(newFiles);
       }
     },
@@ -136,24 +124,43 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
   });
 
   const onUpload = useCallback(async () => {
-    console.log("🚀 Starting upload process...");
-    console.log("Files to upload:", files);
-    console.log("Bucket name:", bucketName);
-    console.log("Path:", path);
-
     // Check authentication status
     const {
       data: { user },
       error: authError
     } = await supabase.auth.getUser();
-    console.log("🔐 Current user:", user);
-    console.log("🔐 Auth error:", authError);
 
     if (!user) {
-      console.error("❌ User not authenticated");
       toast.error("You must be logged in to upload files");
       setErrors([{ name: "auth", message: "You must be logged in to upload files" }]);
       return;
+    }
+
+    // Check workspace storage quota before uploading
+    if (workspace?.id) {
+      // Calculate total size of files to upload
+      const totalSize = files.reduce((acc, file) => acc + file.size, 0);
+
+      const quotaCheck = await checkUploadAllowed(workspace.id, totalSize);
+
+      if (!quotaCheck.allowed) {
+        toast.error(quotaCheck.reason || "Storage quota exceeded", {
+          duration: 8000,
+          action: {
+            label: "Upgrade Plan",
+            onClick: () => {
+              window.location.href = "/billing";
+            }
+          }
+        });
+        setErrors([
+          {
+            name: "quota",
+            message: quotaCheck.reason || "Storage quota exceeded"
+          }
+        ]);
+        return;
+      }
     }
 
     setLoading(true);
@@ -169,48 +176,56 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
           ]
         : files;
 
-    console.log("Files to upload after filtering:", filesToUpload);
-
     const responses = await Promise.all(
       filesToUpload.map(async (file) => {
-        console.log(`📤 Uploading file: ${file.name}`);
-
         try {
-          // Get the current session token for the edge function
+          // Generate unique filename
+          const timestamp = Date.now();
+          const uniqueFileName = `${file.name.replace(/\.[^/.]+$/, "")}_${timestamp}${file.name.substring(file.name.lastIndexOf("."))}`;
+          const filePath = path ? `${path}/${user.id}/${uniqueFileName}` : `${user.id}/${uniqueFileName}`;
+
+          // Upload directly to Supabase Storage (bypasses Edge Function CPU limits)
+          const { data, error: uploadError } = await supabase.storage
+            .from(bucketName)
+            .upload(filePath, file, {
+              contentType: file.type,
+              cacheControl: cacheControl.toString(),
+              upsert: upsert
+            });
+
+          if (uploadError) {
+            return { name: file.name, message: uploadError.message };
+          }
+
+          // Generate public URL for the uploaded file
           const {
-            data: { session }
-          } = await supabase.auth.getSession();
+            data: { publicUrl }
+          } = supabase.storage.from(bucketName).getPublicUrl(filePath);
 
-          if (!session?.access_token) {
-            console.error(`❌ No access token for ${file.name}`);
-            return { name: file.name, message: "No valid session token" };
+          // Create database record for the file with URL and return the ID
+          const { data: fileRecord, error: dbError } = await supabase
+            .from("files")
+            .insert({
+              user_id: user.id,
+              file_name: uniqueFileName,
+              original_name: file.name,
+              file_path: filePath,
+              file_size: file.size,
+              mime_type: file.type,
+              bucket: bucketName,
+              url: publicUrl
+            })
+            .select("id")
+            .single();
+
+          if (dbError) {
+            // Clean up uploaded file if database insert fails
+            await supabase.storage.from(bucketName).remove([filePath]);
+            return { name: file.name, message: `Database error: ${dbError.message}` };
           }
 
-          // Create FormData for the edge function
-          const formData = new FormData();
-          formData.append("file", file);
-
-          // Call our edge function instead of direct storage upload
-          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
-          const response = await fetch(`${supabaseUrl}/functions/v1/file-upload`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${session.access_token}`
-            },
-            body: formData
-          });
-
-          const result = await response.json();
-
-          if (!response.ok || !result.success) {
-            console.error(`❌ Edge function upload failed for ${file.name}:`, result.error);
-            return { name: file.name, message: result.error || "Upload failed" };
-          } else {
-            console.log(`✅ Edge function upload successful for ${file.name}:`, result);
-            return { name: file.name, message: undefined };
-          }
+          return { name: file.name, message: undefined, fileId: fileRecord?.id };
         } catch (error) {
-          console.error(`❌ Upload failed for ${file.name}:`, error);
           return {
             name: file.name,
             message: error instanceof Error ? error.message : "Unknown error"
@@ -218,8 +233,6 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
         }
       })
     );
-
-    console.log("Upload responses:", responses);
 
     const responseErrors = responses.filter((x) => x.message !== undefined);
     // if there were errors previously, this function tried to upload the files again so we should clear/overwrite the existing errors.
@@ -230,9 +243,6 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
       new Set([...successes, ...responseSuccesses.map((x) => x.name)])
     );
     setSuccesses(newSuccesses);
-
-    console.log("Errors:", responseErrors);
-    console.log("Successes:", newSuccesses);
 
     // Show success/error notifications
     if (responseSuccesses.length > 0) {

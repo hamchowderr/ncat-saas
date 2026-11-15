@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Team Member</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+        sans-serif;
+      background-color: #f5f5f5;
+    "
+  >
+    <table role="presentation" style="width: 100%; border-collapse: collapse">
+      <tr>
+        <td align="center" style="padding: 40px 0">
+          <table
+            role="presentation"
+            style="
+              width: 600px;
+              max-width: 100%;
+              border-collapse: collapse;
+              background-color: #ffffff;
+              border-radius: 8px;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            "
+          >
+            <!-- Header -->
+            <tr>
+              <td style="padding: 40px 40px 20px 40px; text-align: center">
+                <h1 style="margin: 0; font-size: 28px; font-weight: 600; color: #1a1a1a">
+                  🎉 New Team Member!
+                </h1>
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td style="padding: 0 40px 40px 40px">
+                <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #4a4a4a">
+                  Great news! A new member has joined your workspace on <strong>NCAT SaaS</strong>.
+                </p>
+
+                <!-- Member Info Card -->
+                <table
+                  role="presentation"
+                  style="
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 30px 0;
+                    background-color: #f9fafb;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 8px;
+                  "
+                >
+                  <tr>
+                    <td style="padding: 20px">
+                      <table role="presentation" style="width: 100%; border-collapse: collapse">
+                        <tr>
+                          <td style="padding: 8px 0; color: #6b7280; font-size: 14px; width: 120px">
+                            Member:
+                          </td>
+                          <td
+                            style="
+                              padding: 8px 0;
+                              color: #1a1a1a;
+                              font-size: 16px;
+                              font-weight: 600;
+                            "
+                          >
+                            {{ .MemberName }}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #6b7280; font-size: 14px">Email:</td>
+                          <td style="padding: 8px 0; color: #2563eb; font-size: 14px">
+                            {{ .MemberEmail }}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #6b7280; font-size: 14px">
+                            Workspace:
+                          </td>
+                          <td style="padding: 8px 0; color: #1a1a1a; font-size: 14px">
+                            {{ .WorkspaceName }}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #6b7280; font-size: 14px">Role:</td>
+                          <td style="padding: 8px 0; color: #1a1a1a; font-size: 14px">
+                            <span
+                              style="
+                                display: inline-block;
+                                padding: 4px 12px;
+                                background-color: #dbeafe;
+                                color: #1e40af;
+                                border-radius: 12px;
+                                font-size: 13px;
+                                font-weight: 500;
+                              "
+                            >
+                              {{ .MemberRole }}
+                            </span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #6b7280; font-size: 14px">Joined:</td>
+                          <td style="padding: 8px 0; color: #1a1a1a; font-size: 14px">
+                            {{ .JoinedDate }}
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin: 20px 0; font-size: 15px; line-height: 1.6; color: #4a4a4a">
+                  Welcome them to the team and help them get started with your workspace!
+                </p>
+
+                <!-- CTA Button -->
+                <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 30px 0">
+                  <tr>
+                    <td align="center">
+                      <a
+                        href="{{ .WorkspaceURL }}"
+                        style="
+                          display: inline-block;
+                          padding: 14px 32px;
+                          background-color: #2563eb;
+                          color: #ffffff;
+                          text-decoration: none;
+                          border-radius: 6px;
+                          font-size: 16px;
+                          font-weight: 500;
+                        "
+                      >
+                        View Workspace
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb" />
+
+                <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #6b7280">
+                  You received this email because you're a member of
+                  <strong>{{ .WorkspaceName }}</strong>. To manage your notification preferences,
+                  visit your
+                  <a
+                    href="{{ .SettingsURL }}"
+                    style="color: #2563eb; text-decoration: underline"
+                  >
+                    settings page
+                  </a>
+                  .
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td
+                style="
+                  padding: 20px 40px;
+                  background-color: #f9fafb;
+                  border-bottom-left-radius: 8px;
+                  border-bottom-right-radius: 8px;
+                "
+              >
+                <p style="margin: 0; font-size: 13px; text-align: center; color: #6b7280">
+                  © 2025 NCAT SaaS. All rights reserved.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

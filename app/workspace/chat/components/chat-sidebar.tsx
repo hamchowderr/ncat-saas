@@ -3,7 +3,7 @@
 import React from "react";
 import { Search } from "lucide-react";
 import useChatStore from "../useChatStore";
-import { ChatItemProps } from "../types";
+import { Conversation } from "@/hooks/use-workspace-conversations";
 
 import { Input } from "@/components/ui/input";
 import { ChatListItem } from "./chat-list-item";
@@ -17,17 +17,30 @@ import {
 } from "@/components/ui/card";
 import { ActionDropdown } from "./action-dropdown";
 
-export function ChatSidebar({ chats }: { chats: ChatItemProps[] }) {
-  const { selectedChat } = useChatStore();
-  const [filteredChats, setFilteredChats] = React.useState(chats);
+export function ChatSidebar({ conversations }: { conversations: Conversation[] }) {
+  const { selectedConversation } = useChatStore();
+  const [searchTerm, setSearchTerm] = React.useState("");
+
+  // Use useMemo to filter conversations instead of useEffect + useState
+  // This prevents unnecessary re-renders and is more performant
+  const filteredConversations = React.useMemo(() => {
+    if (!searchTerm.trim()) {
+      return conversations;
+    }
+
+    const lowerSearch = searchTerm.trim().toLowerCase();
+    return conversations.filter((conversation) => {
+      // For groups, search by group name
+      if (conversation.is_group && conversation.name) {
+        return conversation.name.toLowerCase().includes(lowerSearch);
+      }
+      // For 1-on-1, search by participant name
+      return conversation.other_participant?.full_name?.toLowerCase().includes(lowerSearch);
+    });
+  }, [conversations, searchTerm]);
 
   const changeHandle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const searchTerm = e.target.value.trim();
-
-    const filteredItems = chats.filter((chat) =>
-      chat.user.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredChats(filteredItems);
+    setSearchTerm(e.target.value);
   };
 
   return (
@@ -50,16 +63,16 @@ export function ChatSidebar({ chats }: { chats: ChatItemProps[] }) {
 
       <CardContent className="flex-1 overflow-auto p-0">
         <div className="block min-w-0 divide-y">
-          {filteredChats.length ? (
-            filteredChats.map((chat, key) => (
+          {filteredConversations.length ? (
+            filteredConversations.map((conversation) => (
               <ChatListItem
-                chat={chat}
-                key={key}
-                active={selectedChat && selectedChat.id === chat.id}
+                conversation={conversation}
+                key={conversation.id}
+                active={selectedConversation?.id === conversation.id}
               />
             ))
           ) : (
-            <div className="text-muted-foreground mt-4 text-center text-sm">No chat found</div>
+            <div className="text-muted-foreground mt-4 text-center text-sm">No conversations found</div>
           )}
         </div>
       </CardContent>

@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar/app-sidebar";
 import { SiteHeader } from "@/components/layout/header";
+import { Skeleton } from "@/components/ui/skeleton";
 import { isUserAdmin } from "@/lib/admin";
 
 export default function AdminLayout({
@@ -12,36 +14,49 @@ export default function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      const adminStatus = await isUserAdmin();
-      setIsAdmin(adminStatus);
-
-      if (!adminStatus) {
-        router.push("/dashboard");
+  // Use React Query to check admin status
+  const {
+    data: isAdmin = false,
+    isLoading,
+    isError
+  } = useQuery({
+    queryKey: ["isAdmin"],
+    queryFn: async () => {
+      try {
+        const adminStatus = await isUserAdmin();
+        return adminStatus;
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+        return false;
       }
-    };
+    },
+    retry: 1,
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  });
 
-    checkAdminStatus();
-  }, [router]);
+  // Redirect non-admin users
+  React.useEffect(() => {
+    if (!isLoading && !isAdmin) {
+      router.push("/dashboard");
+    }
+  }, [isLoading, isAdmin, router]);
 
-  // Loading state while checking admin status
-  if (isAdmin === null) {
+  // Loading state with Skeleton
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
-          <p className="text-muted-foreground mt-2">Checking permissions...</p>
+        <div className="text-center space-y-4">
+          <Skeleton className="mx-auto h-8 w-8 rounded-full" />
+          <Skeleton className="h-4 w-48 mx-auto" />
         </div>
       </div>
     );
   }
 
   // If not admin, don't render anything (redirect is happening)
-  if (!isAdmin) {
+  if (!isAdmin || isError) {
     return null;
   }
 

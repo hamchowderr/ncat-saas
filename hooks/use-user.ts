@@ -1,47 +1,67 @@
 "use client";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/client";
-import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
+import { useEffect } from "react";
 
+/**
+ * Hook to fetch and manage current user data
+ *
+ * Uses React Query for automatic caching, race condition handling, and state management.
+ * Subscribes to auth state changes for real-time updates.
+ *
+ * @returns {Object} React Query result with user data
+ * @returns {User | null} data - Current authenticated user or null
+ * @returns {boolean} isLoading - True while fetching user
+ * @returns {Error | null} error - Error if user fetch failed
+ *
+ * @example
+ * ```tsx
+ * const { data: user, isLoading } = useUser()
+ *
+ * if (isLoading) return <Skeleton />
+ * if (!user) return <div>Not logged in</div>
+ *
+ * return <div>Hello {user.email}</div>
+ * ```
+ */
 export function useUser() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
+  // Set up auth state change listener (legitimate useEffect - external system sync)
   useEffect(() => {
     const supabase = createClient();
 
-    // Get initial user
-    const getUser = async () => {
-      console.log("🔧 useUser: Getting initial user...");
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Invalidate user query when auth state changes
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+    });
+
+    return () => subscription.unsubscribe();
+  }, [queryClient]);
+
+  return useQuery({
+    queryKey: ["user"],
+    queryFn: async () => {
+      const supabase = createClient();
+
       const {
         data: { user },
         error
       } = await supabase.auth.getUser();
 
       if (error) {
-        console.error("🔧 useUser: Error getting user:", error);
-      } else {
-        console.log("🔧 useUser: Got user:", user ? `${user.email} (${user.id})` : "null");
+        throw error;
       }
 
-      setUser(user);
-      setLoading(false);
-    };
-
-    getUser();
-
-    // Listen for auth changes
-    const {
-      data: { subscription }
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("🔧 useUser: Auth state changed:", event, session?.user ? `${session.user.email} (${session.user.id})` : "no user");
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  return { user, loading };
+      return user;
+    },
+    // Retry once on failure
+    retry: 1,
+    // Keep data fresh for 5 minutes (auth state rarely changes)
+    staleTime: 5 * 60 * 1000
+  });
 }
