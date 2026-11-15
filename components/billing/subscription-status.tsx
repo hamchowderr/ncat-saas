@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, CreditCard, DollarSign, Package } from "lucide-react";
 import { createClient } from "@/lib/client";
 import { useWorkspace } from "@/hooks/use-workspace";
@@ -41,125 +42,136 @@ interface Subscription {
 }
 
 export function SubscriptionStatus() {
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [loadingSubscription, setLoadingSubscription] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { workspace, loading: workspaceLoading } = useWorkspace();
-  const { user, loading: userLoading } = useUser();
+  const { data: user, isLoading: userLoading } = useUser();
+  const { data: workspace, isLoading: workspaceLoading } = useWorkspace();
 
-  useEffect(() => {
-    async function fetchSubscription() {
-      // Wait for both user and workspace to finish loading
-      if (userLoading || workspaceLoading) {
-        return;
-      }
-
-      // If user is loaded but there's no user, this is an auth issue, not workspace issue
-      if (!user) {
-        setError("Authentication required");
-        setLoadingSubscription(false);
-        return;
-      }
-
+  // Use React Query dependent query - only fetch subscription when workspace is available
+  const {
+    data: subscription,
+    isLoading: subscriptionLoading,
+    error: subscriptionError
+  } = useQuery({
+    queryKey: ["subscription", workspace?.id],
+    queryFn: async () => {
       if (!workspace) {
-        console.log("🔧 SubscriptionStatus: No workspace found. userLoading:", userLoading, "workspaceLoading:", workspaceLoading, "user:", user?.email, "workspace:", workspace);
-        setError("No workspace found");
-        setLoadingSubscription(false);
-        return;
+        throw new Error("No workspace found");
       }
 
-      // Clear any previous error when workspace becomes available
-      setError(null);
-      console.log("🔧 SubscriptionStatus: Workspace found:", workspace);
+      console.log("🔧 SubscriptionStatus: Fetching subscription for workspace:", workspace.id);
+      const supabase = createClient();
 
-      try {
-        const supabase = createClient();
+      // First get the customer for this workspace
+      const { data: customer, error: customerError } = await supabase
+        .from("billing_customers")
+        .select("gateway_customer_id")
+        .eq("workspace_id", workspace.id)
+        .eq("gateway_name", "stripe")
+        .single();
 
-        // First get the customer for this workspace
-        const { data: customer, error: customerError } = await supabase
-          .from("billing_customers")
-          .select("gateway_customer_id")
-          .eq("workspace_id", workspace.id)
-          .eq("gateway_name", "stripe")
-          .single();
+      if (customerError || !customer) {
+        console.log("🔧 SubscriptionStatus: No customer found");
+        return null;
+      }
 
-        if (!customer) {
-          setSubscription(null);
-          setLoadingSubscription(false);
-          return;
-        }
-
-        // Fetch subscription with joined product and price data in a single query
-        const { data, error: subError } = await supabase
-          .from("billing_subscriptions")
-          .select(`
+      // Fetch subscription with joined product and price data in a single query
+      const { data, error: subError } = await supabase
+        .from("billing_subscriptions")
+        .select(
+          `
             *,
             billing_products!inner(name, description, features),
             billing_prices!inner(amount, currency, recurring_interval, recurring_interval_count)
-          `)
-          .eq("gateway_customer_id", customer.gateway_customer_id)
-          .order("status", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+          `
+        )
+        .eq("gateway_customer_id", customer.gateway_customer_id)
+        .order("status", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-        if (subError) {
-          setError("Failed to fetch subscription");
-          console.error("Subscription fetch error:", subError);
-          setLoadingSubscription(false);
-          return;
-        }
-
-        // Handle case where no subscription exists
-        if (!data) {
-          setSubscription(null);
-          setLoadingSubscription(false);
-          return;
-        }
-
-        // Map the joined data to the expected structure
-        const subscriptionWithDetails = {
-          ...data,
-          name: data.billing_products?.name,
-          description: data.billing_products?.description,
-          features: data.billing_products?.features,
-          amount: data.billing_prices?.amount,
-          recurring_interval: data.billing_prices?.recurring_interval,
-          recurring_interval_count: data.billing_prices?.recurring_interval_count
-        };
-
-        setSubscription(subscriptionWithDetails as Subscription);
-      } catch (error) {
-        setError("Failed to fetch subscription");
-        console.error("Error fetching subscription:", error);
-      } finally {
-        setLoadingSubscription(false);
+      if (subError) {
+        console.error("🔧 SubscriptionStatus: Subscription fetch error:", subError);
+        throw subError;
       }
-    }
 
-    fetchSubscription();
-  }, [workspace, workspaceLoading, user, userLoading]);
+      // Handle case where no subscription exists
+      if (!data) {
+        return null;
+      }
 
-  if (userLoading || workspaceLoading || loadingSubscription) {
+      // Map the joined data to the expected structure
+      const subscriptionWithDetails = {
+        ...data,
+        name: data.billing_products?.name,
+        description: data.billing_products?.description,
+        features: data.billing_products?.features,
+        amount: data.billing_prices?.amount,
+        recurring_interval: data.billing_prices?.recurring_interval,
+        recurring_interval_count: data.billing_prices?.recurring_interval_count
+      };
+
+      return subscriptionWithDetails as Subscription;
+    },
+    // Only run when workspace is available (dependent query)
+    enabled: !!workspace?.id,
+    // Retry once on failure
+    retry: 1,
+    // Keep data fresh for 5 minutes
+    staleTime: 5 * 60 * 1000
+  });
+
+  // Loading state with Skeleton
+  if (userLoading || workspaceLoading || subscriptionLoading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Subscription Status</CardTitle>
+          <Skeleton className="h-6 w-[180px]" />
         </CardHeader>
         <CardContent>
-          <p>Loading subscription information...</p>
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
         </CardContent>
       </Card>
     );
   }
 
-  if (error) {
+  // Error states
+  if (!user) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Subscription Status</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-destructive">{error}</p>
+          <p className="text-destructive">Authentication required</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!workspace) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Subscription Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-destructive">No workspace found</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (subscriptionError) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Subscription Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-destructive">Failed to load subscription information</p>
         </CardContent>
       </Card>
     );
@@ -282,105 +294,101 @@ export function SubscriptionStatus() {
               <h4 className="mb-2 font-medium">Plan Features</h4>
               <div className="text-muted-foreground space-y-2 text-sm">
                 {(() => {
-                  const features = subscription.features || subscription.billing_products?.features || {};
+                  const features =
+                    subscription.features || subscription.billing_products?.features || [];
 
-                  // Filter out technical metadata and show user-friendly features
-                  const filteredFeatures = Object.entries(features).filter(([key]) =>
-                    !key.startsWith('sync_') &&
-                    !key.includes('_to_') &&
-                    !key.includes('app') &&
-                    key !== 'tier'
-                  );
+                  // Handle features as an array (from database JSONB array)
+                  if (Array.isArray(features) && features.length > 0) {
+                    return (
+                      <ul className="space-y-1">
+                        {features.map((feature, index) => (
+                          <li key={index} className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    );
+                  }
 
-                  // If no user-friendly features, show plan-specific features based on plan name
-                  if (filteredFeatures.length === 0) {
-                    const planName = subscription.name || subscription.billing_products?.name || '';
+                  // Fallback: show plan-specific features based on plan name if no features array
+                  if (!Array.isArray(features) || features.length === 0) {
+                    const planName = subscription.name || subscription.billing_products?.name || "";
 
-                    if (planName.toLowerCase().includes('free')) {
+                    if (planName.toLowerCase().includes("free")) {
                       return (
                         <ul className="space-y-1">
                           <li className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            <span className="h-2 w-2 rounded-full bg-green-500"></span>
                             Basic file processing
                           </li>
                           <li className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            <span className="h-2 w-2 rounded-full bg-green-500"></span>
                             Up to 10 API calls per month
                           </li>
                           <li className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            <span className="h-2 w-2 rounded-full bg-green-500"></span>
                             Community support
                           </li>
                           <li className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            <span className="h-2 w-2 rounded-full bg-green-500"></span>
                             Basic workspace management
                           </li>
                         </ul>
                       );
-                    } else if (planName.toLowerCase().includes('pro')) {
+                    } else if (planName.toLowerCase().includes("pro")) {
                       return (
                         <ul className="space-y-1">
                           <li className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            <span className="h-2 w-2 rounded-full bg-blue-500"></span>
                             Advanced file processing
                           </li>
                           <li className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            <span className="h-2 w-2 rounded-full bg-blue-500"></span>
                             Up to 1,000 API calls per month
                           </li>
                           <li className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            <span className="h-2 w-2 rounded-full bg-blue-500"></span>
                             Priority support
                           </li>
                           <li className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            <span className="h-2 w-2 rounded-full bg-blue-500"></span>
                             Team collaboration
                           </li>
                         </ul>
                       );
-                    } else if (planName.toLowerCase().includes('business') || planName.toLowerCase().includes('enterprise')) {
+                    } else if (
+                      planName.toLowerCase().includes("business") ||
+                      planName.toLowerCase().includes("enterprise")
+                    ) {
                       return (
                         <ul className="space-y-1">
                           <li className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                            <span className="h-2 w-2 rounded-full bg-purple-500"></span>
                             Unlimited file processing
                           </li>
                           <li className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                            <span className="h-2 w-2 rounded-full bg-purple-500"></span>
                             Unlimited API calls
                           </li>
                           <li className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                            <span className="h-2 w-2 rounded-full bg-purple-500"></span>
                             24/7 dedicated support
                           </li>
                           <li className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                            <span className="h-2 w-2 rounded-full bg-purple-500"></span>
                             Advanced analytics
                           </li>
                           <li className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                            <span className="h-2 w-2 rounded-full bg-purple-500"></span>
                             Custom integrations
                           </li>
                         </ul>
                       );
                     }
 
-                    return (
-                      <p>Contact support for plan details</p>
-                    );
+                    return <p>Contact support for plan details</p>;
                   }
-
-                  // Show filtered user-friendly features
-                  return (
-                    <ul className="space-y-1">
-                      {filteredFeatures.map(([feature, value]) => (
-                        <li key={feature} className="flex items-center justify-between">
-                          <span className="capitalize">{feature.replace(/[_-]/g, " ")}</span>
-                          <span className="font-medium">{String(value)}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  );
                 })()}
               </div>
             </div>

@@ -1,9 +1,10 @@
-"use client";
+﻿"use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { STALE_TIMES, RETRY_CONFIG } from "@/lib/query-config";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { MessageSquarePlus, Trash2, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { ListChatsResponse } from "@/lib/types/chat";
@@ -19,51 +20,72 @@ export function ChatHistorySidebar({
   onNewChat,
   currentChatId
 }: ChatHistorySidebarProps) {
-  const [chats, setChats] = useState<ListChatsResponse["chats"]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  // Fetch chat history
-  const loadChats = async () => {
-    try {
-      setIsLoading(true);
+  // Fetch chat history with React Query
+  const { data: chats = [], isLoading } = useQuery({
+    queryKey: ["chats"],
+    queryFn: async () => {
       const response = await fetch("/api/chat/sessions");
-      if (response.ok) {
-        const data: ListChatsResponse = await response.json();
-        setChats(data.chats);
+      if (!response.ok) {
+        throw new Error("Failed to load chat history");
       }
-    } catch (error) {
-      console.error("Failed to load chat history:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      const data: ListChatsResponse = await response.json();
+      return data.chats;
+    },
+    staleTime: STALE_TIMES.FREQUENT, // 30 seconds - chats change frequently
+    retry: RETRY_CONFIG.DEFAULT
+  });
 
-  useEffect(() => {
-    loadChats();
-  }, []);
-
-  // Delete a chat
-  const deleteChat = async (chatId: string) => {
-    try {
+  // Delete chat mutation with optimistic updates
+  const deleteChatMutation = useMutation({
+    mutationFn: async (chatId: string) => {
       const response = await fetch(`/api/chat/sessions/${chatId}`, {
         method: "DELETE"
       });
 
-      if (response.ok) {
-        setChats((prev) => prev.filter((chat) => chat.id !== chatId));
-
-        // If we deleted the current chat, start a new one
-        if (chatId === currentChatId) {
-          onNewChat();
-        }
+      if (!response.ok) {
+        throw new Error("Failed to delete chat");
       }
-    } catch (error) {
-      console.error("Failed to delete chat:", error);
+
+      return chatId;
+    },
+    onMutate: async (chatId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["chats"] });
+
+      // Snapshot the previous value
+      const previousChats = queryClient.getQueryData<ListChatsResponse["chats"]>(["chats"]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData<ListChatsResponse["chats"]>(["chats"], (old = []) =>
+        old.filter((chat) => chat.id !== chatId)
+      );
+
+      // Return a context object with the snapshotted value
+      return { previousChats };
+    },
+    onError: (err, chatId, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousChats) {
+        queryClient.setQueryData(["chats"], context.previousChats);
+      }
+      console.error("Failed to delete chat:", err);
+    },
+    onSuccess: (chatId) => {
+      // If we deleted the current chat, start a new one
+      if (chatId === currentChatId) {
+        onNewChat();
+      }
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure we're in sync with the server
+      queryClient.invalidateQueries({ queryKey: ["chats"] });
     }
-  };
+  });
 
   return (
-    <div className="flex h-full w-72 flex-col border-r bg-background">
+    <div className="bg-background flex h-full w-72 flex-col border-r">
       <div className="flex items-center justify-between border-b p-4">
         <h2 className="text-base font-semibold">Chat History</h2>
         <Button
@@ -89,9 +111,7 @@ export function ChatHistorySidebar({
             </div>
             <div className="text-center">
               <p className="text-sm font-medium">No conversations yet</p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                Start a new chat to see it here
-              </p>
+              <p className="text-muted-foreground mt-1 text-xs">Start a new chat to see it here</p>
             </div>
           </div>
         ) : (
@@ -108,7 +128,7 @@ export function ChatHistorySidebar({
                   className="w-full p-3 text-left"
                   title={chat.title || "Untitled Chat"}
                 >
-                  <div className="mb-1.5 line-clamp-2 pr-8 text-sm font-medium leading-tight">
+                  <div className="mb-1.5 line-clamp-2 pr-8 text-sm leading-tight font-medium">
                     {chat.title || "Untitled Chat"}
                   </div>
                   <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
@@ -126,9 +146,10 @@ export function ChatHistorySidebar({
                   className="absolute top-2 right-2 size-7 opacity-0 transition-opacity group-hover:opacity-100"
                   onClick={(e) => {
                     e.stopPropagation();
-                    deleteChat(chat.id);
+                    deleteChatMutation.mutate(chat.id);
                   }}
                   title="Delete chat"
+                  disabled={deleteChatMutation.isPending}
                 >
                   <Trash2 className="size-3.5" />
                 </Button>

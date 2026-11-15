@@ -11,3 +11,5 @@ export * from "./message-status-icon";
 export * from "./user-detail-sheet";
 export * from "./call-dialog";
 export * from "./video-call-dialog";
+export * from "./new-chat-dialog";
+export * from "./group-info-sheet";

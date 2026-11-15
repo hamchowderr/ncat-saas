@@ -17,14 +17,7 @@ import {
   SidebarMenuItem,
   useSidebar
 } from "@/components/ui/sidebar";
-import {
-  CreditCard,
-  LogOut,
-  UserCircle2Icon,
-  MonitorIcon,
-  PaletteIcon,
-  BadgeCheck
-} from "lucide-react";
+import { CreditCard, LogOut, UserCircle2Icon, MonitorIcon, PaletteIcon } from "lucide-react";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import Link from "next/link";
 import { createClient } from "@/lib/client";
@@ -40,16 +33,7 @@ const userData = {
 export function NavUser() {
   const { isMobile } = useSidebar();
   const router = useRouter();
-  const { user, loading } = useUser();
-
-  // Debug user data
-  React.useEffect(() => {
-    if (user) {
-      console.log("User data in sidebar:", user);
-      console.log("Avatar URL:", user.user_metadata?.avatar_url);
-      console.log("User metadata:", user.user_metadata);
-    }
-  }, [user]);
+  const { data: user, isLoading } = useUser();
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -57,7 +41,7 @@ export function NavUser() {
     window.location.href = "/auth/login";
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
@@ -136,14 +120,10 @@ export function NavUser() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/settings/account">
-                  <BadgeCheck />
-                  Account
+                <Link href="/billing">
+                  <CreditCard />
+                  Billing
                 </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/settings/appearance">

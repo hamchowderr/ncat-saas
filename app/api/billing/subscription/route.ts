@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     const { data: freePlan, error: freePlanError } = await supabase
       .from("billing_prices")
       .select("gateway_price_id, gateway_product_id")
-      .eq("amount", 0)  // Free plan has $0 amount
+      .eq("amount", 0) // Free plan has $0 amount
       .eq("gateway_name", "stripe")
       .eq("active", true)
       .single();
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
       customer: customer.gateway_customer_id,
       items: [
         {
-          price: freePlan.gateway_price_id,  // Dynamic price ID from database
+          price: freePlan.gateway_price_id, // Dynamic price ID from database
           quantity: 1
         }
       ],

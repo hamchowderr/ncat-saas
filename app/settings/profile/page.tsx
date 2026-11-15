@@ -4,7 +4,7 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
-import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/hooks/use-user";
 import { useWorkspace } from "@/hooks/use-workspace";
 import { createClient } from "@/lib/client";
@@ -60,13 +61,47 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function Page() {
-  const { user, loading: userLoading } = useUser();
-  const { workspace, loading: workspaceLoading } = useWorkspace();
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: user, isLoading: userLoading } = useUser();
+  const { data: workspace, isLoading: workspaceLoading } = useWorkspace();
 
+  // Use React Query to fetch user profile
+  const { data: profile, isLoading: profileLoading } = useQuery({
+    queryKey: ["userProfile", user?.id],
+    queryFn: async () => {
+      if (!user) throw new Error("User not authenticated");
+
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      // Don't throw on error - profile might not exist yet
+      if (error) {
+        console.log("No user profile found, will use defaults");
+        return null;
+      }
+
+      return data;
+    },
+    enabled: !!user?.id,
+    retry: 1,
+    staleTime: 5 * 60 * 1000
+  });
+
+  // Use React Hook Form with `values` prop for dynamic defaults
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    mode: "onChange"
+    mode: "onChange",
+    values: {
+      username:
+        profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "",
+      email: user?.email || "",
+      bio: "",
+      urls: [{ value: "" }]
+    }
   });
 
   const { fields, append } = useFieldArray({
@@ -74,82 +109,58 @@ export default function Page() {
     control: form.control
   });
 
-  useEffect(() => {
-    async function loadUserProfile() {
-      if (userLoading || workspaceLoading) return;
-      if (!user || !workspace) return;
+  // Use React Query mutation for profile updates
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: ProfileFormValues) => {
+      if (!user) throw new Error("User not authenticated");
 
-      try {
-        const supabase = createClient();
-
-        // Get user profile data
-        const { data: profile } = await supabase
-          .from("user_profiles")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
-
-        // Set form default values with real user data
-        form.reset({
-          username: profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "",
-          email: user.email || "",
-          bio: "",
-          urls: [{ value: "" }]
-        });
-      } catch (error) {
-        console.error("Error loading user profile:", error);
-        // Set fallback values
-        form.reset({
-          username: user.user_metadata?.full_name || user.email?.split("@")[0] || "",
-          email: user.email || "",
-          bio: "",
-          urls: [{ value: "" }]
-        });
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadUserProfile();
-  }, [user, workspace, userLoading, workspaceLoading, form]);
-
-  async function onSubmit(data: ProfileFormValues) {
-    if (!user) return;
-
-    try {
       const supabase = createClient();
-
-      // Update user profile
-      const { error } = await supabase
-        .from("user_profiles")
-        .upsert({
-          id: user.id,
-          full_name: data.username
-        });
+      const { error } = await supabase.from("user_profiles").upsert({
+        id: user.id,
+        full_name: data.username
+      });
 
       if (error) throw error;
-
+    },
+    onSuccess: () => {
+      // Invalidate profile query to refetch
+      queryClient.invalidateQueries({ queryKey: ["userProfile", user?.id] });
       toast.success("Profile updated successfully!");
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile. Please try again.");
     }
+  });
+
+  async function onSubmit(data: ProfileFormValues) {
+    updateProfileMutation.mutate(data);
   }
 
-  if (loading || userLoading || workspaceLoading) {
+  // Loading state with Skeleton
+  if (userLoading || workspaceLoading || profileLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Loading Profile...</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
-            <div className="h-4 bg-muted rounded w-1/2 animate-pulse"></div>
-            <div className="h-4 bg-muted rounded w-2/3 animate-pulse"></div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-[200px]" />
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[100px]" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[100px]" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[100px]" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -188,61 +199,62 @@ export default function Page() {
                       <Input {...field} disabled />
                     </FormControl>
                     <FormDescription>
-                      Your email address is managed through your authentication settings and cannot be changed here.
+                      Your email address is managed through your authentication settings and cannot
+                      be changed here.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            <FormField
-              control={form.control}
-              name="bio"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bio</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Tell us a little bit about yourself"
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    You can <span>@mention</span> other users and organizations to link to them.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="space-y-2">
-              {fields.map((field, index) => (
-                <FormField
-                  control={form.control}
-                  key={field.id}
-                  name={`urls.${index}.value`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={cn(index !== 0 && "sr-only")}>URLs</FormLabel>
-                      <FormDescription className={cn(index !== 0 && "sr-only")}>
-                        Add links to your website, blog, or social media profiles.
-                      </FormDescription>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => append({ value: "" })}
-              >
-                Add URL
-              </Button>
-            </div>
+              <FormField
+                control={form.control}
+                name="bio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bio</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Tell us a little bit about yourself"
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      You can <span>@mention</span> other users and organizations to link to them.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="space-y-2">
+                {fields.map((field, index) => (
+                  <FormField
+                    control={form.control}
+                    key={field.id}
+                    name={`urls.${index}.value`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className={cn(index !== 0 && "sr-only")}>URLs</FormLabel>
+                        <FormDescription className={cn(index !== 0 && "sr-only")}>
+                          Add links to your website, blog, or social media profiles.
+                        </FormDescription>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => append({ value: "" })}
+                >
+                  Add URL
+                </Button>
+              </div>
               <Button type="submit">Update profile</Button>
             </form>
           </Form>
@@ -262,7 +274,9 @@ export default function Page() {
           <Separator />
           <div className="flex items-center justify-between">
             <span className="font-medium">User ID</span>
-            <span className="text-muted-foreground font-mono text-sm">{user?.id || "Loading..."}</span>
+            <span className="text-muted-foreground font-mono text-sm">
+              {user?.id || "Loading..."}
+            </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="font-medium">Account Created</span>

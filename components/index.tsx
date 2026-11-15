@@ -231,6 +231,12 @@ function DialogView({ projectRef, isMobile }: { projectRef: string; isMobile?: b
   );
 }
 
+// Export shared file upload dialog
+export { FileUploadDialog } from "./file-upload-dialog";
+
+// Export media preview dialog
+export { MediaPreviewDialog } from "./media-preview-dialog";
+
 export default function SupabaseManagerDialog({
   projectRef,
   open,

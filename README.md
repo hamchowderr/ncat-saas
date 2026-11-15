@@ -6,59 +6,33 @@ Built with Next.js 15 and React 19, this interface streamlines advanced media pr
 
 ## What Can It Do?
 
-The dashboard provides easy access to all NCA Toolkit capabilities:
+This application is a **multi-tenant SaaS platform** built around the No-Code Architects Toolkit (NCAT), powered by Stripe billing and Supabase infrastructure.
 
-- Convert and process audio files
-- Create transcriptions of content
-- Add captions to videos
-- Perform complex media processing for content creation
-- Manage files across multiple cloud services (Google Drive, Amazon S3, Google Cloud Storage, Dropbox)
-- Execute Python code remotely
-- Advanced image processing and transformations
+**Core Platform Features:**
+- Multi-tenant workspace management with team collaboration
+- Real-time team chat: 1-on-1 and group conversations
+- Stripe-powered subscription billing (Free, Pro, Enterprise tiers)
+- File management system with drag-and-drop uploads
+- Job monitoring dashboard for background tasks
+- AI-powered chat with 9 specialized agents using Mastra framework
+- Encrypted cookie storage for social media authentication
 
-Easily replace services like ChatGPT Whisper, Cloud Convert, Createomate, JSON2Video, PDF(dot)co, Placid and OCodeKit.
+**Media Processing Capabilities (via NCAT API):**
+- Video editing: trim, cut, split, concatenate, caption generation, thumbnail extraction
+- Audio processing: concatenate, convert to MP3, silence detection, transcription
+- Image transformations and video generation
+- Media format conversion and metadata extraction
+- Cloud storage integration (S3, Google Drive, Dropbox, GCS)
+- Python code execution for custom workflows
 
-## Dashboard Pages
+**Advanced Features:**
+- Faceless video generation pipeline (stories → scenes → shots → assembly)
+- Knowledge base system (KEDB) for content management
+- Real-time job tracking with webhook notifications
+- Content clips management with aspect ratio calculations
+- AI memory system with semantic search across conversations
 
-The NCAT SaaS Dashboard includes the following pages and features:
-
-### Core Dashboard
-
-- **File Manager** - Main dashboard for file management and storage operations
-- **Files** - File access and organization interface
-- **Jobs** - Task management and job monitoring
-
-### NCA Toolkit Interface
-
-- **Workflows** - Predefined automation workflows including:
-  - AI Podcast Creation
-  - YouTube ChapterBot
-  - Viral Clips from Podcast
-  - Reaction Video Creator
-  - Content Repurposing Suite
-
-- **Media Tools** - Direct access to NCA Toolkit API endpoints for:
-  - Audio/Video conversion and processing
-  - Image transformations and editing
-  - Media transcription and captioning
-  - File format conversions
-  - Python code execution
-
-### Communication & AI
-
-- **Chat** - Team communication interface
-- **AI Chat** - AI assistance and interaction
-- **Image Generator** - AI-powered image creation
-
-### Administration
-
-- **Users List** - User management and administration
-- **API Keys** - API key management for NCA Toolkit integration
-- **Profile** - User profile management
-- **Account** - Account settings and configuration
-- **Appearance** - Theme and display customization
-- **Notifications** - Alert and notification preferences
-- **Display** - Display options and settings
+**Replaces paid services:** Whisper API, Cloud Convert, Createomate, JSON2Video, PDF.co, Placid, OCodeKit
 
 ## Prerequisites
 
@@ -69,6 +43,39 @@ Before installing this SaaS dashboard, ensure you have the following:
 3. **Supabase Account**: Create a free account at [supabase.com](https://supabase.com)
 4. **Stripe Account**: Set up a Stripe account for payment processing
 5. **Stripe CLI**: Required for local webhook testing. [Install Stripe CLI](https://stripe.com/docs/stripe-cli)
+
+## No-Code Architects Toolkit API Setup
+
+**IMPORTANT:** This dashboard requires the [No-Code Architects Toolkit API](https://github.com/stephengpope/no-code-architects-toolkit) running locally via Docker for all media processing operations.
+
+**First, pull the Docker image:**
+```bash
+docker pull stephengpope/no-code-architects-toolkit:latest
+```
+
+**Then choose one option to start the API:**
+
+**Option 1: Use npm scripts (Recommended)**
+```bash
+npm run ncat:start  # Start container
+npm run ncat:test   # Verify API is running
+```
+
+**Option 2: Manual Docker command**
+```bash
+docker run -d --name no-code-architects-toolkit \
+  -p 8080:8080 \
+  -e API_KEY=local-dev-api-key \
+  -e S3_ENDPOINT_URL=http://host.docker.internal:54321/storage/v1/s3 \
+  -e S3_ACCESS_KEY=625729a08b95bf1b7ff351a663f3a23c \
+  -e S3_SECRET_KEY=850181e4652dd023b7a98c58ae0d2d34bd487ee0cc3254aed6eda37307425907 \
+  -e S3_REGION=local \
+  -e S3_BUCKET_NAME=files \
+  stephengpope/no-code-architects-toolkit:latest
+
+# Verify
+curl -H "X-API-Key: local-dev-api-key" http://localhost:8080/v1/toolkit/test
+```
 
 ## Development Setup
 
@@ -82,249 +89,67 @@ cd ncat-saas
 npm install --legacy-peer-deps
 ```
 
-### 2. Environment Variables
+### 2. Start No-Code Architects Toolkit API
 
-Create a `.env.local` file in the project root for **LOCAL TESTING**:
+**This must be started first** as all media processing depends on it.
 
 ```bash
-# ================================
-# SUPABASE CONFIGURATION (REQUIRED)
-# ================================
-# Your Supabase project URL (Project Settings > API)
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-
-# Supabase anonymous key (Project Settings > API)
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-# Supabase service role key (Project Settings > API) - KEEP SECRET!
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-# ================================
-# STRIPE CONFIGURATION (REQUIRED FOR BILLING)
-# ================================
-# Stripe TEST keys (Developers > API Keys)
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_51...
-STRIPE_SECRET_KEY=sk_test_51...
-
-# Stripe webhook signing secret (generated by Stripe CLI - see step 5)
-STRIPE_WEBHOOK_SIGNING_SECRET=whsec_...
-
-# ⚠️ NOTE: Price IDs are now dynamically resolved from database
-# No need to manually configure specific price IDs!
-
-# ================================
-# LOCAL DEVELOPMENT SETTINGS
-# ================================
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
-DATABASE_URL=postgresql://postgres:password@localhost:54322/postgres
-
-# ================================
-# OPTIONAL - FOR ADDITIONAL FEATURES
-# ================================
-# OpenAI for AI features
-OPENAI_API_KEY=sk-...
-
-# Resend for custom emails
-RESEND_API_KEY=re_...
-FROM_EMAIL=noreply@yourdomain.com
-
-# NCAT API for media processing (only URL and key needed)
-NCAT_API_URL=https://your-ncat-api-url.com
-NCAT_API_KEY=your-ncat-api-key
+npm run ncat:start  # Starts Docker container
+npm run ncat:test   # Verify API is running on http://localhost:8080
 ```
 
-### 3. Start Supabase Services
+### 3. Environment Variables
 
-**⚠️ CRITICAL: This must be done before Stripe CLI setup!**
+Copy `.env.local.example` to `.env.local` and add your Stripe keys (Supabase and database values are already set for local development).
+
+### 4. Start Supabase Services
 
 ```bash
 npx supabase start
-npx supabase functions serve
+npx supabase functions serve  # Separate terminal
 ```
 
-Wait for both services to be fully running before proceeding.
-
-### 4. Database Setup
+### 5. Database Setup
 
 ```bash
 npx supabase db push
 npm run update-types
 ```
 
-### 5. Stripe Billing System Setup
-
-**⚠️ CRITICAL: This step sets up the complete billing system for your SaaS.**
-
-The billing system uses **dynamic product resolution** - no hardcoded price IDs needed! The system automatically finds the right products and prices from your database.
-
-#### 5.1. Install and Authenticate Stripe CLI
+### 6. Stripe Billing Setup
 
 ```bash
 stripe login
-```
-
-#### 5.2. Start Webhook Forwarding
-
-**⚠️ Must run AFTER Supabase services are started:**
-
-```bash
 stripe listen --forward-to http://127.0.0.1:54321/functions/v1/stripe-webhook
+
+# Copy webhook secret to .env.local
+
+# Create products (choose one):
+npm run stripe:create-products  # New setup
+npm run stripe:sync             # Existing products
 ```
 
-**Copy the webhook signing secret** from the Stripe CLI output and add it to your `.env.local` as `STRIPE_WEBHOOK_SIGNING_SECRET`.
+### 7. (Optional) Generate AI-Enhanced Seed Data
 
-#### 5.3. Create NCAT Billing Plans
-
-You need to create **exactly 3 products** for the NCAT SaaS billing system. Choose **ONE** of these methods:
-
-**Option A: Manual Creation (Stripe Dashboard)**
-
-1. Go to [Stripe Dashboard > Products](https://dashboard.stripe.com/products)
-2. Create these 3 products with prices:
-
-   **Free Plan:**
-   - Product Name: `NCAT Free Plan`
-   - Description: `Free tier with basic features for NCAT SaaS Dashboard`
-   - Price: `$0/month` (recurring)
-
-   **Pro Plan:**
-   - Product Name: `NCAT Pro Plan`
-   - Description: `Professional plan with advanced features`
-   - Price: `$25/month` (recurring)
-
-   **Business Plan:**
-   - Product Name: `NCAT Business Plan`
-   - Description: `Enterprise plan with full features`
-   - Price: `$50/month` (recurring)
-
-**Option B: Automated Creation (Claude Code with Stripe MCP)**
-
-If you're using Claude Code with Stripe MCP integration:
-
-```typescript
-// Run these in Claude Code to create all products automatically:
-
-// 1. Create Free Plan
-mcp__stripe__create_product("NCAT Free Plan", "Free tier with basic features for NCAT SaaS Dashboard")
-// Then create price: $0/month recurring
-
-// 2. Create Pro Plan
-mcp__stripe__create_product("NCAT Pro Plan", "Professional plan with advanced features")
-// Then create price: $25/month recurring
-
-// 3. Create Business Plan
-mcp__stripe__create_product("NCAT Business Plan", "Enterprise plan with full features")
-// Then create price: $50/month recurring
-```
-
-**Option C: Stripe CLI (Advanced)**
+For more realistic test data, generate AI-enhanced seeds using Snaplet with OpenAI:
 
 ```bash
-# Create products and prices via CLI
-stripe products create --name="NCAT Free Plan" --description="Free tier with basic features for NCAT SaaS Dashboard"
-stripe products create --name="NCAT Pro Plan" --description="Professional plan with advanced features"
-stripe products create --name="NCAT Business Plan" --description="Enterprise plan with full features"
-
-# Then create corresponding prices (replace PRODUCT_ID with actual IDs)
-stripe prices create --product=PRODUCT_ID --currency=usd --unit-amount=0 --recurring interval=month
-stripe prices create --product=PRODUCT_ID --currency=usd --unit-amount=2500 --recurring interval=month
-stripe prices create --product=PRODUCT_ID --currency=usd --unit-amount=5000 --recurring interval=month
+cd supabase
+npm install  # First time only
+npx tsx seed.ts > seeds/09_snaplet_generated.sql
+cd ..
+npx supabase db reset
 ```
 
-#### 5.4. Sync Products to Database
+**Requirements**: `OPENAI_API_KEY` in `.env.local`
 
-You have **TWO OPTIONS** for syncing Stripe products to your database:
+**Note**: This is optional. The default handcrafted seeds provide all necessary test data.
 
-**Option A: New Products (Just Created)**
-
-If you just created products using one of the methods above, trigger webhook sync:
+### 8. Start Development Server
 
 ```bash
-# Update each product to trigger webhook sync
-# (Replace with your actual product IDs from Stripe Dashboard)
-stripe products update prod_YOUR_FREE_PRODUCT_ID --name="NCAT Free Plan"
-stripe products update prod_YOUR_PRO_PRODUCT_ID --name="NCAT Pro Plan"
-stripe products update prod_YOUR_BUSINESS_PRODUCT_ID --name="NCAT Business Plan"
+npm run dev  # http://localhost:3000
 ```
-
-**Option B: Existing Products (Already Created)**
-
-If you already have products in your Stripe account that you want to sync:
-
-1. **First, identify your existing products:**
-
-```bash
-# List all your existing products
-stripe products list
-```
-
-2. **Add sync metadata to products you want to sync:**
-
-```bash
-# Add sync metadata to enable webhook processing
-# (Replace prod_XXXXXX with your actual product IDs)
-stripe products update prod_XXXXXX -d "metadata[sync_to_app]=true"
-```
-
-3. **Update corresponding prices:**
-
-```bash
-# Update prices to trigger sync (replace price_XXXXXX with actual price IDs)
-stripe prices update price_XXXXXX -d "metadata[tier]=free"      # For free plan
-stripe prices update price_XXXXXX -d "metadata[tier]=pro"       # For pro plan
-stripe prices update price_XXXXXX -d "metadata[tier]=business"  # For business plan
-```
-
-4. **Using Claude Code with Stripe MCP (Recommended)**
-
-If you're using Claude Code with Stripe MCP integration, this is the easiest way:
-
-```bash
-# Claude Code will automatically:
-# 1. List your existing products
-# 2. Add sync metadata to products you want
-# 3. Update prices with proper tier metadata
-# 4. Verify sync via webhook logs
-
-# Just ask Claude: "Sync my existing Stripe products to the database"
-```
-
-**Why the metadata is needed:**
-
-The webhook handler only syncs products that have `sync_to_app=true` metadata. This prevents syncing unrelated test products and keeps your database clean.
-
-#### 5.5. Verify Billing Setup
-
-Check that products and prices are synced:
-
-1. **Check Supabase Studio**: http://localhost:54323
-2. **Look for data in these tables:**
-   - `billing_products` - Should have 3 NCAT products
-   - `billing_prices` - Should have 3 corresponding prices
-
-3. **Verify webhook logs show:**
-   ```
-   ✅ Product prod_XXX synced
-   ✅ Price price_XXX synced
-   ```
-
-#### 5.6. Test Billing Flow
-
-The system now automatically:
-- ✅ Finds the free plan ($0) when users sign up
-- ✅ Creates subscriptions with correct price IDs
-- ✅ Syncs all subscription data via webhooks
-- ✅ Displays billing information on frontend
-
-**No environment variable updates needed!** The system dynamically resolves products and prices.
-
-### 6. Start Development Server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Development Commands
 
@@ -339,6 +164,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### Supabase Commands
 
 #### Local Development Commands
+
 - `npx supabase start` - Start local Supabase stack (Docker containers)
 - `npx supabase stop` - Stop local Supabase stack
 - `npx supabase status` - Check local services status
@@ -347,6 +173,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - `npx supabase functions serve` - Serve Edge Functions locally
 
 #### Cloud/Production Commands
+
 - `npx supabase link --project-ref YOUR_PROJECT_ID` - Link local project to cloud Supabase project
 - `npx supabase db push --linked` - Push migrations to linked cloud database
 - `npx supabase functions deploy` - Deploy all Edge Functions to cloud
@@ -358,9 +185,22 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 - `stripe login` - Authenticate with Stripe CLI
 - `stripe listen --forward-to http://127.0.0.1:54321/functions/v1/stripe-webhook` - Forward webhooks to Supabase Edge Function
-- `stripe trigger product.created` - Create test product for billing
-- `stripe trigger customer.subscription.created` - Test subscription creation
 - `stripe logs tail` - View real-time API request logs
+
+### Stripe Product Management (npm scripts)
+
+- `npm run stripe:create-products` - Create all 3 NCAT products and prices from scratch
+- `npm run stripe:sync` - Sync existing NCAT products from Stripe to database
+- `npm run stripe:check` - Check Stripe setup and product configuration
+
+### No-Code Architects Toolkit API (npm scripts)
+
+- `npm run ncat:start` - Start NCAT API Docker container
+- `npm run ncat:stop` - Stop and remove NCAT API container
+- `npm run ncat:restart` - Restart NCAT API container
+- `npm run ncat:status` - Check if NCAT API is running
+- `npm run ncat:logs` - View real-time NCAT API logs
+- `npm run ncat:test` - Test NCAT API endpoint
 
 ### Testing
 
@@ -370,194 +210,91 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Development Workflow
 
-### Making Changes and Adding Features
-
-**⚠️ IMPORTANT: Always follow this sequence when making changes:**
-
-#### 1. Pre-Development Quality Checks
+Before committing:
 
 ```bash
-# 1. Lint check (fix errors before proceeding)
 npm run lint
-
-# 2. Build check (ensure codebase builds)
 npm run build
-
-# 3. Type check
-npm run update-types
-```
-
-#### 2. Make Your Changes
-
-- Edit files as needed
-- Follow existing code patterns
-- Test locally in browser
-
-#### 3. Database Changes (If Applicable)
-
-```bash
-# Apply database migrations
-npx supabase db push
-
-# Update TypeScript types
-npm run update-types
-
-# Check database in Supabase Studio: http://localhost:54323
-```
-
-#### 4. Post-Development Quality Validation
-
-```bash
-# 1. Format code
 npx prettier --write .
-
-# 2. Run linting
-npm run lint
-
-# 3. Build project
-npm run build
-
-# 4. Run tests
-npx playwright test
-```
-
-#### 5. Final Testing
-
-```bash
-# Start fresh dev server
-npm run dev
-
-# Test at http://localhost:3000
-```
-
-### Pre-Commit Checklist
-
-Before committing any changes:
-
-- [ ] `npm run lint` passes
-- [ ] `npm run build` succeeds
-- [ ] `npx prettier --write .` applied
-- [ ] `npx supabase db push` (if database changes)
-- [ ] `npm run update-types` (if schema changes)
-- [ ] `npx playwright test` passes
-- [ ] Manual browser testing complete
-- [ ] Stripe webhooks working (if billing changes)
-
-### Database Migration Workflow
-
-```bash
-# 1. Edit migration files in /supabase/migrations/
-# 2. Apply locally
-npx supabase db push
-# 3. Update types
-npm run update-types
-# 4. Test in Supabase Studio (http://localhost:54323)
-# 5. Verify RLS policies work
-# 6. Test with frontend
+npx supabase db push  # If database changed
+npm run update-types  # If schema changed
 ```
 
 ## Troubleshooting
 
-### Common Issues
+**NCAT API Issues:**
+```bash
+npm run ncat:status  # Check status
+npm run ncat:logs    # View logs
+npm run ncat:restart # Restart container
+```
 
-1. **Subscription not showing**:
-   - Check `billing_products` and `billing_prices` tables have data
-   - Ensure at least one price with `amount = 0` exists (free plan)
-   - Verify webhook logs show `✅ Product synced` and `✅ Price synced`
+**Database Issues:**
+```bash
+npx supabase db push
+npm run update-types
+```
 
-2. **Products not syncing from Stripe**:
-   - Make sure products have `metadata[sync_to_app]=true`
-   - Check Stripe CLI webhook logs for errors
-   - Verify Edge Functions are running: `npx supabase functions serve`
-   - Look for `🔔 Event received: product.updated` in Edge Function logs
+**Stripe Webhooks:**
+- Ensure Edge Functions are running
+- Check webhook secret in `.env.local`
+- View logs: `stripe logs tail`
 
-3. **Webhook errors**:
-   - Make sure Supabase services are running before starting Stripe CLI
-   - Check for `duplicate key value violates unique constraint` errors (now fixed with proper upsert)
-   - Ensure `STRIPE_WEBHOOK_SIGNING_SECRET` is set correctly
+**Service Start Order:**
+1. NCAT API
+2. Supabase
+3. Edge Functions
+4. Stripe CLI
+5. Dev server
 
-4. **Database sync issues**:
-   - Reset database if needed: `npx supabase db reset`
-   - Re-sync products after reset using the methods in section 5.4
-   - Check Supabase Studio tables: `billing_products` and `billing_prices`
+## Documentation
 
-5. **Date formatting problems**:
-   - Webhook handler now properly handles Stripe timestamps
-   - If you see duplicate dates, trigger a subscription update to fix: `stripe subscriptions update sub_XXXX -d "metadata[updated]=true"`
-
-6. **Port conflicts**: All development uses port 3000 by default
-
-7. **Database connection issues**: Run `npx supabase db push` to apply all migrations
-
-### Setup Order Issues
-
-The most common problem is starting services in the wrong order. Always follow this sequence:
-
-1. ✅ Start Supabase stack
-2. ✅ Start Edge Functions
-3. ✅ Apply database migrations
-4. ✅ Start Stripe CLI webhook forwarding
-5. ✅ Start development server
-
-### Required System Requirements
-
-- **Node.js**: Version 22.18.0 (check `.nvmrc`)
-- **Docker**: Required for Supabase local development
-- **Stripe CLI**: Required for webhook testing
+- `CLAUDE.md` - AI assistant instructions
+- `src/mastra/README.md` - Mastra AI agent framework
+- `app/workspace/media-tools/components/tools/README.md` - Media tools guide
 
 ## Production Deployment
 
-### Environment Configuration for Production
-
-Production requires configuring variables in **TWO** places:
-
-#### 1. Supabase Edge Function Secrets
-
-Go to [Supabase Dashboard Functions Settings](https://supabase.com/dashboard/project/YOUR_PROJECT_ID/settings/functions):
+### Supabase Edge Function Secrets
 
 ```bash
-# Edge Function Secrets (for webhook processing)
-STRIPE_SECRET_KEY=sk_live_your_live_secret_key
-STRIPE_WEBHOOK_SIGNING_SECRET=whsec_your_production_webhook_secret
-NCAT_API_URL=https://your-production-ncat-api.com
-NCAT_API_KEY=your_production_ncat_api_key
-OPENAI_API_KEY=sk-your_openai_key
-RESEND_API_KEY=re_your_resend_key
-FROM_EMAIL=noreply@yourdomain.com
+npx supabase link --project-ref YOUR_PROJECT_ID
+npx supabase secrets set STRIPE_SECRET_KEY=sk_live_...
+npx supabase secrets set OPENAI_API_KEY=sk-...
+npx supabase functions deploy
 ```
 
-#### 2. Hosting Platform Environment Variables
+### Hosting Platform Variables (Vercel/Netlify)
 
-**For Netlify/Vercel/Other Hosting** (client-side and API routes):
+Configure these environment variables in your hosting platform's dashboard:
 
-```bash
-# Public variables (exposed to client)
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_your_live_publishable_key
+**Public Variables (exposed to client):**
+```
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY=eyJhbG...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 NEXT_PUBLIC_BASE_URL=https://yourdomain.com
-
-# Server-side secrets
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-STRIPE_SECRET_KEY=sk_live_your_live_secret_key
-OPENAI_API_KEY=sk-your_openai_key
-RESEND_API_KEY=re_your_resend_key
 ```
 
-### Production Webhook Setup
+**Private Variables (server-only):**
+```
+SUPABASE_SERVICE_ROLE_KEY=eyJhbG...
+DATABASE_URL=postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SIGNING_SECRET=whsec_...
+OPENAI_API_KEY=sk-proj-...
+ELEVENLABS_API_KEY=sk_...
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-secret
+RESEND_API_KEY=re_...
+FROM_EMAIL=noreply@yourdomain.com
+COOKIE_ENCRYPTION_KEY=your-32-byte-base64-key
+```
 
-**Stripe Webhook Configuration:**
+**Note:** Generate `COOKIE_ENCRYPTION_KEY` using: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
 
-1. Go to [Stripe Dashboard Webhooks](https://dashboard.stripe.com/webhooks)
-2. Add endpoint: `https://YOUR_PROJECT_ID.supabase.co/functions/v1/stripe-webhook`
-3. Select events: `customer.*`, `invoice.*`, `product.*`, `price.*`, `customer.subscription.*`
-4. Copy the signing secret to **BOTH** Edge Function Secrets AND hosting platform variables
+### Stripe Webhooks
 
-### Key Production Notes:
-
-**🔑 Important Differences:**
-
-- **Local**: Use TEST keys (`pk_test_`, `sk_test_`)
-- **Production**: Use LIVE keys (`pk_live_`, `sk_live_`)
-- **Webhook Secret**: Different for local (Stripe CLI) vs production (Dashboard)
-- **Service Role Key**: Same for local and production (handle with extreme care)
+Add endpoint at [Stripe Dashboard](https://dashboard.stripe.com/webhooks):
+- URL: `https://YOUR_PROJECT_ID.supabase.co/functions/v1/stripe-webhook`
+- Events: `customer.*`, `invoice.*`, `product.*`, `price.*`, `subscription.*`

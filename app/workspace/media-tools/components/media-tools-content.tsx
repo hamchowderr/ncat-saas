@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Video, Music, ImageIcon, Code, Wand2, Upload } from "lucide-react";
+import { staggerFadeInUp, gridStagger } from "@/lib/animations";
 
 // Import extracted tools
 import { AudioConcatenateTool } from "./tools/audio/audio-concatenate-tool";
@@ -17,6 +19,7 @@ import { MediaConvertTool } from "./tools/media/media-convert-tool";
 import { MediaToMp3Tool } from "./tools/media/media-to-mp3-tool";
 import { MediaTranscribeTool } from "./tools/media/media-transcribe-tool";
 import { MediaMetadataTool } from "./tools/media/media-metadata-tool";
+import { MediaDownloadTool } from "./tools/media/media-download-tool";
 import { S3UploadTool } from "./tools/storage/s3-upload-tool";
 
 /**
@@ -34,80 +37,143 @@ import { S3UploadTool } from "./tools/storage/s3-upload-tool";
  * - tools/storage/   - Cloud storage tools
  */
 export function MediaToolsContent() {
+  const sectionsRef = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Animate sections on mount
+  useEffect(() => {
+    const sections = sectionsRef.current.filter(Boolean) as HTMLElement[];
+
+    if (sections.length > 0) {
+      staggerFadeInUp(sections, {
+        stagger: 150,
+        delay: 100
+      });
+    }
+
+    // Animate tool cards within each section
+    sections.forEach((section) => {
+      const cards = section.querySelectorAll("[data-tool-card]");
+      if (cards.length > 0) {
+        setTimeout(() => {
+          gridStagger(cards as unknown as HTMLElement[], 3, {
+            delay: 300
+          });
+        }, 200);
+      }
+    });
+  }, []);
+
+  const setSectionRef = (index: number) => (el: HTMLDivElement | null) => {
+    sectionsRef.current[index] = el;
+  };
+
   return (
     <div className="space-y-8">
       {/* Video Processing Section */}
-      <div className="space-y-4">
+      <div ref={setSectionRef(0)} className="space-y-4" style={{ opacity: 0 }}>
         <div className="flex items-center gap-2">
           <Video className="h-5 w-5 text-blue-600" />
           <h2 className="text-xl font-semibold">Video Processing</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <VideoCaptionTool />
-          <VideoTrimTool />
-          <VideoSplitTool />
-          <VideoCutTool />
-          <VideoThumbnailTool />
-          <VideoConcatenateTool />
+          <div data-tool-card style={{ opacity: 0 }}>
+            <VideoCaptionTool />
+          </div>
+          <div data-tool-card style={{ opacity: 0 }}>
+            <VideoTrimTool />
+          </div>
+          <div data-tool-card style={{ opacity: 0 }}>
+            <VideoSplitTool />
+          </div>
+          <div data-tool-card style={{ opacity: 0 }}>
+            <VideoCutTool />
+          </div>
+          <div data-tool-card style={{ opacity: 0 }}>
+            <VideoThumbnailTool />
+          </div>
+          <div data-tool-card style={{ opacity: 0 }}>
+            <VideoConcatenateTool />
+          </div>
         </div>
       </div>
 
       {/* Audio Processing Section */}
-      <div className="space-y-4">
+      <div ref={setSectionRef(1)} className="space-y-4" style={{ opacity: 0 }}>
         <div className="flex items-center gap-2">
           <Music className="h-5 w-5 text-green-600" />
           <h2 className="text-xl font-semibold">Audio Processing</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <AudioConcatenateTool />
-          <SilenceDetectionTool />
+          <div data-tool-card style={{ opacity: 0 }}>
+            <AudioConcatenateTool />
+          </div>
+          <div data-tool-card style={{ opacity: 0 }}>
+            <SilenceDetectionTool />
+          </div>
         </div>
       </div>
 
       {/* Image Processing Section */}
-      <div className="space-y-4">
+      <div ref={setSectionRef(2)} className="space-y-4" style={{ opacity: 0 }}>
         <div className="flex items-center gap-2">
           <ImageIcon className="h-5 w-5 text-purple-600" />
           <h2 className="text-xl font-semibold">Image Processing</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <ImageToVideoTool />
+          <div data-tool-card style={{ opacity: 0 }}>
+            <ImageToVideoTool />
+          </div>
         </div>
       </div>
 
       {/* Media Tools Section */}
-      <div className="space-y-4">
+      <div ref={setSectionRef(3)} className="space-y-4" style={{ opacity: 0 }}>
         <div className="flex items-center gap-2">
           <Wand2 className="h-5 w-5 text-orange-600" />
           <h2 className="text-xl font-semibold">Media Tools</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <MediaConvertTool />
-          <MediaToMp3Tool />
-          <MediaTranscribeTool />
-          <MediaMetadataTool />
+          <div data-tool-card style={{ opacity: 0 }}>
+            <MediaConvertTool />
+          </div>
+          <div data-tool-card style={{ opacity: 0 }}>
+            <MediaToMp3Tool />
+          </div>
+          <div data-tool-card style={{ opacity: 0 }}>
+            <MediaTranscribeTool />
+          </div>
+          <div data-tool-card style={{ opacity: 0 }}>
+            <MediaMetadataTool />
+          </div>
+          <div data-tool-card style={{ opacity: 0 }}>
+            <MediaDownloadTool />
+          </div>
         </div>
       </div>
 
       {/* Code Execution Section */}
-      <div className="space-y-4">
+      <div ref={setSectionRef(4)} className="space-y-4" style={{ opacity: 0 }}>
         <div className="flex items-center gap-2">
           <Code className="h-5 w-5 text-indigo-600" />
           <h2 className="text-xl font-semibold">Code Execution</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <PythonExecutionTool />
+          <div data-tool-card style={{ opacity: 0 }}>
+            <PythonExecutionTool />
+          </div>
         </div>
       </div>
 
       {/* Cloud Storage Section */}
-      <div className="space-y-4">
+      <div ref={setSectionRef(5)} className="space-y-4" style={{ opacity: 0 }}>
         <div className="flex items-center gap-2">
           <Upload className="h-5 w-5 text-gray-600" />
           <h2 className="text-xl font-semibold">Cloud Storage</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <S3UploadTool />
+          <div data-tool-card style={{ opacity: 0 }}>
+            <S3UploadTool />
+          </div>
         </div>
       </div>
     </div>

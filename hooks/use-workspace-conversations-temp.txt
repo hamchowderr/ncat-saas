@@ -1,0 +1,2 @@
+Line 11: Remove "const supabase = createClient();"
+Line 89: Change to "const supabase = createClient(); const conversationsChannel = supabase"

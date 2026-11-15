@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, X, Plus } from "lucide-react";
+import { FileText } from "lucide-react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,114 +13,224 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
+import { UrlInputWithPicker } from "../../url-input-with-picker";
+import { MEDIA_TYPES } from "@/lib/media-types";
+import { toast } from "sonner";
+import {
+  CaptionStyleSection,
+  CaptionPositionSection,
+  CaptionAdvancedSection,
+  TextReplacementsSection,
+  ExcludeRangesSection
+} from "../../shared/captions";
+import type {
+  CaptionPosition,
+  TextReplacement,
+  ExcludeRange
+} from "../../shared/captions";
 
-interface VideoCaptionToolProps {
-  webhookUrl?: string;
-}
-
-export function VideoCaptionTool({ webhookUrl = "" }: VideoCaptionToolProps) {
-  // Video Caption state
+export function VideoCaptionTool() {
+  // Dialog state
   const [isCaptionDialogOpen, setIsCaptionDialogOpen] = useState(false);
-  const [captionVideoUrl, setCaptionVideoUrl] = useState("");
-  const [captions, setCaptions] = useState("");
-  const [captionType, setCaptionType] = useState<"text" | "srt" | "ass" | "auto">("auto");
-  const [captionCustomId, setCaptionCustomId] = useState("");
-  const [captionLanguage, setCaptionLanguage] = useState("auto");
   const [isCaptionLoading, setIsCaptionLoading] = useState(false);
-  const [excludeTimeRanges, setExcludeTimeRanges] = useState<
-    Array<{ start: string; end: string }>
-  >([]);
-  const [currentExcludeStart, setCurrentExcludeStart] = useState("");
-  const [currentExcludeEnd, setCurrentExcludeEnd] = useState("");
-  const [textReplacements, setTextReplacements] = useState<
-    Array<{ find: string; replace: string }>
-  >([{ find: "", replace: "" }]);
 
-  // Caption settings state
-  const [captionSettings, setCaptionSettings] = useState({
-    fontFamily: "Arial",
-    fontSize: 24,
-    color: "#FFFFFF",
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    position: "bottom",
-    offset: 10,
-    textAlign: "center" as const
-  });
+  // Video input
+  const [captionVideoUrl, setCaptionVideoUrl] = useState("");
+  const [videoFileId, setVideoFileId] = useState<string | null>(null);
+
+  // Caption source
+  const [captionType, setCaptionType] = useState<"text" | "srt" | "ass" | "auto">("auto");
+  const [captions, setCaptions] = useState("");
+  const [captionLanguage, setCaptionLanguage] = useState("auto");
+
+  // Caption style settings (managed by shared component)
+  const [fonts, setFonts] = useState("Arial");
+  const [fontSize, setFontSize] = useState(48);
+  const [primaryColor, setPrimaryColor] = useState("#FFFFFF");
+  const [outlineColor, setOutlineColor] = useState("#000000");
+  const [bold, setBold] = useState(false);
+  const [italic, setItalic] = useState(false);
+  const [underline, setUnderline] = useState(false);
+  const [strikeout, setStrikeout] = useState(false);
+  const [alignment, setAlignment] = useState(2);
+  const [outline, setOutline] = useState(2);
+  const [shadow, setShadow] = useState(0);
+
+  // Caption position (managed by shared component)
+  const [position, setPosition] = useState<CaptionPosition>("bottom-center");
+
+  // Text replacements (managed by shared component)
+  const [textReplacements, setTextReplacements] = useState<TextReplacement[]>([]);
+
+  // Exclude ranges (managed by shared component)
+  const [excludeRanges, setExcludeRanges] = useState<ExcludeRange[]>([]);
+
+  // Custom ID
+  const [captionCustomId, setCaptionCustomId] = useState("");
+
+  // Helper function to map our 9-point position grid to NCAT format
+  const mapPositionToNCATFormat = (pos: CaptionPosition): string => {
+    // Convert "top-left" to "top_left", "bottom-center" to "bottom_center", etc.
+    return pos.replace(/-/g, "_");
+  };
+
+  // Helper function to map alignment number to NCAT format
+  const mapAlignmentToNCATFormat = (alignmentNum: number): string => {
+    // ASS subtitle alignment grid:
+    // 7 8 9 (top row)
+    // 4 5 6 (middle row)
+    // 1 2 3 (bottom row)
+    // Left column (1,4,7) = "left"
+    // Center column (2,5,8) = "center"
+    // Right column (3,6,9) = "right"
+    if ([1, 4, 7].includes(alignmentNum)) return "left";
+    if ([3, 6, 9].includes(alignmentNum)) return "right";
+    return "center"; // Default for 2, 5, 8
+  };
 
   const handleAddCaptions = async () => {
     if (!captionVideoUrl.trim()) {
-      alert("Please enter a video URL");
+      toast.error("Please enter a video URL");
       return;
     }
 
+    setIsCaptionLoading(true);
     try {
-      setIsCaptionLoading(true);
+      // Get Supabase session for authentication
+      const { createClient } = await import("@/lib/client");
+      const supabase = createClient();
+      const {
+        data: { session },
+        error: sessionError
+      } = await supabase.auth.getSession();
 
+      if (sessionError || !session) {
+        toast.error("Authentication error - please refresh and try again");
+        setIsCaptionLoading(false);
+        return;
+      }
+
+      const supabaseUrl =
+        process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
+
+      // Construct payload according to NCAT API documentation
       const payload: any = {
         video_url: captionVideoUrl.trim(),
-        caption_type: captionType,
+        source_file_id: videoFileId || undefined,
         language: captionLanguage,
-        settings: captionSettings,
-        exclude_time_ranges: excludeTimeRanges.filter((range) => range.start && range.end),
-        text_replacements: textReplacements.filter((rep) => rep.find),
-        webhook_url: webhookUrl.trim() || undefined,
-        id: captionCustomId.trim() || undefined
+        custom_id: captionCustomId.trim() || undefined
       };
 
+      // Add captions if provided (raw text, SRT URL, or ASS URL)
       if (captions.trim()) {
         payload.captions = captions.trim();
       }
 
-      console.log("Submitting Video Caption Request:", payload);
-      // Replace with your actual API call
-      // const response = await fetch('/api/video/caption', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(payload)
-      // });
-      // const data = await response.json();
+      // Build settings object with all styling parameters
+      const settings: any = {
+        line_color: primaryColor,
+        outline_color: outlineColor,
+        font_family: fonts,
+        font_size: fontSize,
+        bold,
+        italic,
+        underline,
+        strikeout,
+        position: mapPositionToNCATFormat(position),
+        alignment: mapAlignmentToNCATFormat(alignment),
+        outline_width: outline,
+        shadow_offset: shadow
+      };
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      payload.settings = settings;
 
-      alert("Video caption request submitted successfully!");
+      // Add text replacements if any
+      if (textReplacements.length > 0) {
+        const validReplacements = textReplacements.filter(
+          (rep) => rep.original && rep.replacement
+        );
+        if (validReplacements.length > 0) {
+          payload.replace = validReplacements.map((rep) => ({
+            find: rep.original,
+            replace: rep.replacement
+          }));
+        }
+      }
+
+      // Add exclude time ranges if any
+      if (excludeRanges.length > 0) {
+        const validRanges = excludeRanges.filter((range) => range.start && range.end);
+        if (validRanges.length > 0) {
+          payload.exclude_time_ranges = validRanges;
+        }
+      }
+
+      console.log("📤 Submitting Video Caption request:", payload);
+
+      // Call Edge Function
+      const response = await fetch(`${supabaseUrl}/functions/v1/video-caption`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || result.message || "Request failed");
+      }
+
+      console.log("✅ Video caption started:", result);
+
+      toast.success("Video caption started!", {
+        description: `Job ID: ${result.job_id}. Check the Jobs page to track progress.`
+      });
 
       // Reset form
       setIsCaptionDialogOpen(false);
       setCaptionVideoUrl("");
+      setVideoFileId(null);
       setCaptions("");
       setCaptionType("auto");
       setCaptionLanguage("auto");
-      setExcludeTimeRanges([]);
-      setCurrentExcludeStart("");
-      setCurrentExcludeEnd("");
-      setTextReplacements([{ find: "", replace: "" }]);
-      setCaptionCustomId("");
 
-      // Reset caption settings to defaults
-      setCaptionSettings({
-        fontFamily: "Arial",
-        fontSize: 24,
-        color: "#FFFFFF",
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
-        position: "bottom",
-        offset: 10,
-        textAlign: "center" as const
-      });
+      // Reset caption style settings to defaults
+      setFonts("Arial");
+      setFontSize(48);
+      setPrimaryColor("#FFFFFF");
+      setOutlineColor("#000000");
+      setBold(false);
+      setItalic(false);
+      setUnderline(false);
+      setStrikeout(false);
+      setAlignment(2);
+      setOutline(2);
+      setShadow(0);
+
+      // Reset position
+      setPosition("bottom-center");
+
+      // Reset arrays
+      setTextReplacements([]);
+      setExcludeRanges([]);
+      setCaptionCustomId("");
     } catch (error) {
-      console.error("Error adding captions to video:", error);
-      alert("Error submitting video caption request: " + (error as Error).message);
+      console.error("❌ Video caption error:", error);
+      toast.error("Failed to submit request", {
+        description: (error as Error).message || "An unexpected error occurred"
+      });
     } finally {
       setIsCaptionLoading(false);
     }
   };
 
-  const renderButtonText = () => "Add Captions to Video";
-
   return (
     <Dialog open={isCaptionDialogOpen} onOpenChange={setIsCaptionDialogOpen}>
       <DialogTrigger asChild>
-        <Card className="transition-shadow hover:shadow-md cursor-pointer">
+        <Card className="cursor-pointer transition-shadow hover:shadow-md">
           <CardHeader>
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-blue-600" />
@@ -132,27 +242,29 @@ export function VideoCaptionTool({ webhookUrl = "" }: VideoCaptionToolProps) {
           </CardHeader>
         </Card>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader className="pb-4">
-          <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
             <FileText className="h-5 w-5 text-blue-600" />
             Add Captions to Video
           </DialogTitle>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-sm">
             Add or generate captions with custom styling and timing options
           </p>
         </DialogHeader>
+
         <div className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="caption-video-url" className="text-sm font-medium">
               Video URL <span className="text-red-500">*</span>
             </Label>
-            <Input
+            <UrlInputWithPicker
               id="caption-video-url"
               value={captionVideoUrl}
-              onChange={(e) => setCaptionVideoUrl(e.target.value)}
-              placeholder="https://example.com/video.mp4"
-              className="h-10"
+              onChange={setCaptionVideoUrl}
+              onFileIdChange={setVideoFileId}
+              accept={MEDIA_TYPES.VIDEO}
+              placeholder="Select video or paste URL..."
             />
           </div>
 
@@ -163,7 +275,7 @@ export function VideoCaptionTool({ webhookUrl = "" }: VideoCaptionToolProps) {
                 <select
                   value={captionType}
                   onChange={(e) => setCaptionType(e.target.value as any)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="auto">Auto-generate from audio</option>
                   <option value="text">Enter text</option>
@@ -179,7 +291,7 @@ export function VideoCaptionTool({ webhookUrl = "" }: VideoCaptionToolProps) {
                   placeholder="Language code (e.g., en, fr)"
                   className="h-10"
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Leave as &quot;auto&quot; to detect language
                 </p>
               </div>
@@ -189,9 +301,7 @@ export function VideoCaptionTool({ webhookUrl = "" }: VideoCaptionToolProps) {
           {(captionType === "text" || captionType === "srt" || captionType === "ass") && (
             <div className="space-y-2">
               <Label htmlFor="captions" className="text-sm font-medium">
-                {captionType === "text"
-                  ? "Caption Text"
-                  : `${captionType.toUpperCase()} File URL`}
+                {captionType === "text" ? "Caption Text" : `${captionType.toUpperCase()} File URL`}
               </Label>
               {captionType === "text" ? (
                 <textarea
@@ -200,277 +310,71 @@ export function VideoCaptionTool({ webhookUrl = "" }: VideoCaptionToolProps) {
                   onChange={(e) => setCaptions(e.target.value)}
                   placeholder="Enter your captions here..."
                   rows={6}
-                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 />
               ) : (
-                <Input
+                <UrlInputWithPicker
                   id="captions"
                   value={captions}
-                  onChange={(e) => setCaptions(e.target.value)}
-                  placeholder={`https://example.com/captions.${captionType}`}
-                  className="h-10"
+                  onChange={setCaptions}
+                  accept="*/*"
+                  placeholder="Select caption file or paste URL..."
                 />
               )}
             </div>
           )}
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Text Replacements (optional)</Label>
-              <div className="space-y-3">
-                {textReplacements.map((replacement, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <Input
-                      placeholder="Find text"
-                      value={replacement.find}
-                      onChange={(e) => {
-                        const updated = [...textReplacements];
-                        updated[index].find = e.target.value;
-                        setTextReplacements(updated);
-                      }}
-                      className="h-10"
-                    />
-                    <Input
-                      placeholder="Replace with"
-                      value={replacement.replace}
-                      onChange={(e) => {
-                        const updated = [...textReplacements];
-                        updated[index].replace = e.target.value;
-                        setTextReplacements(updated);
-                      }}
-                      className="h-10"
-                    />
-                    {textReplacements.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setTextReplacements(textReplacements.filter((_, i) => i !== index));
-                        }}
-                        className="h-10 w-10"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setTextReplacements([...textReplacements, { find: "", replace: "" }])
-                  }
-                  className="mt-2"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Replacement
-                </Button>
-              </div>
-            </div>
-          </div>
+          <CaptionStyleSection
+            fonts={fonts}
+            onFontsChange={setFonts}
+            fontSize={fontSize}
+            onFontSizeChange={setFontSize}
+            primaryColor={primaryColor}
+            onPrimaryColorChange={setPrimaryColor}
+            outlineColor={outlineColor}
+            onOutlineColorChange={setOutlineColor}
+            bold={bold}
+            onBoldChange={setBold}
+            italic={italic}
+            onItalicChange={setItalic}
+            underline={underline}
+            onUnderlineChange={setUnderline}
+            strikeout={strikeout}
+            onStrikeoutChange={setStrikeout}
+            alignment={alignment}
+            onAlignmentChange={setAlignment}
+            disabled={isCaptionLoading}
+            collapsible={true}
+          />
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Exclude Time Ranges (optional)</Label>
-              <div className="space-y-3">
-                {excludeTimeRanges.map((range, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="flex-1 grid grid-cols-2 gap-2">
-                      <div>
-                        <Input
-                          placeholder="Start (hh:mm:ss.ms)"
-                          value={range.start}
-                          disabled
-                          className="h-10"
-                        />
-                      </div>
-                      <div>
-                        <Input
-                          placeholder="End (hh:mm:ss.ms)"
-                          value={range.end}
-                          disabled
-                          className="h-10"
-                        />
-                      </div>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setExcludeTimeRanges(excludeTimeRanges.filter((_, i) => i !== index));
-                      }}
-                      className="h-10 w-10"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 grid grid-cols-2 gap-2">
-                    <div>
-                      <Input
-                        placeholder="Start (hh:mm:ss.ms)"
-                        value={currentExcludeStart}
-                        onChange={(e) => setCurrentExcludeStart(e.target.value)}
-                        className="h-10"
-                      />
-                    </div>
-                    <div>
-                      <Input
-                        placeholder="End (hh:mm:ss.ms)"
-                        value={currentExcludeEnd}
-                        onChange={(e) => setCurrentExcludeEnd(e.target.value)}
-                        className="h-10"
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (currentExcludeStart && currentExcludeEnd) {
-                        setExcludeTimeRanges([
-                          ...excludeTimeRanges,
-                          {
-                            start: currentExcludeStart,
-                            end: currentExcludeEnd
-                          }
-                        ]);
-                        setCurrentExcludeStart("");
-                        setCurrentExcludeEnd("");
-                      }
-                    }}
-                    className="h-10 w-10 p-0"
-                    disabled={!currentExcludeStart || !currentExcludeEnd}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <CaptionPositionSection
+            position={position}
+            onPositionChange={setPosition}
+            disabled={isCaptionLoading}
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="caption-font-family" className="text-sm font-medium">
-                Font Family
-              </Label>
-              <select
-                id="caption-font-family"
-                value={captionSettings.fontFamily}
-                onChange={(e) =>
-                  setCaptionSettings({ ...captionSettings, fontFamily: e.target.value })
-                }
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="Arial">Arial</option>
-                <option value="Helvetica">Helvetica</option>
-                <option value="Verdana">Verdana</option>
-                <option value="Tahoma">Tahoma</option>
-                <option value="Times New Roman">Times New Roman</option>
-                <option value="Courier New">Courier New</option>
-                <option value="Georgia">Georgia</option>
-              </select>
-            </div>
+          <CaptionAdvancedSection
+            outline={outline}
+            onOutlineChange={setOutline}
+            shadow={shadow}
+            onShadowChange={setShadow}
+            disabled={isCaptionLoading}
+            collapsible={true}
+          />
 
-            <div className="space-y-2">
-              <Label htmlFor="caption-position" className="text-sm font-medium">
-                Position
-              </Label>
-              <select
-                id="caption-position"
-                value={captionSettings.position}
-                onChange={(e) =>
-                  setCaptionSettings({ ...captionSettings, position: e.target.value as any })
-                }
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="top">Top</option>
-                <option value="middle">Middle</option>
-                <option value="bottom">Bottom</option>
-              </select>
-            </div>
+          <TextReplacementsSection
+            replacements={textReplacements}
+            onReplacementsChange={setTextReplacements}
+            disabled={isCaptionLoading}
+            collapsible={true}
+          />
 
-            <div className="space-y-2">
-              <Label htmlFor="caption-font-size" className="text-sm font-medium">
-                Font Size (px)
-              </Label>
-              <Input
-                id="caption-font-size"
-                type="number"
-                min="8"
-                max="72"
-                value={captionSettings.fontSize}
-                onChange={(e) =>
-                  setCaptionSettings({
-                    ...captionSettings,
-                    fontSize: parseInt(e.target.value) || 24
-                  })
-                }
-                className="h-10"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="caption-offset" className="text-sm font-medium">
-                Offset (px)
-              </Label>
-              <Input
-                id="caption-offset"
-                type="number"
-                min="0"
-                max="200"
-                value={captionSettings.offset}
-                onChange={(e) =>
-                  setCaptionSettings({
-                    ...captionSettings,
-                    offset: parseInt(e.target.value) || 10
-                  })
-                }
-                className="h-10"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="caption-color" className="text-sm font-medium">
-                Text Color
-              </Label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  id="caption-color"
-                  value={captionSettings.color}
-                  onChange={(e) =>
-                    setCaptionSettings({ ...captionSettings, color: e.target.value })
-                  }
-                  className="h-10 w-10 p-1 rounded border"
-                />
-                <span className="text-sm">{captionSettings.color.toUpperCase()}</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="caption-background" className="text-sm font-medium">
-                Background
-              </Label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  id="caption-background"
-                  value={captionSettings.backgroundColor}
-                  onChange={(e) =>
-                    setCaptionSettings({ ...captionSettings, backgroundColor: e.target.value })
-                  }
-                  className="h-10 w-10 p-1 rounded border"
-                />
-                <span className="text-sm">{captionSettings.backgroundColor}</span>
-              </div>
-            </div>
-          </div>
+          <ExcludeRangesSection
+            ranges={excludeRanges}
+            onRangesChange={setExcludeRanges}
+            disabled={isCaptionLoading}
+            collapsible={true}
+          />
 
           <div className="space-y-2">
             <Label htmlFor="caption-custom-id" className="text-sm font-medium">
@@ -483,7 +387,7 @@ export function VideoCaptionTool({ webhookUrl = "" }: VideoCaptionToolProps) {
               placeholder="my-captioned-video-1"
               className="h-10"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Optional identifier for tracking this request
             </p>
           </div>
@@ -498,7 +402,7 @@ export function VideoCaptionTool({ webhookUrl = "" }: VideoCaptionToolProps) {
               {isCaptionLoading ? (
                 <>
                   <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    className="mr-2 -ml-1 h-4 w-4 animate-spin text-white"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"

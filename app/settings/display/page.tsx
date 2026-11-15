@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PresetSelector } from "@/components/theme-customizer";
 import { isUserAdmin } from "@/lib/admin";
 
@@ -50,8 +50,21 @@ const displayFormSchema = z.object({
 type DisplayFormValues = z.infer<typeof displayFormSchema>;
 
 export default function Page() {
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [loading, setLoading] = useState(true);
+  // Use React Query to check admin status
+  const { data: isAdmin = false, isLoading } = useQuery({
+    queryKey: ["isAdmin"],
+    queryFn: async () => {
+      try {
+        const adminStatus = await isUserAdmin();
+        return adminStatus;
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+        return false;
+      }
+    },
+    retry: 1,
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  });
 
   const form = useForm<DisplayFormValues>({
     resolver: zodResolver(displayFormSchema),
@@ -60,40 +73,34 @@ export default function Page() {
     }
   });
 
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        const adminStatus = await isUserAdmin();
-        setIsAdmin(adminStatus);
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAdminStatus();
-  }, []);
-
   function onSubmit(data: DisplayFormValues) {
     // In a real app, this would save the preferences to the database
     localStorage.setItem("sidebar-preferences", JSON.stringify(data));
     toast.success("Display preferences updated successfully!");
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Loading Display Settings...</CardTitle>
+            <CardTitle>Sidebar Navigation</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
-              <div className="h-4 bg-muted rounded w-1/2 animate-pulse"></div>
-              <div className="h-4 bg-muted rounded w-2/3 animate-pulse"></div>
-            </div>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-10 w-32 mt-4" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Theme Customization</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-20 w-full" />
           </CardContent>
         </Card>
       </div>
@@ -125,15 +132,18 @@ export default function Page() {
                     </FormDescription>
                     <div className="space-y-4">
                       {Object.entries(
-                        allNavigationItems.reduce((groups, item) => {
-                          const category = item.category;
-                          if (!groups[category]) groups[category] = [];
-                          groups[category].push(item);
-                          return groups;
-                        }, {} as Record<string, Array<typeof allNavigationItems[number]>>)
+                        allNavigationItems.reduce(
+                          (groups, item) => {
+                            const category = item.category;
+                            if (!groups[category]) groups[category] = [];
+                            groups[category].push(item);
+                            return groups;
+                          },
+                          {} as Record<string, Array<(typeof allNavigationItems)[number]>>
+                        )
                       ).map(([category, items]) => (
                         <div key={category}>
-                          <h4 className="mb-2 text-sm font-medium text-muted-foreground">
+                          <h4 className="text-muted-foreground mb-2 text-sm font-medium">
                             {category}
                           </h4>
                           <div className="space-y-2">
@@ -144,7 +154,10 @@ export default function Page() {
                                 name="items"
                                 render={({ field }) => {
                                   return (
-                                    <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                    <FormItem
+                                      key={item.id}
+                                      className="flex flex-row items-start space-y-0 space-x-3"
+                                    >
                                       <FormControl>
                                         <Checkbox
                                           checked={field.value?.includes(item.id)}
@@ -186,8 +199,9 @@ export default function Page() {
           <div className="space-y-6">
             <div>
               <h4 className="mb-2 text-sm font-medium">Color Theme</h4>
-              <p className="text-muted-foreground text-sm mb-4">
-                Choose a color theme for your application. This is also available from the header theme customizer.
+              <p className="text-muted-foreground mb-4 text-sm">
+                Choose a color theme for your application. This is also available from the header
+                theme customizer.
               </p>
               <PresetSelector />
             </div>

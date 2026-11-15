@@ -15,16 +15,9 @@ SELECT TO authenticated USING (
     )
 );
 
--- AI/Chat System RLS Policies
-CREATE POLICY "Users can perform all operations on their own chats" ON "public"."chats" FOR ALL USING (
-    "user_id" = (
-        SELECT auth.uid()
-    )
-) WITH CHECK (
-    "user_id" = (
-        SELECT auth.uid()
-    )
-);
+-- Mastra AI Chat System RLS Policies
+-- Note: All RLS policies for Mastra tables are defined in migration 006
+-- (mastra_threads, mastra_messages, mastra_resources, mastra_working_memory)
 
 -- Marketing System RLS Policies
 CREATE POLICY "Author profiles are visible to everyone" ON "public"."marketing_author_profiles" FOR

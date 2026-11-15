@@ -1,13 +1,22 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.39.3";
+import {
+  validateRequiredString,
+  buildErrorResponse,
+  buildSuccessResponse,
+  parseNcatResponse,
+  replaceLocalhostUrl
+} from "../_shared/validation.ts";
 
 const NCAT_API_URL = Deno.env.get("NCAT_API_URL");
 const NCAT_API_KEY = Deno.env.get("NCAT_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const WEBHOOK_URL = Deno.env.get("WEBHOOK_URL"); // Use this for NCAT webhooks (host.docker.internal)
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 interface VideoThumbnailRequest {
   video_url: string;
+  source_file_id?: string;
   second?: number;
   webhook_url?: string;
   id?: string;
@@ -41,19 +50,25 @@ Deno.serve(async (req) => {
     const body: VideoThumbnailRequest = await req.json();
 
     // Validate required parameters
-    if (!body.video_url || typeof body.video_url !== "string") {
-      return new Response("video_url is required", { status: 400 });
+    const urlError = validateRequiredString(body.video_url, "video_url");
+    if (urlError) {
+      return buildErrorResponse("Validation error", urlError);
     }
 
-    // Validate optional parameters
+    // Validate second parameter if provided
     if (body.second !== undefined && (typeof body.second !== "number" || body.second < 0)) {
-      return new Response("second must be a non-negative number", { status: 400 });
+      return buildErrorResponse("Validation error", "second must be a non-negative number");
     }
+
+    // Replace localhost URLs for Docker compatibility
+    const processedVideoUrl = replaceLocalhostUrl(body.video_url);
 
     const ncatPayload = {
-      video_url: body.video_url,
+      video_url: processedVideoUrl,
       second: body.second || 0,
-      webhook_url: body.webhook_url || `${SUPABASE_URL}/functions/v1/ncat-webhook`,
+      webhook_url: replaceLocalhostUrl(
+        body.webhook_url || `${WEBHOOK_URL}/functions/v1/ncat-webhook`
+      ),
       id: body.id || `video-thumbnail-${Date.now()}`
     };
 
@@ -66,48 +81,106 @@ Deno.serve(async (req) => {
       body: JSON.stringify(ncatPayload)
     });
 
-    if (!ncatResponse.ok) {
-      const errorText = await ncatResponse.text();
-      console.error("NCAT API error:", errorText);
-      return new Response("Failed to generate video thumbnail", { status: 500 });
+    // Parse NCAT API response with error handling
+    const parseResult = await parseNcatResponse(ncatResponse);
+    if (!parseResult.success) {
+      return parseResult.error!;
     }
 
-    const ncatResult = await ncatResponse.json();
+    const ncatResult = parseResult.data;
 
     // Create job record with NCAT job ID for tracking
     if (ncatResult.job_id) {
-      await supabase.from("jobs").insert({
-        user_id: user.id,
-        nca_job_id: ncatResult.job_id,
-        custom_id: body.id || `video-thumbnail-${Date.now()}`,
-        processing_status: "processing"
-      });
+      const { data: jobRecord, error: insertError } = await supabase
+        .from("jobs")
+        .insert({
+          user_id: user.id,
+          nca_job_id: ncatResult.job_id,
+          nca_endpoint: "/v1/video/thumbnail",
+          custom_id: body.id || `video-thumbnail-${Date.now()}`,
+          processing_status: "processing"
+        })
+        .select("id")
+        .single();
+
+      if (insertError) {
+        console.error("❌ Failed to create job record:", insertError);
+      } else if (jobRecord) {
+        // Link source file to job as input (if provided)
+        // Two approaches supported:
+        // 1. Direct file ID (preferred): body.source_file_id
+        // 2. Extract from URL: parse video_url to find file path
+
+        let sourceFileId: string | null = body.source_file_id || null;
+
+        // If no direct file ID, try to extract from video_url
+        if (!sourceFileId) {
+          let sourceFilePath: string | null = null;
+          if (body.video_url.includes("/storage/v1/object/public/files/")) {
+            const pathMatch = body.video_url.match(/\/storage\/v1\/object\/public\/files\/(.+)$/);
+            if (pathMatch && pathMatch[1]) {
+              sourceFilePath = decodeURIComponent(pathMatch[1]);
+            }
+          } else if (body.video_url.includes("/storage/v1/s3/files/")) {
+            const pathMatch = body.video_url.match(/\/storage\/v1\/s3\/files\/(.+)$/);
+            if (pathMatch && pathMatch[1]) {
+              sourceFilePath = decodeURIComponent(pathMatch[1]);
+            }
+          }
+
+          if (sourceFilePath) {
+            // Look up file record by path
+            const { data: sourceFile } = await supabase
+              .from("files")
+              .select("id")
+              .eq("user_id", user.id)
+              .eq("file_path", sourceFilePath)
+              .single();
+
+            if (sourceFile) {
+              sourceFileId = sourceFile.id;
+              console.log(`📎 Found source file via URL: ${sourceFilePath} -> ${sourceFileId}`);
+            } else {
+              console.warn(`⚠️ Source file not found in database: ${sourceFilePath}`);
+            }
+          } else {
+            console.warn(`⚠️ Could not extract file path from video_url: ${body.video_url}`);
+          }
+        }
+
+        // Create job_files link if we have a source file ID
+        if (sourceFileId) {
+          const { error: jobFileError } = await supabase.from("job_files").insert({
+            job_id: jobRecord.id,
+            file_id: sourceFileId,
+            file_role: "input",
+            sequence_number: 1
+          });
+
+          if (jobFileError) {
+            console.warn("⚠️ Could not create job_files record:", jobFileError.message);
+          } else {
+            console.log(`✅ Linked source file ${sourceFileId} to job ${jobRecord.id}`);
+          }
+        } else {
+          console.warn(`⚠️ No source file ID available for job ${jobRecord.id}`);
+        }
+      }
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        job_id: ncatResult.job_id,
-        message: "Video thumbnail generation started successfully",
-        response: ncatResult.response,
-        queue_length: ncatResult.queue_length
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" }
-      }
-    );
+    return buildSuccessResponse({
+      success: true,
+      job_id: ncatResult.job_id,
+      message: "Video thumbnail generation started successfully",
+      response: ncatResult.response,
+      queue_length: ncatResult.queue_length
+    });
   } catch (error) {
     console.error("Video thumbnail error:", error);
-    return new Response(
-      JSON.stringify({
-        error: "Internal server error",
-        message: error.message
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" }
-      }
+    return buildErrorResponse(
+      "Internal server error",
+      error instanceof Error ? error.message : "An unexpected error occurred",
+      500
     );
   }
 });

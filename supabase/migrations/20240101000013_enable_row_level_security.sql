@@ -24,8 +24,9 @@ ALTER TABLE public.workspace_credits_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."projects" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."project_comments" ENABLE ROW LEVEL SECURITY;
 
--- AI/Chat System RLS
-ALTER TABLE "public"."chats" ENABLE ROW LEVEL SECURITY;
+-- Mastra AI Chat System RLS
+-- Note: RLS already enabled in migration 006 for Mastra tables
+-- (mastra_threads, mastra_messages, mastra_resources, mastra_working_memory)
 
 -- Marketing System RLS
 ALTER TABLE "public"."marketing_author_profiles" ENABLE ROW LEVEL SECURITY;

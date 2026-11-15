@@ -16,7 +16,7 @@ BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ language 'plpgsql' SET search_path = '';
 
 CREATE TRIGGER update_app_settings_updated_at 
     BEFORE UPDATE ON "public"."app_settings" 

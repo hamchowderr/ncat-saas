@@ -112,11 +112,11 @@ const cardVariants = {
 
 export function PricingSection() {
   return (
-    <section className="py-24 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 relative overflow-hidden">
+    <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50/30 py-24 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
       {/* Background decoration */}
       <div className="absolute inset-0">
         <motion.div
-          className="absolute top-20 left-20 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl"
+          className="absolute top-20 left-20 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.5, 0.3]
@@ -128,7 +128,7 @@ export function PricingSection() {
           }}
         />
         <motion.div
-          className="absolute bottom-20 right-20 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl"
+          className="absolute right-20 bottom-20 h-96 w-96 rounded-full bg-purple-400/10 blur-3xl"
           animate={{
             scale: [1.2, 1, 1.2],
             opacity: [0.4, 0.2, 0.4]
@@ -141,29 +141,28 @@ export function PricingSection() {
         />
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="relative z-10 container mx-auto px-6">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-center mb-16"
+          className="mb-16 text-center"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 border border-emerald-200/50 dark:border-emerald-800/50 mb-6">
-            <Sparkles className="w-4 h-4 text-emerald-600" />
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200/50 bg-gradient-to-r from-emerald-50 to-blue-50 px-4 py-2 dark:border-emerald-800/50 dark:from-emerald-900/20 dark:to-blue-900/20">
+            <Sparkles className="h-4 w-4 text-emerald-600" />
             <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
               Simple, Transparent Pricing
             </span>
           </div>
 
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 bg-clip-text text-transparent">
+          <h2 className="mb-6 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-4xl font-bold text-transparent md:text-5xl dark:from-gray-100 dark:to-gray-400">
             Choose the Perfect Plan for You
           </h2>
 
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Start free and scale as you grow. No hidden fees, no surprises.
-            Cancel anytime.
+          <p className="mx-auto max-w-3xl text-xl leading-relaxed text-gray-600 dark:text-gray-300">
+            Start free and scale as you grow. No hidden fees, no surprises. Cancel anytime.
           </p>
         </motion.div>
 
@@ -173,7 +172,7 @@ export function PricingSection() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
-          className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto"
+          className="mx-auto grid max-w-6xl gap-8 md:grid-cols-3"
         >
           {plans.map((plan, index) => {
             const Icon = plan.icon;
@@ -185,33 +184,40 @@ export function PricingSection() {
                 className="relative"
               >
                 {plan.popular && (
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
-                    <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 text-sm font-semibold shadow-2xl border-2 border-white dark:border-gray-900">
-                      <Star className="w-4 h-4 mr-1.5 fill-white" />
+                  <div className="absolute top-0 left-1/2 z-20 -translate-x-1/2 -translate-y-1/2 transform">
+                    <Badge className="border-2 border-white bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-2 text-sm font-semibold text-white shadow-2xl dark:border-gray-900">
+                      <Star className="mr-1.5 h-4 w-4 fill-white" />
                       Most Popular
                     </Badge>
                   </div>
                 )}
-                <Card className={`h-full border-0 shadow-lg hover:shadow-2xl transition-all duration-300 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm overflow-hidden relative ${
-                  plan.popular ? 'ring-2 ring-blue-500 ring-offset-4 dark:ring-offset-gray-900' : ''
-                }`}>
-
+                <Card
+                  className={`relative h-full overflow-hidden border-0 bg-white/80 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-2xl dark:bg-gray-900/80 ${
+                    plan.popular
+                      ? "ring-2 ring-blue-500 ring-offset-4 dark:ring-offset-gray-900"
+                      : ""
+                  }`}
+                >
                   <CardContent className={plan.popular ? "p-8 pt-12" : "p-8"}>
                     {/* Plan Header */}
-                    <div className="text-center mb-8">
+                    <div className="mb-8 text-center">
                       <motion.div
-                        className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-r ${plan.bgColor} flex items-center justify-center`}
+                        className={`mx-auto mb-4 h-16 w-16 rounded-2xl bg-gradient-to-r ${plan.bgColor} flex items-center justify-center`}
                         whileHover={{ scale: 1.1, rotate: 5 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <Icon className={`w-8 h-8 ${
-                          plan.color === "from-gray-500 to-gray-600" ? "text-gray-600" :
-                          plan.color === "from-blue-500 to-blue-600" ? "text-blue-600" :
-                          "text-purple-600"
-                        }`} />
+                        <Icon
+                          className={`h-8 w-8 ${
+                            plan.color === "from-gray-500 to-gray-600"
+                              ? "text-gray-600"
+                              : plan.color === "from-blue-500 to-blue-600"
+                                ? "text-blue-600"
+                                : "text-purple-600"
+                          }`}
+                        />
                       </motion.div>
 
-                      <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                      <h3 className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
                         {plan.name}
                       </h3>
 
@@ -219,18 +225,14 @@ export function PricingSection() {
                         <span className="text-4xl font-bold text-gray-900 dark:text-gray-100">
                           {plan.price}
                         </span>
-                        <span className="text-gray-600 dark:text-gray-400 ml-2">
-                          {plan.period}
-                        </span>
+                        <span className="ml-2 text-gray-600 dark:text-gray-400">{plan.period}</span>
                       </div>
 
-                      <p className="text-gray-600 dark:text-gray-300 text-sm">
-                        {plan.description}
-                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{plan.description}</p>
                     </div>
 
                     {/* Features List */}
-                    <div className="space-y-4 mb-8">
+                    <div className="mb-8 space-y-4">
                       {plan.features.map((feature, featureIndex) => (
                         <motion.div
                           key={featureIndex}
@@ -240,10 +242,10 @@ export function PricingSection() {
                           transition={{ duration: 0.3, delay: featureIndex * 0.1 }}
                           className="flex items-center gap-3"
                         >
-                          <div className="w-5 h-5 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center flex-shrink-0">
-                            <Check className="w-3 h-3 text-green-600 dark:text-green-400" />
+                          <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
+                            <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
                           </div>
-                          <span className="text-gray-700 dark:text-gray-300 text-sm">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
                             {feature}
                           </span>
                         </motion.div>
@@ -251,21 +253,18 @@ export function PricingSection() {
                     </div>
 
                     {/* CTA Button */}
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                       <Button
                         variant={plan.buttonVariant}
                         size="lg"
                         className={`w-full font-semibold ${
                           plan.buttonVariant === "default"
-                            ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl"
+                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg hover:from-blue-700 hover:to-purple-700 hover:shadow-xl"
                             : "border-2"
                         }`}
                       >
                         {plan.buttonText}
-                        <ArrowRight className="w-4 h-4 ml-2" />
+                        <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </motion.div>
                   </CardContent>
@@ -281,19 +280,19 @@ export function PricingSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="text-center mt-16"
+          className="mt-16 text-center"
         >
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-8">
+          <div className="mx-auto mb-8 grid max-w-4xl gap-6 md:grid-cols-3">
             <div className="flex items-center justify-center gap-3 text-gray-600 dark:text-gray-300">
-              <Shield className="w-5 h-5 text-green-500" />
+              <Shield className="h-5 w-5 text-green-500" />
               <span className="text-sm font-medium">14-day free trial</span>
             </div>
             <div className="flex items-center justify-center gap-3 text-gray-600 dark:text-gray-300">
-              <Users className="w-5 h-5 text-blue-500" />
+              <Users className="h-5 w-5 text-blue-500" />
               <span className="text-sm font-medium">No setup fees</span>
             </div>
             <div className="flex items-center justify-center gap-3 text-gray-600 dark:text-gray-300">
-              <Clock className="w-5 h-5 text-purple-500" />
+              <Clock className="h-5 w-5 text-purple-500" />
               <span className="text-sm font-medium">Cancel anytime</span>
             </div>
           </div>

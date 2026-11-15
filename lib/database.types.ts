@@ -75,6 +75,68 @@ export type Database = {
         }
         Relationships: []
       }
+      audio_concatenate: {
+        Row: {
+          created_at: string
+          duration: number | null
+          filesize: number | null
+          id: string
+          job_id: string
+          mime_type: string | null
+          output_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration?: number | null
+          filesize?: number | null
+          id?: string
+          job_id: string
+          mime_type?: string | null
+          output_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number | null
+          filesize?: number | null
+          id?: string
+          job_id?: string
+          mime_type?: string | null
+          output_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_concatenate_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_concatenate_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_concatenate_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_concatenate_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       avatar_details: {
         Row: {
           avatar_id: string | null
@@ -461,6 +523,7 @@ export type Database = {
           gateway_name: string
           gateway_price_id: string
           gateway_product_id: string
+          metadata: Json | null
           recurring_interval: string
           recurring_interval_count: number
           tier: string | null
@@ -473,6 +536,7 @@ export type Database = {
           gateway_name: string
           gateway_price_id?: string
           gateway_product_id: string
+          metadata?: Json | null
           recurring_interval: string
           recurring_interval_count?: number
           tier?: string | null
@@ -485,6 +549,7 @@ export type Database = {
           gateway_name?: string
           gateway_price_id?: string
           gateway_product_id?: string
+          metadata?: Json | null
           recurring_interval?: string
           recurring_interval_count?: number
           tier?: string | null
@@ -666,86 +731,182 @@ export type Database = {
           },
         ]
       }
-      chat_files: {
+      clips: {
         Row: {
-          chat_id: string
-          created_at: string
-          file_id: string
+          center_x_width: number | null
+          center_y_height: number | null
+          clip_description: string | null
+          clip_id: number
+          clip_url: string | null
+          created_at: string | null
+          cropped_clip_url: string | null
+          end_time: number | null
+          final_clip_url: string | null
           id: string
+          post: string | null
+          start_time: number | null
+          thumbnail_url: string | null
+          title: string | null
+          transcript: string | null
+          updated_at: string | null
+          user_id: string
+          video_id: string | null
         }
         Insert: {
-          chat_id: string
-          created_at?: string
-          file_id: string
+          center_x_width?: number | null
+          center_y_height?: number | null
+          clip_description?: string | null
+          clip_id?: number
+          clip_url?: string | null
+          created_at?: string | null
+          cropped_clip_url?: string | null
+          end_time?: number | null
+          final_clip_url?: string | null
           id?: string
+          post?: string | null
+          start_time?: number | null
+          thumbnail_url?: string | null
+          title?: string | null
+          transcript?: string | null
+          updated_at?: string | null
+          user_id: string
+          video_id?: string | null
         }
         Update: {
-          chat_id?: string
-          created_at?: string
-          file_id?: string
+          center_x_width?: number | null
+          center_y_height?: number | null
+          clip_description?: string | null
+          clip_id?: number
+          clip_url?: string | null
+          created_at?: string | null
+          cropped_clip_url?: string | null
+          end_time?: number | null
+          final_clip_url?: string | null
           id?: string
+          post?: string | null
+          start_time?: number | null
+          thumbnail_url?: string | null
+          title?: string | null
+          transcript?: string | null
+          updated_at?: string | null
+          user_id?: string
+          video_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "chat_files_chat_id_fkey"
-            columns: ["chat_id"]
+            foreignKeyName: "clips_video_id_fkey"
+            columns: ["video_id"]
             isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chat_files_file_id_fkey"
-            columns: ["file_id"]
-            isOneToOne: false
-            referencedRelation: "files"
+            referencedRelation: "videos"
             referencedColumns: ["id"]
           },
         ]
       }
-      chats: {
+      code_execution: {
         Row: {
+          code_snippet: string | null
           created_at: string
+          exit_code: number | null
           id: string
-          messages: Json | null
-          metadata: Json | null
-          project_id: string | null
-          title: string | null
+          job_id: string
+          result: string | null
+          stderr: string | null
+          stdout: string | null
+          timeout_seconds: number | null
           updated_at: string
+        }
+        Insert: {
+          code_snippet?: string | null
+          created_at?: string
+          exit_code?: number | null
+          id?: string
+          job_id: string
+          result?: string | null
+          stderr?: string | null
+          stdout?: string | null
+          timeout_seconds?: number | null
+          updated_at?: string
+        }
+        Update: {
+          code_snippet?: string | null
+          created_at?: string
+          exit_code?: number | null
+          id?: string
+          job_id?: string
+          result?: string | null
+          stderr?: string | null
+          stdout?: string | null
+          timeout_seconds?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "code_execution_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "code_execution_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "code_execution_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "code_execution_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cookie_audit_logs: {
+        Row: {
+          action: string
+          cookie_id: string | null
+          created_at: string | null
+          id: string
+          ip_address: unknown
+          metadata: Json | null
+          user_agent: string | null
           user_id: string
         }
         Insert: {
-          created_at?: string
-          id: string
-          messages?: Json | null
+          action: string
+          cookie_id?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown
           metadata?: Json | null
-          project_id?: string | null
-          title?: string | null
-          updated_at?: string
+          user_agent?: string | null
           user_id: string
         }
         Update: {
-          created_at?: string
+          action?: string
+          cookie_id?: string | null
+          created_at?: string | null
           id?: string
-          messages?: Json | null
+          ip_address?: unknown
           metadata?: Json | null
-          project_id?: string | null
-          title?: string | null
-          updated_at?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "chats_project_id_fkey"
-            columns: ["project_id"]
+            foreignKeyName: "cookie_audit_logs_cookie_id_fkey"
+            columns: ["cookie_id"]
             isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chats_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
+            referencedRelation: "user_cookies"
             referencedColumns: ["id"]
           },
         ]
@@ -825,6 +986,157 @@ export type Database = {
         }
         Relationships: []
       }
+      ffmpeg_compose: {
+        Row: {
+          bitrate: number | null
+          created_at: string
+          duration: number | null
+          encoder: string | null
+          filesize: number | null
+          id: string
+          job_id: string
+          output_url: string | null
+          script: string | null
+          thumbnail_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          bitrate?: number | null
+          created_at?: string
+          duration?: number | null
+          encoder?: string | null
+          filesize?: number | null
+          id?: string
+          job_id: string
+          output_url?: string | null
+          script?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bitrate?: number | null
+          created_at?: string
+          duration?: number | null
+          encoder?: string | null
+          filesize?: number | null
+          id?: string
+          job_id?: string
+          output_url?: string | null
+          script?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ffmpeg_compose_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ffmpeg_compose_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ffmpeg_compose_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ffmpeg_compose_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      file_analyses: {
+        Row: {
+          analysis_id: string
+          analysis_table: string
+          analysis_type: string
+          created_at: string
+          file_id: string
+          id: string
+          job_id: string
+        }
+        Insert: {
+          analysis_id: string
+          analysis_table: string
+          analysis_type: string
+          created_at?: string
+          file_id: string
+          id?: string
+          job_id: string
+        }
+        Update: {
+          analysis_id?: string
+          analysis_table?: string
+          analysis_type?: string
+          created_at?: string
+          file_id?: string
+          id?: string
+          job_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "file_analyses_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_analyses_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files_with_input_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_analyses_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files_with_output_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_analyses_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_analyses_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_analyses_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_analyses_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       files: {
         Row: {
           bucket: string | null
@@ -832,10 +1144,13 @@ export type Database = {
           file_name: string
           file_path: string
           file_size: number | null
+          file_type: string | null
           id: string
+          is_generated: boolean | null
           mime_type: string | null
           original_name: string
           updated_at: string | null
+          url: string | null
           user_id: string | null
         }
         Insert: {
@@ -844,10 +1159,13 @@ export type Database = {
           file_name: string
           file_path: string
           file_size?: number | null
+          file_type?: string | null
           id?: string
+          is_generated?: boolean | null
           mime_type?: string | null
           original_name: string
           updated_at?: string | null
+          url?: string | null
           user_id?: string | null
         }
         Update: {
@@ -856,69 +1174,238 @@ export type Database = {
           file_name?: string
           file_path?: string
           file_size?: number | null
+          file_type?: string | null
           id?: string
+          is_generated?: boolean | null
           mime_type?: string | null
           original_name?: string
           updated_at?: string | null
+          url?: string | null
           user_id?: string | null
         }
         Relationships: []
       }
-      jobs: {
+      image_to_video: {
         Row: {
           created_at: string
+          duration: number | null
+          filesize: number | null
+          id: string
+          job_id: string
+          mime_type: string | null
+          output_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration?: number | null
+          filesize?: number | null
+          id?: string
+          job_id: string
+          mime_type?: string | null
+          output_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number | null
+          filesize?: number | null
+          id?: string
+          job_id?: string
+          mime_type?: string | null
+          output_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "image_to_video_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "image_to_video_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "image_to_video_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "image_to_video_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_files: {
+        Row: {
+          created_at: string
+          file_id: string
+          file_role: string
+          id: string
+          job_id: string
+          sequence_number: number | null
+        }
+        Insert: {
+          created_at?: string
+          file_id: string
+          file_role: string
+          id?: string
+          job_id: string
+          sequence_number?: number | null
+        }
+        Update: {
+          created_at?: string
+          file_id?: string
+          file_role?: string
+          id?: string
+          job_id?: string
+          sequence_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_files_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_files_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files_with_input_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_files_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files_with_output_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_files_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_files_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_files_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_files_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          agent_action: string | null
+          agent_context: Json | null
+          agent_name: string | null
+          created_at: string
           custom_id: string | null
+          entity_id: string | null
+          entity_role: string | null
+          entity_type: string | null
           error_message: string | null
           id: string
           nca_build_number: string | null
           nca_code: string | null
+          nca_endpoint: string | null
           nca_job_id: string | null
           nca_message: string | null
           nca_pid: number | null
           nca_queue_id: string | null
           nca_queue_length: number | null
           nca_queue_time: number | null
+          nca_result_files: Json | null
           nca_run_time: number | null
           nca_total_time: number | null
           processing_status: string | null
+          triggered_by: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          agent_action?: string | null
+          agent_context?: Json | null
+          agent_name?: string | null
           created_at?: string
           custom_id?: string | null
+          entity_id?: string | null
+          entity_role?: string | null
+          entity_type?: string | null
           error_message?: string | null
           id?: string
           nca_build_number?: string | null
           nca_code?: string | null
+          nca_endpoint?: string | null
           nca_job_id?: string | null
           nca_message?: string | null
           nca_pid?: number | null
           nca_queue_id?: string | null
           nca_queue_length?: number | null
           nca_queue_time?: number | null
+          nca_result_files?: Json | null
           nca_run_time?: number | null
           nca_total_time?: number | null
           processing_status?: string | null
+          triggered_by?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          agent_action?: string | null
+          agent_context?: Json | null
+          agent_name?: string | null
           created_at?: string
           custom_id?: string | null
+          entity_id?: string | null
+          entity_role?: string | null
+          entity_type?: string | null
           error_message?: string | null
           id?: string
           nca_build_number?: string | null
           nca_code?: string | null
+          nca_endpoint?: string | null
           nca_job_id?: string | null
           nca_message?: string | null
           nca_pid?: number | null
           nca_queue_id?: string | null
           nca_queue_length?: number | null
           nca_queue_time?: number | null
+          nca_result_files?: Json | null
           nca_run_time?: number | null
           nca_total_time?: number | null
           processing_status?: string | null
+          triggered_by?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -1552,6 +2039,779 @@ export type Database = {
         }
         Relationships: []
       }
+      mastra_evals: {
+        Row: {
+          agent_name: string
+          created_at: string
+          eval_data: Json
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          agent_name: string
+          created_at?: string
+          eval_data: Json
+          id: string
+          metadata?: Json | null
+        }
+        Update: {
+          agent_name?: string
+          created_at?: string
+          eval_data?: Json
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
+      mastra_messages: {
+        Row: {
+          content: string
+          createdAt: string
+          createdAtZ: string
+          id: string
+          resourceId: string | null
+          role: string
+          thread_id: string
+          type: string
+        }
+        Insert: {
+          content: string
+          createdAt?: string
+          createdAtZ?: string
+          id: string
+          resourceId?: string | null
+          role: string
+          thread_id: string
+          type: string
+        }
+        Update: {
+          content?: string
+          createdAt?: string
+          createdAtZ?: string
+          id?: string
+          resourceId?: string | null
+          role?: string
+          thread_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_mastra_messages_thread"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "mastra_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mastra_resources: {
+        Row: {
+          createdAt: string
+          createdAtZ: string
+          id: string
+          metadata: Json | null
+          updatedAt: string
+          updatedAtZ: string
+          workingMemory: string | null
+        }
+        Insert: {
+          createdAt?: string
+          createdAtZ?: string
+          id: string
+          metadata?: Json | null
+          updatedAt?: string
+          updatedAtZ?: string
+          workingMemory?: string | null
+        }
+        Update: {
+          createdAt?: string
+          createdAtZ?: string
+          id?: string
+          metadata?: Json | null
+          updatedAt?: string
+          updatedAtZ?: string
+          workingMemory?: string | null
+        }
+        Relationships: []
+      }
+      mastra_scorers: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          score_data: Json
+          scorer_name: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          metadata?: Json | null
+          score_data: Json
+          scorer_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          score_data?: Json
+          scorer_name?: string
+        }
+        Relationships: []
+      }
+      mastra_threads: {
+        Row: {
+          createdAt: string
+          createdAtZ: string
+          id: string
+          metadata: string | null
+          resourceId: string
+          title: string
+          updatedAt: string
+          updatedAtZ: string
+        }
+        Insert: {
+          createdAt?: string
+          createdAtZ?: string
+          id: string
+          metadata?: string | null
+          resourceId: string
+          title: string
+          updatedAt?: string
+          updatedAtZ?: string
+        }
+        Update: {
+          createdAt?: string
+          createdAtZ?: string
+          id?: string
+          metadata?: string | null
+          resourceId?: string
+          title?: string
+          updatedAt?: string
+          updatedAtZ?: string
+        }
+        Relationships: []
+      }
+      mastra_traces: {
+        Row: {
+          attributes: Json | null
+          created_at: string
+          end_time: string | null
+          id: string
+          metadata: Json | null
+          name: string
+          start_time: string
+        }
+        Insert: {
+          attributes?: Json | null
+          created_at?: string
+          end_time?: string | null
+          id: string
+          metadata?: Json | null
+          name: string
+          start_time: string
+        }
+        Update: {
+          attributes?: Json | null
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          metadata?: Json | null
+          name?: string
+          start_time?: string
+        }
+        Relationships: []
+      }
+      mastra_working_memory: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          resource_id: string | null
+          scope: string
+          thread_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          resource_id?: string | null
+          scope?: string
+          thread_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          resource_id?: string | null
+          scope?: string
+          thread_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mastra_working_memory_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "mastra_resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mastra_working_memory_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "mastra_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_convert: {
+        Row: {
+          audio_codec: string | null
+          created_at: string
+          duration: number | null
+          filesize: number | null
+          id: string
+          job_id: string
+          mime_type: string | null
+          output_format: string | null
+          output_url: string | null
+          updated_at: string
+          video_codec: string | null
+        }
+        Insert: {
+          audio_codec?: string | null
+          created_at?: string
+          duration?: number | null
+          filesize?: number | null
+          id?: string
+          job_id: string
+          mime_type?: string | null
+          output_format?: string | null
+          output_url?: string | null
+          updated_at?: string
+          video_codec?: string | null
+        }
+        Update: {
+          audio_codec?: string | null
+          created_at?: string
+          duration?: number | null
+          filesize?: number | null
+          id?: string
+          job_id?: string
+          mime_type?: string | null
+          output_format?: string | null
+          output_url?: string | null
+          updated_at?: string
+          video_codec?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_convert_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_convert_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_convert_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_convert_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_convert_mp3: {
+        Row: {
+          created_at: string
+          duration: number | null
+          filesize: number | null
+          id: string
+          job_id: string
+          mime_type: string | null
+          output_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration?: number | null
+          filesize?: number | null
+          id?: string
+          job_id: string
+          mime_type?: string | null
+          output_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number | null
+          filesize?: number | null
+          id?: string
+          job_id?: string
+          mime_type?: string | null
+          output_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_convert_mp3_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_convert_mp3_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_convert_mp3_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_convert_mp3_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_download: {
+        Row: {
+          audio_codec: string | null
+          audio_codec_requested: string | null
+          audio_format: string | null
+          audio_quality: string | null
+          cloud_upload: boolean | null
+          cookie_used: boolean | null
+          created_at: string
+          description: string | null
+          download_all_thumbnails: boolean | null
+          download_subtitles: boolean | null
+          download_thumbnails: boolean | null
+          duration: number | null
+          embed_thumbnail_in_audio: boolean | null
+          ext: string | null
+          extract_audio: boolean | null
+          filesize: number | null
+          format_id: string | null
+          fps: number | null
+          height: number | null
+          id: string
+          job_id: string
+          max_filesize: number | null
+          media_url: string | null
+          quality: string | null
+          rate_limit: string | null
+          resolution: string | null
+          retries: number | null
+          subtitle_format: string | null
+          subtitle_languages: string[] | null
+          thumbnail_formats: string | null
+          thumbnails: Json | null
+          title: string | null
+          updated_at: string
+          upload_date: string | null
+          uploader: string | null
+          uploader_id: string | null
+          video_codec: string | null
+          video_codec_requested: string | null
+          view_count: number | null
+          width: number | null
+        }
+        Insert: {
+          audio_codec?: string | null
+          audio_codec_requested?: string | null
+          audio_format?: string | null
+          audio_quality?: string | null
+          cloud_upload?: boolean | null
+          cookie_used?: boolean | null
+          created_at?: string
+          description?: string | null
+          download_all_thumbnails?: boolean | null
+          download_subtitles?: boolean | null
+          download_thumbnails?: boolean | null
+          duration?: number | null
+          embed_thumbnail_in_audio?: boolean | null
+          ext?: string | null
+          extract_audio?: boolean | null
+          filesize?: number | null
+          format_id?: string | null
+          fps?: number | null
+          height?: number | null
+          id?: string
+          job_id: string
+          max_filesize?: number | null
+          media_url?: string | null
+          quality?: string | null
+          rate_limit?: string | null
+          resolution?: string | null
+          retries?: number | null
+          subtitle_format?: string | null
+          subtitle_languages?: string[] | null
+          thumbnail_formats?: string | null
+          thumbnails?: Json | null
+          title?: string | null
+          updated_at?: string
+          upload_date?: string | null
+          uploader?: string | null
+          uploader_id?: string | null
+          video_codec?: string | null
+          video_codec_requested?: string | null
+          view_count?: number | null
+          width?: number | null
+        }
+        Update: {
+          audio_codec?: string | null
+          audio_codec_requested?: string | null
+          audio_format?: string | null
+          audio_quality?: string | null
+          cloud_upload?: boolean | null
+          cookie_used?: boolean | null
+          created_at?: string
+          description?: string | null
+          download_all_thumbnails?: boolean | null
+          download_subtitles?: boolean | null
+          download_thumbnails?: boolean | null
+          duration?: number | null
+          embed_thumbnail_in_audio?: boolean | null
+          ext?: string | null
+          extract_audio?: boolean | null
+          filesize?: number | null
+          format_id?: string | null
+          fps?: number | null
+          height?: number | null
+          id?: string
+          job_id?: string
+          max_filesize?: number | null
+          media_url?: string | null
+          quality?: string | null
+          rate_limit?: string | null
+          resolution?: string | null
+          retries?: number | null
+          subtitle_format?: string | null
+          subtitle_languages?: string[] | null
+          thumbnail_formats?: string | null
+          thumbnails?: Json | null
+          title?: string | null
+          updated_at?: string
+          upload_date?: string | null
+          uploader?: string | null
+          uploader_id?: string | null
+          video_codec?: string | null
+          video_codec_requested?: string | null
+          view_count?: number | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_download_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_download_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_download_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_download_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_metadata: {
+        Row: {
+          audio_bitrate: number | null
+          audio_bitrate_kbps: number | null
+          audio_channels: number | null
+          audio_codec: string | null
+          audio_codec_long: string | null
+          audio_sample_rate: number | null
+          audio_sample_rate_khz: number | null
+          created_at: string
+          duration: number | null
+          duration_formatted: string | null
+          filesize: number | null
+          filesize_mb: number | null
+          format: string | null
+          fps: number | null
+          has_audio: boolean | null
+          has_video: boolean | null
+          height: number | null
+          id: string
+          job_id: string
+          overall_bitrate: number | null
+          overall_bitrate_mbps: number | null
+          pixel_format: string | null
+          resolution: string | null
+          updated_at: string
+          video_bitrate: number | null
+          video_bitrate_mbps: number | null
+          video_codec: string | null
+          video_codec_long: string | null
+          width: number | null
+        }
+        Insert: {
+          audio_bitrate?: number | null
+          audio_bitrate_kbps?: number | null
+          audio_channels?: number | null
+          audio_codec?: string | null
+          audio_codec_long?: string | null
+          audio_sample_rate?: number | null
+          audio_sample_rate_khz?: number | null
+          created_at?: string
+          duration?: number | null
+          duration_formatted?: string | null
+          filesize?: number | null
+          filesize_mb?: number | null
+          format?: string | null
+          fps?: number | null
+          has_audio?: boolean | null
+          has_video?: boolean | null
+          height?: number | null
+          id?: string
+          job_id: string
+          overall_bitrate?: number | null
+          overall_bitrate_mbps?: number | null
+          pixel_format?: string | null
+          resolution?: string | null
+          updated_at?: string
+          video_bitrate?: number | null
+          video_bitrate_mbps?: number | null
+          video_codec?: string | null
+          video_codec_long?: string | null
+          width?: number | null
+        }
+        Update: {
+          audio_bitrate?: number | null
+          audio_bitrate_kbps?: number | null
+          audio_channels?: number | null
+          audio_codec?: string | null
+          audio_codec_long?: string | null
+          audio_sample_rate?: number | null
+          audio_sample_rate_khz?: number | null
+          created_at?: string
+          duration?: number | null
+          duration_formatted?: string | null
+          filesize?: number | null
+          filesize_mb?: number | null
+          format?: string | null
+          fps?: number | null
+          has_audio?: boolean | null
+          has_video?: boolean | null
+          height?: number | null
+          id?: string
+          job_id?: string
+          overall_bitrate?: number | null
+          overall_bitrate_mbps?: number | null
+          pixel_format?: string | null
+          resolution?: string | null
+          updated_at?: string
+          video_bitrate?: number | null
+          video_bitrate_mbps?: number | null
+          video_codec?: string | null
+          video_codec_long?: string | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_metadata_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_metadata_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_metadata_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_metadata_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_silence: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          media_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          media_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          media_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_silence_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_silence_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_silence_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_silence_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_transcribe: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          language: string | null
+          segments: Json | null
+          segments_url: string | null
+          srt: string | null
+          srt_url: string | null
+          task: string | null
+          text: string | null
+          text_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          language?: string | null
+          segments?: Json | null
+          segments_url?: string | null
+          srt?: string | null
+          srt_url?: string | null
+          task?: string | null
+          text?: string | null
+          text_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          language?: string | null
+          segments?: Json | null
+          segments_url?: string | null
+          srt?: string | null
+          srt_url?: string | null
+          task?: string | null
+          text?: string | null
+          text_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_transcribe_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_transcribe_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_transcribe_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_transcribe_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_comments: {
         Row: {
           created_at: string | null
@@ -1639,45 +2899,194 @@ export type Database = {
           },
         ]
       }
+      s3_upload: {
+        Row: {
+          bucket: string | null
+          created_at: string
+          filename: string | null
+          id: string
+          job_id: string
+          provider: string | null
+          public: boolean | null
+          region: string | null
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          bucket?: string | null
+          created_at?: string
+          filename?: string | null
+          id?: string
+          job_id: string
+          provider?: string | null
+          public?: boolean | null
+          region?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          bucket?: string | null
+          created_at?: string
+          filename?: string | null
+          id?: string
+          job_id?: string
+          provider?: string | null
+          public?: boolean | null
+          region?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "s3_upload_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "s3_upload_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "s3_upload_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "s3_upload_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scene_files: {
+        Row: {
+          created_at: string | null
+          file_id: string
+          file_role: string
+          id: string
+          scene_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_id: string
+          file_role: string
+          id?: string
+          scene_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_id?: string
+          file_role?: string
+          id?: string
+          scene_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scene_files_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scene_files_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files_with_input_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scene_files_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files_with_output_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scene_files_scene_id_fkey"
+            columns: ["scene_id"]
+            isOneToOne: false
+            referencedRelation: "scenes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scene_files_scene_id_fkey"
+            columns: ["scene_id"]
+            isOneToOne: false
+            referencedRelation: "scenes_with_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scenes: {
         Row: {
+          approved: boolean | null
+          audio_upload_url: string | null
+          audio_url: string | null
           created_at: string | null
           description: string | null
           duration_seconds: number | null
+          final_scene_url: string | null
           generated_content: Json | null
           id: string
+          scene_script: string | null
           sequence_number: number
           settings: Json | null
           status: Database["public"]["Enums"]["scene_status"] | null
           story_id: string | null
           title: string
           updated_at: string | null
+          video_upload_url: string | null
+          video_url: string | null
         }
         Insert: {
+          approved?: boolean | null
+          audio_upload_url?: string | null
+          audio_url?: string | null
           created_at?: string | null
           description?: string | null
           duration_seconds?: number | null
+          final_scene_url?: string | null
           generated_content?: Json | null
           id?: string
+          scene_script?: string | null
           sequence_number: number
           settings?: Json | null
           status?: Database["public"]["Enums"]["scene_status"] | null
           story_id?: string | null
           title: string
           updated_at?: string | null
+          video_upload_url?: string | null
+          video_url?: string | null
         }
         Update: {
+          approved?: boolean | null
+          audio_upload_url?: string | null
+          audio_url?: string | null
           created_at?: string | null
           description?: string | null
           duration_seconds?: number | null
+          final_scene_url?: string | null
           generated_content?: Json | null
           id?: string
+          scene_script?: string | null
           sequence_number?: number
           settings?: Json | null
           status?: Database["public"]["Enums"]["scene_status"] | null
           story_id?: string | null
           title?: string
           updated_at?: string | null
+          video_upload_url?: string | null
+          video_url?: string | null
         }
         Relationships: [
           {
@@ -1687,58 +3096,182 @@ export type Database = {
             referencedRelation: "stories"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "scenes_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories_with_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shot_files: {
+        Row: {
+          created_at: string | null
+          file_id: string
+          file_role: string
+          id: string
+          shot_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_id: string
+          file_role: string
+          id?: string
+          shot_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_id?: string
+          file_role?: string
+          id?: string
+          shot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shot_files_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shot_files_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files_with_input_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shot_files_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files_with_output_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shot_files_shot_id_fkey"
+            columns: ["shot_id"]
+            isOneToOne: false
+            referencedRelation: "shots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shot_files_shot_id_fkey"
+            columns: ["shot_id"]
+            isOneToOne: false
+            referencedRelation: "shots_with_files"
+            referencedColumns: ["id"]
+          },
         ]
       }
       shots: {
         Row: {
+          approved: boolean | null
+          audio_go: boolean | null
+          audio_prompt: string | null
+          audio_upload_url: string | null
+          audio_url: string | null
           camera_angle: string | null
           created_at: string | null
+          cref: string | null
           description: string | null
           duration_seconds: number | null
+          final_audio_prompt: string | null
+          final_shot_url: string | null
+          final_video_prompt: string | null
           generated_content: Json | null
           id: string
+          image_go: boolean | null
+          image_prompt: string | null
+          image_selector: string | null
+          image_upload_url: string | null
+          image_url: string | null
           scene_id: string | null
           sequence_number: number
           settings: Json | null
+          shot_script: string | null
           shot_type: string | null
+          sort: number | null
           status: Database["public"]["Enums"]["shot_status"] | null
           thumbnail_url: string | null
           title: string
           updated_at: string | null
+          video_go: boolean | null
+          video_prompt: string | null
+          video_upload_url: string | null
           video_url: string | null
         }
         Insert: {
+          approved?: boolean | null
+          audio_go?: boolean | null
+          audio_prompt?: string | null
+          audio_upload_url?: string | null
+          audio_url?: string | null
           camera_angle?: string | null
           created_at?: string | null
+          cref?: string | null
           description?: string | null
           duration_seconds?: number | null
+          final_audio_prompt?: string | null
+          final_shot_url?: string | null
+          final_video_prompt?: string | null
           generated_content?: Json | null
           id?: string
+          image_go?: boolean | null
+          image_prompt?: string | null
+          image_selector?: string | null
+          image_upload_url?: string | null
+          image_url?: string | null
           scene_id?: string | null
           sequence_number: number
           settings?: Json | null
+          shot_script?: string | null
           shot_type?: string | null
+          sort?: number | null
           status?: Database["public"]["Enums"]["shot_status"] | null
           thumbnail_url?: string | null
           title: string
           updated_at?: string | null
+          video_go?: boolean | null
+          video_prompt?: string | null
+          video_upload_url?: string | null
           video_url?: string | null
         }
         Update: {
+          approved?: boolean | null
+          audio_go?: boolean | null
+          audio_prompt?: string | null
+          audio_upload_url?: string | null
+          audio_url?: string | null
           camera_angle?: string | null
           created_at?: string | null
+          cref?: string | null
           description?: string | null
           duration_seconds?: number | null
+          final_audio_prompt?: string | null
+          final_shot_url?: string | null
+          final_video_prompt?: string | null
           generated_content?: Json | null
           id?: string
+          image_go?: boolean | null
+          image_prompt?: string | null
+          image_selector?: string | null
+          image_upload_url?: string | null
+          image_url?: string | null
           scene_id?: string | null
           sequence_number?: number
           settings?: Json | null
+          shot_script?: string | null
           shot_type?: string | null
+          sort?: number | null
           status?: Database["public"]["Enums"]["shot_status"] | null
           thumbnail_url?: string | null
           title?: string
           updated_at?: string | null
+          video_go?: boolean | null
+          video_prompt?: string | null
+          video_upload_url?: string | null
           video_url?: string | null
         }
         Relationships: [
@@ -1749,44 +3282,131 @@ export type Database = {
             referencedRelation: "scenes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "shots_scene_id_fkey"
+            columns: ["scene_id"]
+            isOneToOne: false
+            referencedRelation: "scenes_with_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      silence_segments: {
+        Row: {
+          created_at: string
+          duration: number | null
+          end_time: number
+          id: string
+          media_silence_id: string
+          sequence_number: number
+          start_time: number
+        }
+        Insert: {
+          created_at?: string
+          duration?: number | null
+          end_time: number
+          id?: string
+          media_silence_id: string
+          sequence_number: number
+          start_time: number
+        }
+        Update: {
+          created_at?: string
+          duration?: number | null
+          end_time?: number
+          id?: string
+          media_silence_id?: string
+          sequence_number?: number
+          start_time?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "silence_segments_media_silence_id_fkey"
+            columns: ["media_silence_id"]
+            isOneToOne: false
+            referencedRelation: "media_silence"
+            referencedColumns: ["id"]
+          },
         ]
       }
       stories: {
         Row: {
+          active_story: boolean | null
+          approve_source: boolean | null
+          approved: boolean | null
           created_at: string | null
           description: string | null
+          final_video_url: string | null
+          final_video_with_captions_url: string | null
+          generation_completed_at: string | null
+          generation_started_at: string | null
           id: string
           metadata: Json | null
+          script: string | null
           settings: Json | null
+          sid: number
+          source_content_url: string | null
+          srt_url: string | null
           status: Database["public"]["Enums"]["story_status"] | null
+          story_content: string | null
           story_type_id: string | null
           title: string
+          total_generation_time_seconds: number | null
           updated_at: string | null
           user_id: string
+          voiceover_url: string | null
         }
         Insert: {
+          active_story?: boolean | null
+          approve_source?: boolean | null
+          approved?: boolean | null
           created_at?: string | null
           description?: string | null
+          final_video_url?: string | null
+          final_video_with_captions_url?: string | null
+          generation_completed_at?: string | null
+          generation_started_at?: string | null
           id?: string
           metadata?: Json | null
+          script?: string | null
           settings?: Json | null
+          sid?: number
+          source_content_url?: string | null
+          srt_url?: string | null
           status?: Database["public"]["Enums"]["story_status"] | null
+          story_content?: string | null
           story_type_id?: string | null
           title: string
+          total_generation_time_seconds?: number | null
           updated_at?: string | null
           user_id: string
+          voiceover_url?: string | null
         }
         Update: {
+          active_story?: boolean | null
+          approve_source?: boolean | null
+          approved?: boolean | null
           created_at?: string | null
           description?: string | null
+          final_video_url?: string | null
+          final_video_with_captions_url?: string | null
+          generation_completed_at?: string | null
+          generation_started_at?: string | null
           id?: string
           metadata?: Json | null
+          script?: string | null
           settings?: Json | null
+          sid?: number
+          source_content_url?: string | null
+          srt_url?: string | null
           status?: Database["public"]["Enums"]["story_status"] | null
+          story_content?: string | null
           story_type_id?: string | null
           title?: string
+          total_generation_time_seconds?: number | null
           updated_at?: string | null
           user_id?: string
+          voiceover_url?: string | null
         }
         Relationships: [
           {
@@ -1798,35 +3418,175 @@ export type Database = {
           },
         ]
       }
-      story_types: {
+      story_files: {
         Row: {
           created_at: string | null
-          description: string | null
+          file_id: string
+          file_role: string
           id: string
-          is_active: boolean | null
-          name: string
-          settings: Json | null
-          updated_at: string | null
+          story_id: string
         }
         Insert: {
           created_at?: string | null
-          description?: string | null
+          file_id: string
+          file_role: string
           id?: string
-          is_active?: boolean | null
-          name: string
-          settings?: Json | null
-          updated_at?: string | null
+          story_id: string
         }
         Update: {
           created_at?: string | null
-          description?: string | null
+          file_id?: string
+          file_role?: string
           id?: string
-          is_active?: boolean | null
-          name?: string
-          settings?: Json | null
-          updated_at?: string | null
+          story_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "story_files_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_files_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files_with_input_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_files_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files_with_output_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_files_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_files_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories_with_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_types: {
+        Row: {
+          auto_approve_scenes: boolean | null
+          auto_approve_shots: boolean | null
+          auto_approve_source: boolean | null
+          auto_approve_story: boolean | null
+          auto_approve_story_gen: boolean | null
+          auto_assemble_scenes: boolean | null
+          auto_assemble_stories: boolean | null
+          auto_run_audio_action: boolean | null
+          auto_run_image_action: boolean | null
+          auto_run_video_action: boolean | null
+          captions_enabled: boolean | null
+          created_at: string | null
+          description: string | null
+          height: number | null
+          id: string
+          image_prompt_generation_prompt: string | null
+          is_active: boolean | null
+          is_system_default: boolean | null
+          name: string
+          scene_generation_prompt: string | null
+          settings: Json | null
+          shot_generation_system_prompt: string | null
+          shot_generation_user_prompt: string | null
+          story_prompt_system: string | null
+          story_prompt_user: string | null
+          updated_at: string | null
+          video_prompt_generation_prompt: string | null
+          voice_id: string | null
+          voice_settings: Json | null
+          width: number | null
+          workspace_id: string | null
+        }
+        Insert: {
+          auto_approve_scenes?: boolean | null
+          auto_approve_shots?: boolean | null
+          auto_approve_source?: boolean | null
+          auto_approve_story?: boolean | null
+          auto_approve_story_gen?: boolean | null
+          auto_assemble_scenes?: boolean | null
+          auto_assemble_stories?: boolean | null
+          auto_run_audio_action?: boolean | null
+          auto_run_image_action?: boolean | null
+          auto_run_video_action?: boolean | null
+          captions_enabled?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          height?: number | null
+          id?: string
+          image_prompt_generation_prompt?: string | null
+          is_active?: boolean | null
+          is_system_default?: boolean | null
+          name: string
+          scene_generation_prompt?: string | null
+          settings?: Json | null
+          shot_generation_system_prompt?: string | null
+          shot_generation_user_prompt?: string | null
+          story_prompt_system?: string | null
+          story_prompt_user?: string | null
+          updated_at?: string | null
+          video_prompt_generation_prompt?: string | null
+          voice_id?: string | null
+          voice_settings?: Json | null
+          width?: number | null
+          workspace_id?: string | null
+        }
+        Update: {
+          auto_approve_scenes?: boolean | null
+          auto_approve_shots?: boolean | null
+          auto_approve_source?: boolean | null
+          auto_approve_story?: boolean | null
+          auto_approve_story_gen?: boolean | null
+          auto_assemble_scenes?: boolean | null
+          auto_assemble_stories?: boolean | null
+          auto_run_audio_action?: boolean | null
+          auto_run_image_action?: boolean | null
+          auto_run_video_action?: boolean | null
+          captions_enabled?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          height?: number | null
+          id?: string
+          image_prompt_generation_prompt?: string | null
+          is_active?: boolean | null
+          is_system_default?: boolean | null
+          name?: string
+          scene_generation_prompt?: string | null
+          settings?: Json | null
+          shot_generation_system_prompt?: string | null
+          shot_generation_user_prompt?: string | null
+          story_prompt_system?: string | null
+          story_prompt_user?: string | null
+          updated_at?: string | null
+          video_prompt_generation_prompt?: string | null
+          voice_id?: string | null
+          voice_settings?: Json | null
+          width?: number | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_types_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stripe_webhook_events: {
         Row: {
@@ -1910,6 +3670,42 @@ export type Database = {
           },
         ]
       }
+      user_cookies: {
+        Row: {
+          created_at: string | null
+          encrypted_cookies: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          label: string | null
+          last_used_at: string | null
+          platform: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          encrypted_cookies: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string | null
+          last_used_at?: string | null
+          platform: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          encrypted_cookies?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string | null
+          last_used_at?: string | null
+          platform?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_notifications: {
         Row: {
           created_at: string
@@ -1944,6 +3740,45 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_presence: {
+        Row: {
+          last_seen_at: string
+          status: Database["public"]["Enums"]["online_status"]
+          updated_at: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          last_seen_at?: string
+          status?: Database["public"]["Enums"]["online_status"]
+          updated_at?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          last_seen_at?: string
+          status?: Database["public"]["Enums"]["online_status"]
+          updated_at?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_presence_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_presence_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -2014,6 +3849,519 @@ export type Database = {
             columns: ["id"]
             isOneToOne: true
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_caption: {
+        Row: {
+          created_at: string
+          duration: number | null
+          filesize: number | null
+          font_color: string | null
+          font_size: number | null
+          id: string
+          job_id: string
+          mime_type: string | null
+          output_url: string | null
+          position: string | null
+          subtitle_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration?: number | null
+          filesize?: number | null
+          font_color?: string | null
+          font_size?: number | null
+          id?: string
+          job_id: string
+          mime_type?: string | null
+          output_url?: string | null
+          position?: string | null
+          subtitle_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number | null
+          filesize?: number | null
+          font_color?: string | null
+          font_size?: number | null
+          id?: string
+          job_id?: string
+          mime_type?: string | null
+          output_url?: string | null
+          position?: string | null
+          subtitle_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_caption_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_caption_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_caption_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_caption_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_concatenate: {
+        Row: {
+          created_at: string
+          duration: number | null
+          filesize: number | null
+          id: string
+          job_id: string
+          mime_type: string | null
+          output_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration?: number | null
+          filesize?: number | null
+          id?: string
+          job_id: string
+          mime_type?: string | null
+          output_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number | null
+          filesize?: number | null
+          id?: string
+          job_id?: string
+          mime_type?: string | null
+          output_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_concatenate_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_concatenate_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_concatenate_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_concatenate_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_cut: {
+        Row: {
+          created_at: string
+          duration: number | null
+          filesize: number | null
+          id: string
+          job_id: string
+          mime_type: string | null
+          output_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration?: number | null
+          filesize?: number | null
+          id?: string
+          job_id: string
+          mime_type?: string | null
+          output_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number | null
+          filesize?: number | null
+          id?: string
+          job_id?: string
+          mime_type?: string | null
+          output_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_cut_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_cut_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_cut_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_cut_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_split: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          segment_count: number | null
+          split_interval: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          segment_count?: number | null
+          split_interval?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          segment_count?: number | null
+          split_interval?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_split_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_split_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_split_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_split_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_split_segments: {
+        Row: {
+          created_at: string
+          duration: number | null
+          file_url: string
+          filename: string
+          filesize: number | null
+          id: string
+          segment_number: number
+          video_split_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration?: number | null
+          file_url: string
+          filename: string
+          filesize?: number | null
+          id?: string
+          segment_number: number
+          video_split_id: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number | null
+          file_url?: string
+          filename?: string
+          filesize?: number | null
+          id?: string
+          segment_number?: number
+          video_split_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_split_segments_video_split_id_fkey"
+            columns: ["video_split_id"]
+            isOneToOne: false
+            referencedRelation: "video_split"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_thumbnail: {
+        Row: {
+          created_at: string
+          filesize: number | null
+          height: number | null
+          id: string
+          job_id: string
+          mime_type: string | null
+          output_url: string | null
+          thumbnail_time: number | null
+          updated_at: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          filesize?: number | null
+          height?: number | null
+          id?: string
+          job_id: string
+          mime_type?: string | null
+          output_url?: string | null
+          thumbnail_time?: number | null
+          updated_at?: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          filesize?: number | null
+          height?: number | null
+          id?: string
+          job_id?: string
+          mime_type?: string | null
+          output_url?: string | null
+          thumbnail_time?: number | null
+          updated_at?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_thumbnail_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_thumbnail_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_thumbnail_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_thumbnail_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_trim: {
+        Row: {
+          created_at: string
+          duration: number | null
+          end_time: number | null
+          filesize: number | null
+          id: string
+          job_id: string
+          mime_type: string | null
+          output_url: string | null
+          start_time: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration?: number | null
+          end_time?: number | null
+          filesize?: number | null
+          id?: string
+          job_id: string
+          mime_type?: string | null
+          output_url?: string | null
+          start_time?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number | null
+          end_time?: number | null
+          filesize?: number | null
+          id?: string
+          job_id?: string
+          mime_type?: string | null
+          output_url?: string | null
+          start_time?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_trim_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "agent_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_trim_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_trim_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_with_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_trim_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "video_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      videos: {
+        Row: {
+          active_video: boolean | null
+          clip_height: number | null
+          clip_width: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          segments_url: string | null
+          source_file_id: string | null
+          srt_url: string | null
+          transcript_url: string | null
+          updated_at: string | null
+          user_id: string
+          vid: number
+          video_height: number | null
+          video_url: string | null
+          video_width: number | null
+          videos_to_create: number | null
+        }
+        Insert: {
+          active_video?: boolean | null
+          clip_height?: number | null
+          clip_width?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          segments_url?: string | null
+          source_file_id?: string | null
+          srt_url?: string | null
+          transcript_url?: string | null
+          updated_at?: string | null
+          user_id: string
+          vid?: number
+          video_height?: number | null
+          video_url?: string | null
+          video_width?: number | null
+          videos_to_create?: number | null
+        }
+        Update: {
+          active_video?: boolean | null
+          clip_height?: number | null
+          clip_width?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          segments_url?: string | null
+          source_file_id?: string | null
+          srt_url?: string | null
+          transcript_url?: string | null
+          updated_at?: string | null
+          user_id?: string
+          vid?: number
+          video_height?: number | null
+          video_url?: string | null
+          video_width?: number | null
+          videos_to_create?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "videos_source_file_id_fkey"
+            columns: ["source_file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "videos_source_file_id_fkey"
+            columns: ["source_file_id"]
+            isOneToOne: false
+            referencedRelation: "files_with_input_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "videos_source_file_id_fkey"
+            columns: ["source_file_id"]
+            isOneToOne: false
+            referencedRelation: "files_with_output_jobs"
             referencedColumns: ["id"]
           },
         ]
@@ -2098,6 +4446,113 @@ export type Database = {
             foreignKeyName: "workspace_application_settings_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_conversation_participants: {
+        Row: {
+          conversation_id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          joined_at?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_conversation_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_conversations: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_group: boolean
+          last_message_at: string | null
+          name: string | null
+          participant_1_id: string | null
+          participant_2_id: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_group?: boolean
+          last_message_at?: string | null
+          name?: string | null
+          participant_1_id?: string | null
+          participant_2_id?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_group?: boolean
+          last_message_at?: string | null
+          name?: string | null
+          participant_1_id?: string | null
+          participant_2_id?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_conversations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_conversations_participant_1_id_fkey"
+            columns: ["participant_1_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_conversations_participant_2_id_fkey"
+            columns: ["participant_2_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_conversations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
@@ -2271,6 +4726,96 @@ export type Database = {
           },
         ]
       }
+      workspace_message_receipts: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_message_receipts_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_message_receipts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_messages: {
+        Row: {
+          attachment_metadata: Json | null
+          attachment_url: string | null
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          message_type: Database["public"]["Enums"]["message_type"]
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          attachment_metadata?: Json | null
+          attachment_url?: string | null
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          message_type?: Database["public"]["Enums"]["message_type"]
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          attachment_metadata?: Json | null
+          attachment_url?: string | null
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          message_type?: Database["public"]["Enums"]["message_type"]
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_settings: {
         Row: {
           workspace_id: string
@@ -2317,21 +4862,773 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      agent_jobs: {
+        Row: {
+          agent_action: string | null
+          agent_context: Json | null
+          agent_name: string | null
+          created_at: string | null
+          custom_id: string | null
+          entity_id: string | null
+          entity_role: string | null
+          entity_title: string | null
+          entity_type: string | null
+          error_message: string | null
+          id: string | null
+          nca_build_number: string | null
+          nca_code: string | null
+          nca_endpoint: string | null
+          nca_job_id: string | null
+          nca_message: string | null
+          nca_pid: number | null
+          nca_queue_id: string | null
+          nca_queue_length: number | null
+          nca_queue_time: number | null
+          nca_result_files: Json | null
+          nca_run_time: number | null
+          nca_total_time: number | null
+          processing_status: string | null
+          triggered_by: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          agent_action?: string | null
+          agent_context?: Json | null
+          agent_name?: string | null
+          created_at?: string | null
+          custom_id?: string | null
+          entity_id?: string | null
+          entity_role?: string | null
+          entity_title?: never
+          entity_type?: string | null
+          error_message?: string | null
+          id?: string | null
+          nca_build_number?: string | null
+          nca_code?: string | null
+          nca_endpoint?: string | null
+          nca_job_id?: string | null
+          nca_message?: string | null
+          nca_pid?: number | null
+          nca_queue_id?: string | null
+          nca_queue_length?: number | null
+          nca_queue_time?: number | null
+          nca_result_files?: Json | null
+          nca_run_time?: number | null
+          nca_total_time?: number | null
+          processing_status?: string | null
+          triggered_by?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          agent_action?: string | null
+          agent_context?: Json | null
+          agent_name?: string | null
+          created_at?: string | null
+          custom_id?: string | null
+          entity_id?: string | null
+          entity_role?: string | null
+          entity_title?: never
+          entity_type?: string | null
+          error_message?: string | null
+          id?: string | null
+          nca_build_number?: string | null
+          nca_code?: string | null
+          nca_endpoint?: string | null
+          nca_job_id?: string | null
+          nca_message?: string | null
+          nca_pid?: number | null
+          nca_queue_id?: string | null
+          nca_queue_length?: number | null
+          nca_queue_time?: number | null
+          nca_result_files?: Json | null
+          nca_run_time?: number | null
+          nca_total_time?: number | null
+          processing_status?: string | null
+          triggered_by?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      files_with_input_jobs: {
+        Row: {
+          bucket: string | null
+          created_at: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
+          id: string | null
+          input_jobs: Json | null
+          is_generated: boolean | null
+          mime_type: string | null
+          original_name: string | null
+          updated_at: string | null
+          url: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      files_with_output_jobs: {
+        Row: {
+          bucket: string | null
+          created_at: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
+          id: string | null
+          is_generated: boolean | null
+          mime_type: string | null
+          original_name: string | null
+          output_jobs: Json | null
+          updated_at: string | null
+          url: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      jobs_by_agent: {
+        Row: {
+          agent_name: string | null
+          avg_processing_time_seconds: number | null
+          completed_jobs: number | null
+          failed_jobs: number | null
+          last_job_created: string | null
+          processing_jobs: number | null
+          total_jobs: number | null
+        }
+        Relationships: []
+      }
+      jobs_with_files: {
+        Row: {
+          created_at: string | null
+          custom_id: string | null
+          error_message: string | null
+          id: string | null
+          input_files: Json | null
+          nca_build_number: string | null
+          nca_code: string | null
+          nca_endpoint: string | null
+          nca_job_id: string | null
+          nca_message: string | null
+          nca_pid: number | null
+          nca_queue_id: string | null
+          nca_queue_length: number | null
+          nca_queue_time: number | null
+          nca_result_files: Json | null
+          nca_run_time: number | null
+          nca_total_time: number | null
+          output_files: Json | null
+          processing_status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          custom_id?: string | null
+          error_message?: string | null
+          id?: string | null
+          input_files?: never
+          nca_build_number?: string | null
+          nca_code?: string | null
+          nca_endpoint?: string | null
+          nca_job_id?: string | null
+          nca_message?: string | null
+          nca_pid?: number | null
+          nca_queue_id?: string | null
+          nca_queue_length?: number | null
+          nca_queue_time?: number | null
+          nca_result_files?: Json | null
+          nca_run_time?: number | null
+          nca_total_time?: number | null
+          output_files?: never
+          processing_status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          custom_id?: string | null
+          error_message?: string | null
+          id?: string | null
+          input_files?: never
+          nca_build_number?: string | null
+          nca_code?: string | null
+          nca_endpoint?: string | null
+          nca_job_id?: string | null
+          nca_message?: string | null
+          nca_pid?: number | null
+          nca_queue_id?: string | null
+          nca_queue_length?: number | null
+          nca_queue_time?: number | null
+          nca_result_files?: Json | null
+          nca_run_time?: number | null
+          nca_total_time?: number | null
+          output_files?: never
+          processing_status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      scenes_with_files: {
+        Row: {
+          approved: boolean | null
+          audio_file: Json | null
+          audio_upload_url: string | null
+          audio_url: string | null
+          created_at: string | null
+          description: string | null
+          duration_seconds: number | null
+          final_scene_file: Json | null
+          final_scene_url: string | null
+          generated_content: Json | null
+          id: string | null
+          scene_script: string | null
+          sequence_number: number | null
+          settings: Json | null
+          status: Database["public"]["Enums"]["scene_status"] | null
+          story_id: string | null
+          title: string | null
+          updated_at: string | null
+          video_file: Json | null
+          video_upload_url: string | null
+          video_url: string | null
+        }
+        Insert: {
+          approved?: boolean | null
+          audio_file?: never
+          audio_upload_url?: string | null
+          audio_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          final_scene_file?: never
+          final_scene_url?: string | null
+          generated_content?: Json | null
+          id?: string | null
+          scene_script?: string | null
+          sequence_number?: number | null
+          settings?: Json | null
+          status?: Database["public"]["Enums"]["scene_status"] | null
+          story_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+          video_file?: never
+          video_upload_url?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          approved?: boolean | null
+          audio_file?: never
+          audio_upload_url?: string | null
+          audio_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          final_scene_file?: never
+          final_scene_url?: string | null
+          generated_content?: Json | null
+          id?: string | null
+          scene_script?: string | null
+          sequence_number?: number | null
+          settings?: Json | null
+          status?: Database["public"]["Enums"]["scene_status"] | null
+          story_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+          video_file?: never
+          video_upload_url?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenes_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scenes_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories_with_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shots_with_files: {
+        Row: {
+          approved: boolean | null
+          audio_file: Json | null
+          audio_go: boolean | null
+          audio_prompt: string | null
+          audio_upload_url: string | null
+          audio_url: string | null
+          camera_angle: string | null
+          created_at: string | null
+          cref: string | null
+          description: string | null
+          duration_seconds: number | null
+          final_audio_prompt: string | null
+          final_shot_file: Json | null
+          final_shot_url: string | null
+          final_video_prompt: string | null
+          generated_content: Json | null
+          id: string | null
+          image_file: Json | null
+          image_go: boolean | null
+          image_prompt: string | null
+          image_selector: string | null
+          image_upload_url: string | null
+          image_url: string | null
+          scene_id: string | null
+          sequence_number: number | null
+          settings: Json | null
+          shot_script: string | null
+          shot_type: string | null
+          sort: number | null
+          status: Database["public"]["Enums"]["shot_status"] | null
+          thumbnail_url: string | null
+          title: string | null
+          updated_at: string | null
+          video_file: Json | null
+          video_go: boolean | null
+          video_prompt: string | null
+          video_upload_url: string | null
+          video_url: string | null
+        }
+        Insert: {
+          approved?: boolean | null
+          audio_file?: never
+          audio_go?: boolean | null
+          audio_prompt?: string | null
+          audio_upload_url?: string | null
+          audio_url?: string | null
+          camera_angle?: string | null
+          created_at?: string | null
+          cref?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          final_audio_prompt?: string | null
+          final_shot_file?: never
+          final_shot_url?: string | null
+          final_video_prompt?: string | null
+          generated_content?: Json | null
+          id?: string | null
+          image_file?: never
+          image_go?: boolean | null
+          image_prompt?: string | null
+          image_selector?: string | null
+          image_upload_url?: string | null
+          image_url?: string | null
+          scene_id?: string | null
+          sequence_number?: number | null
+          settings?: Json | null
+          shot_script?: string | null
+          shot_type?: string | null
+          sort?: number | null
+          status?: Database["public"]["Enums"]["shot_status"] | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+          video_file?: never
+          video_go?: boolean | null
+          video_prompt?: string | null
+          video_upload_url?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          approved?: boolean | null
+          audio_file?: never
+          audio_go?: boolean | null
+          audio_prompt?: string | null
+          audio_upload_url?: string | null
+          audio_url?: string | null
+          camera_angle?: string | null
+          created_at?: string | null
+          cref?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          final_audio_prompt?: string | null
+          final_shot_file?: never
+          final_shot_url?: string | null
+          final_video_prompt?: string | null
+          generated_content?: Json | null
+          id?: string | null
+          image_file?: never
+          image_go?: boolean | null
+          image_prompt?: string | null
+          image_selector?: string | null
+          image_upload_url?: string | null
+          image_url?: string | null
+          scene_id?: string | null
+          sequence_number?: number | null
+          settings?: Json | null
+          shot_script?: string | null
+          shot_type?: string | null
+          sort?: number | null
+          status?: Database["public"]["Enums"]["shot_status"] | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+          video_file?: never
+          video_go?: boolean | null
+          video_prompt?: string | null
+          video_upload_url?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shots_scene_id_fkey"
+            columns: ["scene_id"]
+            isOneToOne: false
+            referencedRelation: "scenes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shots_scene_id_fkey"
+            columns: ["scene_id"]
+            isOneToOne: false
+            referencedRelation: "scenes_with_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stories_with_files: {
+        Row: {
+          active_story: boolean | null
+          approve_source: boolean | null
+          approved: boolean | null
+          created_at: string | null
+          description: string | null
+          final_video_file: Json | null
+          final_video_url: string | null
+          final_video_with_captions_url: string | null
+          final_with_captions_file: Json | null
+          generation_completed_at: string | null
+          generation_started_at: string | null
+          id: string | null
+          metadata: Json | null
+          script: string | null
+          settings: Json | null
+          sid: number | null
+          source_content_url: string | null
+          srt_url: string | null
+          status: Database["public"]["Enums"]["story_status"] | null
+          story_content: string | null
+          story_type_id: string | null
+          title: string | null
+          total_generation_time_seconds: number | null
+          updated_at: string | null
+          user_id: string | null
+          voiceover_file: Json | null
+          voiceover_url: string | null
+        }
+        Insert: {
+          active_story?: boolean | null
+          approve_source?: boolean | null
+          approved?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          final_video_file?: never
+          final_video_url?: string | null
+          final_video_with_captions_url?: string | null
+          final_with_captions_file?: never
+          generation_completed_at?: string | null
+          generation_started_at?: string | null
+          id?: string | null
+          metadata?: Json | null
+          script?: string | null
+          settings?: Json | null
+          sid?: number | null
+          source_content_url?: string | null
+          srt_url?: string | null
+          status?: Database["public"]["Enums"]["story_status"] | null
+          story_content?: string | null
+          story_type_id?: string | null
+          title?: string | null
+          total_generation_time_seconds?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          voiceover_file?: never
+          voiceover_url?: string | null
+        }
+        Update: {
+          active_story?: boolean | null
+          approve_source?: boolean | null
+          approved?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          final_video_file?: never
+          final_video_url?: string | null
+          final_video_with_captions_url?: string | null
+          final_with_captions_file?: never
+          generation_completed_at?: string | null
+          generation_started_at?: string | null
+          id?: string | null
+          metadata?: Json | null
+          script?: string | null
+          settings?: Json | null
+          sid?: number | null
+          source_content_url?: string | null
+          srt_url?: string | null
+          status?: Database["public"]["Enums"]["story_status"] | null
+          story_content?: string | null
+          story_type_id?: string | null
+          title?: string | null
+          total_generation_time_seconds?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          voiceover_file?: never
+          voiceover_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stories_story_type_id_fkey"
+            columns: ["story_type_id"]
+            isOneToOne: false
+            referencedRelation: "story_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_generation_jobs: {
+        Row: {
+          agent_action: string | null
+          agent_context: Json | null
+          agent_name: string | null
+          created_at: string | null
+          custom_id: string | null
+          entity_details: Json | null
+          entity_id: string | null
+          entity_role: string | null
+          entity_type: string | null
+          error_message: string | null
+          id: string | null
+          nca_build_number: string | null
+          nca_code: string | null
+          nca_endpoint: string | null
+          nca_job_id: string | null
+          nca_message: string | null
+          nca_pid: number | null
+          nca_queue_id: string | null
+          nca_queue_length: number | null
+          nca_queue_time: number | null
+          nca_result_files: Json | null
+          nca_run_time: number | null
+          nca_total_time: number | null
+          output_files: Json | null
+          processing_status: string | null
+          triggered_by: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          agent_action?: string | null
+          agent_context?: Json | null
+          agent_name?: string | null
+          created_at?: string | null
+          custom_id?: string | null
+          entity_details?: never
+          entity_id?: string | null
+          entity_role?: string | null
+          entity_type?: string | null
+          error_message?: string | null
+          id?: string | null
+          nca_build_number?: string | null
+          nca_code?: string | null
+          nca_endpoint?: string | null
+          nca_job_id?: string | null
+          nca_message?: string | null
+          nca_pid?: number | null
+          nca_queue_id?: string | null
+          nca_queue_length?: number | null
+          nca_queue_time?: number | null
+          nca_result_files?: Json | null
+          nca_run_time?: number | null
+          nca_total_time?: number | null
+          output_files?: never
+          processing_status?: string | null
+          triggered_by?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          agent_action?: string | null
+          agent_context?: Json | null
+          agent_name?: string | null
+          created_at?: string | null
+          custom_id?: string | null
+          entity_details?: never
+          entity_id?: string | null
+          entity_role?: string | null
+          entity_type?: string | null
+          error_message?: string | null
+          id?: string | null
+          nca_build_number?: string | null
+          nca_code?: string | null
+          nca_endpoint?: string | null
+          nca_job_id?: string | null
+          nca_message?: string | null
+          nca_pid?: number | null
+          nca_queue_id?: string | null
+          nca_queue_length?: number | null
+          nca_queue_time?: number | null
+          nca_result_files?: Json | null
+          nca_run_time?: number | null
+          nca_total_time?: number | null
+          output_files?: never
+          processing_status?: string | null
+          triggered_by?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      add_participant_to_conversation: {
+        Args: {
+          p_added_by: string
+          p_conversation_id: string
+          p_user_id: string
+        }
+        Returns: {
+          conversation_id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "workspace_conversation_participants"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      check_workspace_storage_quota: {
+        Args: { p_file_size_bytes: number; p_workspace_id: string }
+        Returns: Json
+      }
+      create_agent_tracked_job: {
+        Args: {
+          p_agent_action: string
+          p_agent_context?: Json
+          p_agent_name: string
+          p_entity_id?: string
+          p_entity_role?: string
+          p_entity_type?: string
+          p_nca_endpoint: string
+          p_nca_job_id: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      create_group_conversation: {
+        Args: {
+          p_creator_id: string
+          p_name: string
+          p_participant_ids: string[]
+          p_workspace_id: string
+        }
+        Returns: {
+          avatar_url: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_group: boolean
+          last_message_at: string | null
+          name: string | null
+          participant_1_id: string | null
+          participant_2_id: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "workspace_conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      get_active_user_cookie: {
+        Args: { p_user_id: string }
+        Returns: {
+          encrypted_cookies: string
+          expires_at: string
+          id: string
+          label: string
+          platform: string
+        }[]
+      }
+      get_clip_aspect_ratio: { Args: { v_id: string }; Returns: number }
+      get_clip_duration: { Args: { c_id: string }; Returns: number }
+      get_clip_left_x_width: { Args: { c_id: string }; Returns: number }
+      get_clip_top_y_height: { Args: { c_id: string }; Returns: number }
+      get_conversation_participants: {
+        Args: { p_conversation_id: string }
+        Returns: {
+          avatar_url: string
+          email: string
+          full_name: string
+          joined_at: string
+          role: string
+          user_id: string
+        }[]
+      }
+      get_crop_x_width: { Args: { c_id: string }; Returns: number }
+      get_crop_y_height: { Args: { c_id: string }; Returns: number }
       get_customer_workspace_id: {
         Args: { gateway_customer_id: string }
+        Returns: string
+      }
+      get_or_create_conversation: {
+        Args: {
+          p_user_1_id: string
+          p_user_2_id: string
+          p_workspace_id: string
+        }
         Returns: string
       }
       get_project_workspace_uuid: {
         Args: { project_id: string }
         Returns: string
       }
-      is_application_admin: {
-        Args: { user_id: string }
+      get_threads_with_message_counts: {
+        Args: { p_user_id: string }
+        Returns: {
+          createdAt: string
+          id: string
+          message_count: number
+          metadata: string
+          title: string
+          updatedAt: string
+        }[]
+      }
+      get_unread_count: {
+        Args: { p_conversation_id: string; p_user_id: string }
+        Returns: number
+      }
+      get_video_aspect_ratio: { Args: { v_id: string }; Returns: number }
+      get_workspace_storage_quota: {
+        Args: { p_workspace_id: string }
+        Returns: number
+      }
+      get_workspace_storage_usage: {
+        Args: { p_workspace_id: string }
+        Returns: number
+      }
+      is_application_admin: { Args: { user_id: string }; Returns: boolean }
+      is_conversation_participant: {
+        Args: { p_conversation_id: string; p_user_id: string }
         Returns: boolean
       }
+      is_cookie_expired: { Args: { cookie_id: string }; Returns: boolean }
       is_workspace_admin: {
         Args: { user_id: string; workspace_id: string }
         Returns: boolean
@@ -2339,6 +5636,32 @@ export type Database = {
       is_workspace_member: {
         Args: { user_id: string; workspace_id: string }
         Returns: boolean
+      }
+      remove_participant_from_conversation: {
+        Args: {
+          p_conversation_id: string
+          p_removed_by: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      search_workspace_messages: {
+        Args: {
+          p_limit?: number
+          p_search_query: string
+          p_user_id: string
+          p_workspace_id: string
+        }
+        Returns: {
+          content: string
+          conversation_id: string
+          created_at: string
+          message_id: string
+          message_type: Database["public"]["Enums"]["message_type"]
+          rank: number
+          sender_id: string
+          sender_name: string
+        }[]
       }
     }
     Enums: {
@@ -2369,6 +5692,8 @@ export type Database = {
         | "completed"
         | "moderator_hold"
       marketing_feedback_thread_type: "bug" | "feature_request" | "general"
+      message_type: "text" | "image" | "video" | "audio" | "file"
+      online_status: "online" | "away" | "offline"
       organization_joining_status:
         | "invited"
         | "joinied"
@@ -2558,6 +5883,8 @@ export const Constants = {
         "moderator_hold",
       ],
       marketing_feedback_thread_type: ["bug", "feature_request", "general"],
+      message_type: ["text", "image", "video", "audio", "file"],
+      online_status: ["online", "away", "offline"],
       organization_joining_status: [
         "invited",
         "joinied",

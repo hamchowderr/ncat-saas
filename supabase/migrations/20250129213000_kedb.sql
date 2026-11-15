@@ -40,7 +40,7 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ language 'plpgsql' SET search_path = '';
 
 -- Add updated_at trigger
 CREATE TRIGGER update_kedb_updated_at BEFORE UPDATE ON kedb FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

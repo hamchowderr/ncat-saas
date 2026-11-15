@@ -1,58 +1,103 @@
 "use client";
 
 import { useState } from "react";
-import { Video, Plus, Trash2 } from "lucide-react";
+import { Video } from "lucide-react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
+import { MEDIA_TYPES } from "@/lib/media-types";
+import { toast } from "sonner";
+import { UrlArrayInput } from "../../shared/common/url-array-input";
+import type { UrlItem } from "../../shared/common/types";
 
 export function VideoConcatenateTool() {
+  // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [videoUrls, setVideoUrls] = useState([""]);
-  const [customId, setCustomId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const addVideoUrl = () => {
-    setVideoUrls([...videoUrls, ""]);
-  };
+  // Video URLs (managed by shared component)
+  const [videoUrls, setVideoUrls] = useState<UrlItem[]>([{ url: "" }]);
 
-  const removeVideoUrl = (index: number) => {
-    if (videoUrls.length > 1) {
-      setVideoUrls(videoUrls.filter((_, i) => i !== index));
-    }
-  };
-
-  const updateVideoUrl = (index: number, value: string) => {
-    const updated = [...videoUrls];
-    updated[index] = value;
-    setVideoUrls(updated);
-  };
+  // Custom ID
+  const [customId, setCustomId] = useState("");
 
   const handleSubmit = async () => {
-    const validUrls = videoUrls.filter(url => url.trim() !== "");
+    const validUrls = videoUrls.filter((item) => item.url.trim() !== "");
     if (validUrls.length < 2) {
-      alert("Please add at least two video URLs");
+      toast.error("Please add at least two video URLs");
       return;
     }
 
     setIsLoading(true);
     try {
+      // Get Supabase session for authentication
+      const { createClient } = await import("@/lib/client");
+      const supabase = createClient();
+      const {
+        data: { session },
+        error: sessionError
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        toast.error("Authentication error - please refresh and try again");
+        setIsLoading(false);
+        return;
+      }
+
+      // Construct internal webhook URL for NCAT API callbacks
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
+      const internalWebhookUrl = `${supabaseUrl}/functions/v1/ncat-webhook`;
+
       const payload = {
-        video_urls: validUrls.map(url => ({ video_url: url.trim() })),
+        video_urls: videoUrls
+          .filter((item) => item.url.trim() !== "")
+          .map((item) => ({
+            video_url: item.url.trim()
+          })),
+        webhook_url: internalWebhookUrl,
         id: customId.trim() || undefined
       };
 
-      console.log("Submitting Video Concatenate:", payload);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log("📤 Submitting Video Concatenate request:", payload);
 
-      alert("Video concatenation request submitted successfully!");
+      // Call Edge Function
+      const response = await fetch(`${supabaseUrl}/functions/v1/video-concatenate`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || result.message || "Request failed");
+      }
+
+      console.log("✅ Video concatenation started:", result);
+
+      toast.success("Video concatenation started!", {
+        description: `Job ID: ${result.job_id}. Check the Jobs page to track progress.`
+      });
+
       setIsDialogOpen(false);
-      setVideoUrls([""]);
+      setVideoUrls([{ url: "" }]);
       setCustomId("");
     } catch (error) {
-      alert("Error submitting request: " + error);
+      console.error("❌ Video concatenate error:", error);
+      toast.error("Failed to submit request", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -61,7 +106,7 @@ export function VideoConcatenateTool() {
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Card className="transition-shadow hover:shadow-md cursor-pointer">
+        <Card className="cursor-pointer transition-shadow hover:shadow-md">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Video className="h-4 w-4 text-blue-600" />
@@ -73,51 +118,27 @@ export function VideoConcatenateTool() {
           </CardHeader>
         </Card>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader className="pb-4">
-          <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
             <Video className="h-5 w-5 text-blue-600" />
             Video Concatenate
           </DialogTitle>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-sm">
             Combine multiple videos into one continuous file
           </p>
         </DialogHeader>
         <div className="space-y-6">
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Video URLs</Label>
-            <div className="space-y-3">
-              {videoUrls.map((url, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    value={url}
-                    onChange={(e) => updateVideoUrl(index, e.target.value)}
-                    placeholder={`https://example.com/video${index + 1}.mp4`}
-                    className="h-10"
-                  />
-                  {videoUrls.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => removeVideoUrl(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addVideoUrl}
-                className="w-full h-10 border-dashed flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add Video URL
-              </Button>
-            </div>
-          </div>
+          <UrlArrayInput
+            urls={videoUrls}
+            onUrlsChange={setVideoUrls}
+            label="Videos to Concatenate"
+            itemLabel="Video"
+            placeholder="Select video or paste URL..."
+            acceptedTypes={MEDIA_TYPES.VIDEO}
+            minUrls={2}
+            disabled={isLoading}
+          />
 
           <div className="space-y-2">
             <Label htmlFor="custom-id" className="text-sm font-medium">
@@ -132,15 +153,11 @@ export function VideoConcatenateTool() {
             />
           </div>
 
-          <div className="flex gap-3 pt-2 border-t">
-            <Button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className="flex-1 h-11"
-            >
+          <div className="flex gap-3 border-t pt-2">
+            <Button onClick={handleSubmit} disabled={isLoading} className="h-11 flex-1">
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
                   Processing...
                 </>
               ) : (

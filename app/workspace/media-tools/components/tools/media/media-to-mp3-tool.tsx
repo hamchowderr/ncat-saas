@@ -6,39 +6,89 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
+import { UrlInputWithPicker } from "../../url-input-with-picker";
+import { MEDIA_TYPES } from "@/lib/media-types";
+import { toast } from "sonner";
 
 export function MediaToMp3Tool() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [mediaUrl, setMediaUrl] = useState("");
+  const [mediaFileId, setMediaFileId] = useState<string | null>(null);
   const [bitrate, setBitrate] = useState("128k");
   const [customId, setCustomId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!mediaUrl.trim()) {
-      alert("Please provide a media URL");
+      toast.error("Please provide a media URL");
       return;
     }
 
     setIsLoading(true);
     try {
+      // Get Supabase session for authentication
+      const { createClient } = await import("@/lib/client");
+      const supabase = createClient();
+      const {
+        data: { session },
+        error: sessionError
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        toast.error("Authentication error - please refresh and try again");
+        setIsLoading(false);
+        return;
+      }
+
       const payload = {
+        source_file_id: mediaFileId || undefined,
         media_url: mediaUrl.trim(),
         bitrate: bitrate.trim(),
-        id: customId.trim() || undefined
+        custom_id: customId.trim() || undefined
       };
 
-      console.log("Submitting Media to MP3:", payload);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log("📤 Submitting Media to MP3 request:", payload);
 
-      alert("MP3 conversion request submitted successfully!");
+      // Call Edge Function
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
+      const response = await fetch(`${supabaseUrl}/functions/v1/media-convert-mp3`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || result.message || "Request failed");
+      }
+
+      console.log("✅ MP3 conversion started:", result);
+
+      toast.success("MP3 conversion started!", {
+        description: `Job ID: ${result.job_id}. Check the Jobs page to track progress.`
+      });
+
       setIsDialogOpen(false);
       setMediaUrl("");
+      setMediaFileId(null);
       setBitrate("128k");
       setCustomId("");
     } catch (error) {
-      alert("Error submitting request: " + error);
+      console.error("❌ Media to MP3 error:", error);
+      toast.error("Failed to submit request", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -47,7 +97,7 @@ export function MediaToMp3Tool() {
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Card className="transition-shadow hover:shadow-md cursor-pointer">
+        <Card className="cursor-pointer transition-shadow hover:shadow-md">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Music className="h-4 w-4 text-orange-600" />
@@ -59,13 +109,13 @@ export function MediaToMp3Tool() {
           </CardHeader>
         </Card>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader className="pb-4">
-          <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
             <Music className="h-5 w-5 text-orange-600" />
             Convert to MP3
           </DialogTitle>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-sm">
             Convert any video or audio file to MP3 format
           </p>
         </DialogHeader>
@@ -74,12 +124,13 @@ export function MediaToMp3Tool() {
             <Label htmlFor="media-url" className="text-sm font-medium">
               Media URL <span className="text-red-500">*</span>
             </Label>
-            <Input
+            <UrlInputWithPicker
               id="media-url"
               value={mediaUrl}
-              onChange={(e) => setMediaUrl(e.target.value)}
-              placeholder="https://example.com/video.mp4"
-              className="h-10"
+              onChange={setMediaUrl}
+              onFileIdChange={setMediaFileId}
+              accept={MEDIA_TYPES.VIDEO_AUDIO_NON_MP3}
+              placeholder="Select media file or paste URL..."
             />
           </div>
 
@@ -94,7 +145,7 @@ export function MediaToMp3Tool() {
               placeholder="128k, 192k, 256k, 320k"
               className="h-10"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Higher bitrate = better quality (128k is standard)
             </p>
           </div>
@@ -112,15 +163,11 @@ export function MediaToMp3Tool() {
             />
           </div>
 
-          <div className="flex gap-3 pt-2 border-t">
-            <Button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className="flex-1 h-11"
-            >
+          <div className="flex gap-3 border-t pt-2">
+            <Button onClick={handleSubmit} disabled={isLoading} className="h-11 flex-1">
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
                   Converting...
                 </>
               ) : (

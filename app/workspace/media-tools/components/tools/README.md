@@ -2,9 +2,7 @@
 
 ## Overview
 
-This directory contains modular, self-contained tool components extracted from the monolithic `media-tools-content.tsx` file (originally 3,033 lines).
-
-**Goal:** Break down the large file into manageable, reusable components where each tool is in its own file.
+Modular tool components extracted from monolithic file (3,033 lines → separate files).
 
 ## Directory Structure
 
@@ -39,58 +37,12 @@ tools/
 
 ## Extraction Pattern
 
-### Step 1: Identify the Tool in Original File
+**Each tool has 3 parts:**
+1. State declarations
+2. Handler function
+3. Dialog JSX
 
-Open `media-tools-content.tsx` and search for your tool. Each tool has three main components:
-
-1. **State declarations** (near the top, around lines 30-330)
-2. **Handler function** (in the middle, around lines 79-673)
-3. **Dialog JSX** (in the return statement, around lines 674-3030)
-
-### Step 2: Extract State Variables
-
-Find the comment for your tool's state, for example:
-```typescript
-// Video Split state
-const [isVideoSplitDialogOpen, setIsVideoSplitDialogOpen] = useState(false);
-const [splitVideoUrl, setSplitVideoUrl] = useState("");
-// ... all related state
-```
-
-Copy ALL state variables related to that tool.
-
-### Step 3: Extract Handler Function
-
-Find the async handler function, for example:
-```typescript
-const handleVideoSplitSubmit = async () => {
-  // validation
-  // API call
-  // success handling
-  // error handling
-  // form reset
-};
-```
-
-Copy the entire function including all logic.
-
-### Step 4: Extract Dialog JSX
-
-Find the Dialog component in the return statement. It usually follows this pattern:
-```typescript
-<Dialog open={isToolDialogOpen} onOpenChange={setIsToolDialogOpen}>
-  <DialogTrigger asChild>
-    <Card>...</Card>
-  </DialogTrigger>
-  <DialogContent>
-    {/* All form fields */}
-  </DialogContent>
-</Dialog>
-```
-
-### Step 5: Create New Component File
-
-Create a new file following this template:
+**Component template:**
 
 ```typescript
 "use client";
@@ -130,50 +82,13 @@ export function YourToolNameTool() {
 }
 ```
 
-### Step 6: Clean Up State Variable Names
+**Simplify names:**
+- `isVideoSplitDialogOpen` → `isDialogOpen`
+- `handleVideoSplitSubmit` → `handleSubmit`
 
-In the original file, state variables are prefixed to avoid conflicts. In your component, you can simplify:
-
-❌ **Before (in monolithic file):**
+**Import in main file:**
 ```typescript
-const [isVideoSplitDialogOpen, setIsVideoSplitDialogOpen] = useState(false);
-const [splitVideoUrl, setSplitVideoUrl] = useState("");
-const [isVideoSplitLoading, setIsVideoSplitLoading] = useState(false);
-```
-
-✅ **After (in component file):**
-```typescript
-const [isDialogOpen, setIsDialogOpen] = useState(false);
-const [videoUrl, setVideoUrl] = useState("");
-const [isLoading, setIsLoading] = useState(false);
-```
-
-### Step 7: Update Handler Function Name
-
-Rename tool-specific handler to generic `handleSubmit`:
-
-❌ **Before:**
-```typescript
-const handleVideoSplitSubmit = async () => { ... }
-```
-
-✅ **After:**
-```typescript
-const handleSubmit = async () => { ... }
-```
-
-### Step 8: Add to Main File
-
-Import and use your new component in `media-tools-content-refactored.tsx`:
-
-```typescript
-// Add import at top
 import { VideoSplitTool } from "./tools/video/video-split-tool";
-
-// Add to appropriate section
-<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-  <VideoSplitTool />
-</div>
 ```
 
 ## Examples
@@ -202,100 +117,48 @@ import { VideoSplitTool } from "./tools/video/video-split-tool";
   - Dynamic exclude time ranges array
   - Conditional form fields based on caption type
 
-## Testing Your Extracted Tool
+## Testing
 
-After extracting a tool:
+Import → `npm run dev` → Test at http://localhost:3000/workspace/media-tools
 
-1. **Import it** in `media-tools-content-refactored.tsx`
-2. **Run the dev server:** `npm run dev`
-3. **Navigate to:** http://localhost:3000/workspace/media-tools
-4. **Click on your tool card** to open the dialog
-5. **Test all form fields** work correctly
-6. **Submit a test request** and verify it processes
+## Benefits
 
-## Benefits of This Architecture
-
-### Before Refactoring
-- ❌ 3,033 lines in one file
-- ❌ Hard to find specific tool logic
-- ❌ All state mixed together
-- ❌ Difficult to test individual tools
-- ❌ Merge conflicts when multiple developers work
-
-### After Refactoring
-- ✅ ~150-500 lines per tool file
-- ✅ Easy to locate and edit specific tools
-- ✅ Isolated state per component
-- ✅ Each tool can be tested independently
-- ✅ No conflicts when adding new tools
-- ✅ **To add a new tool:** Just create a new file and import it!
+Before: 3,033 lines, mixed state, hard to test
+After: 150-500 lines per tool, isolated components, easy to add/test
 
 ## Remaining Tools to Extract
 
 ### High Priority (Most Used)
+
 1. ⏳ Video Split Tool
 2. ⏳ Video Thumbnail Tool
 3. ⏳ FFmpeg Compose Tool
 4. ⏳ Media Convert Tool
 
 ### Medium Priority
+
 5. ⏳ Video Concatenate Tool
 6. ⏳ Media to MP3 Tool
 7. ⏳ Media Download Tool
 8. ⏳ Webpage Screenshot Tool
 
 ### Low Priority (Less Complex)
+
 9. ⏳ Media Metadata Tool (might be just a placeholder)
 10. ⏳ Media Transcribe Tool
 11. ⏳ S3 Upload Tool
 12. ⏳ S3 Download Tool
 
-## Tips & Tricks
+## Tips
 
-### Finding State Variables Quickly
-Use regex search: `// .*Tool.*state$` to find all state declaration comments
+**Find state:** Regex `// .*Tool.*state$`
+**Find handlers:** Regex `const handle.*Submit.*=.*async`
+**Find dialogs:** Search tool name in DialogTitle
+**Shared logic:** Create `tools/utils/` folder
+**Examples:** `audio-concatenate-tool.tsx` (simple) | `video-caption-tool.tsx` (complex)
 
-### Finding Handler Functions
-Use regex search: `const handle.*Submit.*=.*async` to find all handlers
+## Checklist
 
-### Finding Dialog Components
-Search for the tool name in DialogTitle, for example: "Video Split"
-
-### Handling Complex State
-For tools with complex nested state (like FFmpeg Compose), keep the structure but simplify variable names:
-
-```typescript
-// Complex arrays and objects are fine!
-const [inputs, setInputs] = useState([
-  { file_url: "", options: [{ option: "", argument: "" }] }
-]);
-```
-
-### Reusing Helper Functions
-If multiple tools share logic, create a `utils/` folder:
-```
-tools/
-├── utils/
-│   ├── validation.ts
-│   └── api-client.ts
-```
-
-## Questions?
-
-- Check existing extracted tools for reference
-- Follow the pattern established in `audio-concatenate-tool.tsx` (simplest example)
-- For complex tools, reference `video-caption-tool.tsx`
-
-## Migration Checklist
-
-When you've extracted all tools:
-
-- [ ] All 18+ tools extracted to separate files
-- [ ] All tools imported in `media-tools-content-refactored.tsx`
-- [ ] All placeholder cards removed
-- [ ] Original `media-tools-content.tsx` backed up
-- [ ] Refactored file renamed to `media-tools-content.tsx`
-- [ ] All tools tested and working
-- [ ] Update imports in `page.tsx` if needed
-- [ ] Run `npm run build` to verify no errors
-- [ ] Run `npm run lint` to check code quality
+- [ ] Extract all tools → Import → Remove placeholders
+- [ ] Backup original → Rename refactored
+- [ ] `npm run build` → `npm run lint`

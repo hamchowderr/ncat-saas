@@ -1,66 +1,112 @@
-import { openai } from "@ai-sdk/openai";
-import { streamText, convertToModelMessages } from "ai";
 import { createClient } from "@/lib/server";
-import type { ChatMetadata, UIMessage } from "@/lib/types/chat";
+import { mastra } from "@/src/mastra";
+import { RuntimeContext } from "@mastra/core/runtime-context";
+import { toAISdkFormat } from "@mastra/ai-sdk";
+import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages, chatId } = await req.json();
+  const {
+    messages,
+    chatId,
+    agentName,
+    workspaceId,
+    modelSettings,
+    maxSteps,
+    maxTokens,
+    providerOptions
+  } = await req.json();
 
-  // Get authenticated user for saving chat
+  // Get authenticated user
   const supabase = await createClient();
   const {
-    data: { user }
+    data: { user },
+    error: userError
   } = await supabase.auth.getUser();
 
-  const result = streamText({
-    model: openai("gpt-4o-mini"),
-    system: "You are a helpful AI assistant. Provide clear, concise, and accurate responses.",
-    messages: convertToModelMessages(messages),
-    onFinish: async ({ text, usage, finishReason }) => {
-      // Auto-save chat after completion if user is authenticated
-      if (!user || !chatId) return;
+  if (userError || !user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
 
-      try {
-        // Build updated messages array with the new assistant response
-        const updatedMessages: UIMessage[] = [
-          ...messages,
-          {
-            id: Date.now().toString(),
-            role: "assistant" as const,
-            parts: [{ type: "text", text }]
-          }
-        ];
+  // Use Mastra agent (default to generalChatAgent if not specified)
+  const selectedAgentName = agentName && agentName !== "default" ? agentName : "generalChatAgent";
+  const agent = mastra.getAgent(selectedAgentName);
 
-        // Build metadata for tracking
-        const metadata: ChatMetadata = {
-          model: "gpt-4o-mini",
-          totalTokens: usage.totalTokens || 0,
-          promptTokens: usage.inputTokens || 0,
-          completionTokens: usage.outputTokens || 0,
-          lastUpdated: new Date().toISOString(),
-          messageCount: updatedMessages.length
-        };
-
-        // Update the chat in the database
-        const { error } = await supabase
-          .from("chats")
-          .update({
-            messages: updatedMessages as any,
-            metadata: metadata as any
-          })
-          .eq("id", chatId)
-          .eq("user_id", user.id);
-
-        if (error) {
-          console.error("Error saving chat:", error);
-        }
-      } catch (error) {
-        console.error("Error in onFinish callback:", error);
+  if (!agent) {
+    return new Response(
+      JSON.stringify({ error: `Agent '${selectedAgentName}' not found` }),
+      {
+        status: 404,
+        headers: { "Content-Type": "application/json" }
       }
-    }
-  });
+    );
+  }
 
-  return result.toUIMessageStreamResponse();
+  // Get session for runtime context
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
+  // Prepare runtime context for tools that need auth
+  const runtimeContext = new RuntimeContext();
+  if (session?.access_token) {
+    runtimeContext.set("userToken", session.access_token);
+  }
+  if (user.id) {
+    runtimeContext.set("userId", user.id);
+  }
+  if (workspaceId) {
+    runtimeContext.set("workspaceId", workspaceId);
+  }
+
+  // Use Mastra memory system with thread and resource IDs
+  const threadId = chatId || `thread-${user.id}-${Date.now()}`;
+  const resourceId = user.id; // User ID as resource for cross-thread memory
+
+  try {
+    // Stream response from Mastra agent with memory
+    const stream = await agent.stream(messages, {
+      memory: {
+        thread: threadId,
+        resource: resourceId,
+      },
+      runtimeContext,
+      savePerStep: true, // CRITICAL: Save messages after each step completes
+      // Pass model settings if provided (overrides agent defaults)
+      ...(modelSettings && { modelSettings }),
+      ...(maxSteps !== undefined && { maxSteps }),
+      ...(maxTokens !== undefined && { maxTokens }),
+      ...(providerOptions && { providerOptions }),
+    });
+
+    // Transform Mastra stream to AI SDK format using recommended @mastra/ai-sdk package
+    const uiMessageStream = createUIMessageStream({
+      execute: async ({ writer }) => {
+        for await (const part of toAISdkFormat(stream, { from: "agent" })!) {
+          writer.write(part);
+        }
+      },
+    });
+
+    // Return UI message stream response
+    return createUIMessageStreamResponse({
+      stream: uiMessageStream,
+    });
+  } catch (error) {
+    console.error("Error in Mastra agent stream:", error);
+    return new Response(
+      JSON.stringify({
+        error: "Failed to generate response",
+        details: error instanceof Error ? error.message : "Unknown error"
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      }
+    );
+  }
 }

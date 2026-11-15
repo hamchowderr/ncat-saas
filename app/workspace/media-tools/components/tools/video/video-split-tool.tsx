@@ -1,72 +1,119 @@
 "use client";
 
 import { useState } from "react";
-import { Scissors, Plus, Trash2 } from "lucide-react";
+import { Scissors } from "lucide-react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
+import { UrlInputWithPicker } from "../../url-input-with-picker";
+import { MEDIA_TYPES } from "@/lib/media-types";
+import { toast } from "sonner";
+import { EncodingSettingsSection } from "../../shared/encoding/encoding-settings-section";
+import { TimeRangesArray } from "../../shared/time/time-ranges-array";
+import type { TimeRange } from "../../shared/time/types";
 
 export function VideoSplitTool() {
+  // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Video input
   const [videoUrl, setVideoUrl] = useState("");
-  const [splits, setSplits] = useState([{ start: "", end: "" }]);
+  const [videoFileId, setVideoFileId] = useState<string | null>(null);
+
+  // Split segments (managed by shared component)
+  const [splits, setSplits] = useState<TimeRange[]>([{ start: "", end: "" }]);
+
+  // Encoding settings (managed by shared component)
   const [videoCodec, setVideoCodec] = useState("libx264");
   const [videoPreset, setVideoPreset] = useState("medium");
   const [videoCrf, setVideoCrf] = useState(23);
   const [audioCodec, setAudioCodec] = useState("aac");
   const [audioBitrate, setAudioBitrate] = useState("128k");
+
+  // Custom ID
   const [customId, setCustomId] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const addSplit = () => {
-    setSplits([...splits, { start: "", end: "" }]);
-  };
-
-  const removeSplit = (index: number) => {
-    if (splits.length > 1) {
-      setSplits(splits.filter((_, i) => i !== index));
-    }
-  };
-
-  const updateSplit = (index: number, field: "start" | "end", value: string) => {
-    const updated = [...splits];
-    updated[index][field] = value;
-    setSplits(updated);
-  };
 
   const handleSubmit = async () => {
     if (!videoUrl.trim()) {
-      alert("Please provide a video URL");
+      toast.error("Please provide a video URL");
       return;
     }
 
-    const validSplits = splits.filter(s => s.start.trim() && s.end.trim());
+    const validSplits = splits.filter((s) => s.start.trim() && s.end.trim());
     if (validSplits.length === 0) {
-      alert("Please add at least one split with start and end times");
+      toast.error("Please add at least one split with start and end times");
       return;
     }
 
     setIsLoading(true);
     try {
+      // Get Supabase session for authentication
+      const { createClient } = await import("@/lib/client");
+      const supabase = createClient();
+      const {
+        data: { session },
+        error: sessionError
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        toast.error("Authentication error - please refresh and try again");
+        setIsLoading(false);
+        return;
+      }
+
+      // Construct internal webhook URL for NCAT API callbacks
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
+      const internalWebhookUrl = `${supabaseUrl}/functions/v1/ncat-webhook`;
+
       const payload = {
         video_url: videoUrl.trim(),
+        source_file_id: videoFileId || undefined,
         splits: validSplits,
         video_codec: videoCodec,
         video_preset: videoPreset,
         video_crf: videoCrf,
         audio_codec: audioCodec,
         audio_bitrate: audioBitrate,
+        webhook_url: internalWebhookUrl,
         id: customId.trim() || undefined
       };
 
-      console.log("Submitting Video Split:", payload);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log("📤 Submitting Video Split request:", payload);
 
-      alert("Video split request submitted successfully!");
+      // Call Edge Function
+      const response = await fetch(`${supabaseUrl}/functions/v1/video-split`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || result.message || "Request failed");
+      }
+
+      console.log("✅ Video split started:", result);
+
+      toast.success("Video split started!", {
+        description: `Job ID: ${result.job_id}. Check the Jobs page to track progress.`
+      });
+
       setIsDialogOpen(false);
       setVideoUrl("");
+      setVideoFileId(null);
       setSplits([{ start: "", end: "" }]);
       setVideoCodec("libx264");
       setVideoPreset("medium");
@@ -75,7 +122,10 @@ export function VideoSplitTool() {
       setAudioBitrate("128k");
       setCustomId("");
     } catch (error) {
-      alert("Error submitting request: " + error);
+      console.error("❌ Video split error:", error);
+      toast.error("Failed to submit request", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +134,7 @@ export function VideoSplitTool() {
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Card className="transition-shadow hover:shadow-md cursor-pointer">
+        <Card className="cursor-pointer transition-shadow hover:shadow-md">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Scissors className="h-4 w-4 text-blue-600" />
@@ -96,13 +146,13 @@ export function VideoSplitTool() {
           </CardHeader>
         </Card>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader className="pb-4">
-          <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
             <Scissors className="h-5 w-5 text-blue-600" />
             Video Split
           </DialogTitle>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-sm">
             Split a video into multiple segments with custom time ranges
           </p>
         </DialogHeader>
@@ -111,137 +161,37 @@ export function VideoSplitTool() {
             <Label htmlFor="video-url" className="text-sm font-medium">
               Video URL <span className="text-red-500">*</span>
             </Label>
-            <Input
+            <UrlInputWithPicker
               id="video-url"
               value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="https://example.com/video.mp4"
-              className="h-10"
+              onChange={setVideoUrl}
+              onFileIdChange={setVideoFileId}
+              accept={MEDIA_TYPES.VIDEO}
+              placeholder="Select video or paste URL..."
             />
           </div>
 
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Split Segments</Label>
-            {splits.map((split, index) => (
-              <div key={index} className="space-y-2 p-3 border rounded-md">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Segment {index + 1}</span>
-                  {splits.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeSplit(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label htmlFor={`start-${index}`} className="text-xs">Start Time</Label>
-                    <Input
-                      id={`start-${index}`}
-                      value={split.start}
-                      onChange={(e) => updateSplit(index, "start", e.target.value)}
-                      placeholder="00:00:10.000"
-                      className="h-9 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor={`end-${index}`} className="text-xs">End Time</Label>
-                    <Input
-                      id={`end-${index}`}
-                      value={split.end}
-                      onChange={(e) => updateSplit(index, "end", e.target.value)}
-                      placeholder="00:00:20.000"
-                      className="h-9 text-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={addSplit}
-              className="w-full h-9 border-dashed"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Split Segment
-            </Button>
-          </div>
+          <TimeRangesArray
+            ranges={splits}
+            onRangesChange={setSplits}
+            itemLabel="Segment"
+            minRanges={1}
+            disabled={isLoading}
+          />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="video-codec" className="text-sm font-medium">
-                Video Codec
-              </Label>
-              <Input
-                id="video-codec"
-                value={videoCodec}
-                onChange={(e) => setVideoCodec(e.target.value)}
-                placeholder="libx264"
-                className="h-10"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="video-preset" className="text-sm font-medium">
-                Preset
-              </Label>
-              <Input
-                id="video-preset"
-                value={videoPreset}
-                onChange={(e) => setVideoPreset(e.target.value)}
-                placeholder="medium"
-                className="h-10"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="video-crf" className="text-sm font-medium">
-              CRF Quality (0-51)
-            </Label>
-            <Input
-              id="video-crf"
-              type="number"
-              min="0"
-              max="51"
-              value={videoCrf}
-              onChange={(e) => setVideoCrf(Number(e.target.value))}
-              className="h-10"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="audio-codec" className="text-sm font-medium">
-                Audio Codec
-              </Label>
-              <Input
-                id="audio-codec"
-                value={audioCodec}
-                onChange={(e) => setAudioCodec(e.target.value)}
-                placeholder="aac"
-                className="h-10"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="audio-bitrate" className="text-sm font-medium">
-                Audio Bitrate
-              </Label>
-              <Input
-                id="audio-bitrate"
-                value={audioBitrate}
-                onChange={(e) => setAudioBitrate(e.target.value)}
-                placeholder="128k"
-                className="h-10"
-              />
-            </div>
-          </div>
+          <EncodingSettingsSection
+            videoCodec={videoCodec}
+            onVideoCodecChange={setVideoCodec}
+            videoPreset={videoPreset}
+            onVideoPresetChange={setVideoPreset}
+            videoCrf={videoCrf}
+            onVideoCrfChange={setVideoCrf}
+            audioCodec={audioCodec}
+            onAudioCodecChange={setAudioCodec}
+            audioBitrate={audioBitrate}
+            onAudioBitrateChange={setAudioBitrate}
+            disabled={isLoading}
+          />
 
           <div className="space-y-2">
             <Label htmlFor="custom-id" className="text-sm font-medium">
@@ -251,20 +201,20 @@ export function VideoSplitTool() {
               id="custom-id"
               value={customId}
               onChange={(e) => setCustomId(e.target.value)}
-              placeholder="Enter a custom identifier for tracking"
+              placeholder="my-split-job"
               className="h-10"
+              disabled={isLoading}
             />
+            <p className="text-muted-foreground text-xs">
+              Custom identifier for tracking this request
+            </p>
           </div>
 
-          <div className="flex gap-3 pt-2 border-t">
-            <Button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className="flex-1 h-11"
-            >
+          <div className="flex gap-3 border-t pt-2">
+            <Button onClick={handleSubmit} disabled={isLoading} className="h-11 flex-1">
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
                   Processing...
                 </>
               ) : (

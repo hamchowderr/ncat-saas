@@ -17,6 +17,7 @@ import {
   ActivityIcon,
   ArchiveRestoreIcon,
   BadgeDollarSignIcon,
+  BookOpenIcon,
   BrainCircuitIcon,
   BrainIcon,
   Building2Icon,
@@ -24,17 +25,21 @@ import {
   ChartBarDecreasingIcon,
   ChartPieIcon,
   ChevronRight,
+  ClapperboardIcon,
   ClipboardCheckIcon,
   ClipboardMinusIcon,
   ComponentIcon,
   CookieIcon,
+  DatabaseIcon,
   FingerprintIcon,
   FolderDotIcon,
   FolderIcon,
+  FrameIcon,
   GaugeIcon,
   GraduationCapIcon,
   ImagesIcon,
   KeyIcon,
+  LayoutTemplateIcon,
   MailIcon,
   MessageSquareIcon,
   ProportionsIcon,
@@ -45,6 +50,7 @@ import {
   StickyNoteIcon,
   UserCircle2Icon,
   UsersIcon,
+  VideoIcon,
   WalletMinimalIcon,
   type LucideIcon,
   GithubIcon,
@@ -55,10 +61,16 @@ import {
   BadgeCheck,
   Bell,
   PaletteIcon,
-  MonitorIcon
+  MonitorIcon,
+  ScissorsIcon,
+  FilmIcon,
+  CameraIcon,
+  LibraryIcon,
+  SparklesIcon
 } from "lucide-react";
 import Link from "next/link";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Separator } from "@/components/ui/separator";
 import { usePathname } from "next/navigation";
 import {
   DropdownMenu,
@@ -68,7 +80,9 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { isUserAdmin } from "@/lib/admin";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useWorkspaceConversations, type Conversation } from "@/hooks/use-workspace-conversations";
+import { useMemo } from "react";
 
 type NavGroup = {
   title: string;
@@ -114,18 +128,88 @@ export const navItems: NavGroup[] = [
         title: "Jobs",
         href: "/workspace/jobs",
         icon: ClipboardCheckIcon
-      },
-      { title: "Chat", href: "/workspace/chat", icon: MessageSquareIcon, isDataBadge: "5" }
+      }
     ]
   },
   {
     title: "AI",
     items: [
-      { title: "AI Chat", href: "/workspace/ai-chat", icon: BrainIcon },
+      { title: "AI Chat", href: "/workspace/ai-chat", icon: SparklesIcon },
       {
         title: "Image Generator",
         href: "/workspace/ai-image-generator",
         icon: ImagesIcon
+      }
+    ]
+  },
+  {
+    title: "Video Generation",
+    items: [
+      {
+        title: "Stories",
+        href: "/workspace/video-generation/stories",
+        icon: BookOpenIcon
+      },
+      {
+        title: "Scenes",
+        href: "/workspace/video-generation/scenes",
+        icon: FilmIcon
+      },
+      {
+        title: "Shots",
+        href: "/workspace/video-generation/shots",
+        icon: CameraIcon
+      },
+      {
+        title: "Story Types",
+        href: "/workspace/video-generation/story-types",
+        icon: LayoutTemplateIcon
+      }
+    ]
+  },
+  {
+    title: "Content Clips",
+    items: [
+      {
+        title: "Videos",
+        href: "/workspace/content-clips/videos",
+        icon: VideoIcon
+      },
+      {
+        title: "Clips",
+        href: "/workspace/content-clips/clips",
+        icon: ScissorsIcon
+      }
+    ]
+  },
+  {
+    title: "K.E.D.B",
+    items: [
+      {
+        title: "Content",
+        href: "/workspace/kedb/content",
+        icon: LibraryIcon
+      },
+      {
+        title: "AI Chat",
+        href: "/workspace/kedb/ai-chat",
+        icon: BrainCircuitIcon
+      }
+    ]
+  },
+  {
+    title: "Team",
+    items: [
+      {
+        title: "Members",
+        href: "/workspace/members",
+        icon: UsersIcon
+      },
+      {
+        title: "Chat",
+        href: "/workspace/chat",
+        icon: MessageSquareIcon
+        // isDataBadge will be set dynamically in NavMain component
       }
     ]
   },
@@ -160,19 +244,38 @@ export const navItems: NavGroup[] = [
 export function NavMain() {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      const adminStatus = await isUserAdmin();
-      setIsAdmin(adminStatus);
-    };
+  // Use React Query for admin status check (no race conditions, automatic caching)
+  const { data: isAdmin = false } = useQuery({
+    queryKey: ["isAdmin"],
+    queryFn: isUserAdmin,
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  });
 
-    checkAdminStatus();
-  }, []);
+  // Get all conversations and calculate total unread count
+  const { conversations } = useWorkspaceConversations();
+  const totalUnreadCount = useMemo(() => {
+    return conversations.reduce((total: number, conv: Conversation) => total + (conv.unread_count || 0), 0);
+  }, [conversations]);
+
+  // Update navItems with dynamic unread count
+  const dynamicNavItems = useMemo(() => {
+    return navItems.map(group => ({
+      ...group,
+      items: group.items.map(item => {
+        if (item.title === "Chat") {
+          return {
+            ...item,
+            isDataBadge: totalUnreadCount > 0 ? String(totalUnreadCount) : undefined
+          };
+        }
+        return item;
+      })
+    }));
+  }, [totalUnreadCount]);
 
   // Filter out admin section for non-admin users
-  const filteredNavItems = navItems.filter((nav) => {
+  const filteredNavItems = dynamicNavItems.filter((nav) => {
     if (nav.title === "Admin" && !isAdmin) {
       return false;
     }
@@ -181,10 +284,13 @@ export function NavMain() {
 
   return (
     <>
-      {filteredNavItems.map((nav) => (
-        <SidebarGroup key={nav.title}>
-          <SidebarGroupLabel>{nav.title}</SidebarGroupLabel>
-          <SidebarGroupContent className="flex flex-col gap-2">
+      {filteredNavItems.map((nav, groupIndex) => (
+        <div key={nav.title}>
+          <SidebarGroup className="mb-1">
+            <SidebarGroupLabel className="text-xs font-semibold tracking-wider uppercase opacity-70 mb-2">
+              {nav.title}
+            </SidebarGroupLabel>
+            <SidebarGroupContent className="flex flex-col gap-1.5">
             <SidebarMenu>
               {nav.items.map((item) => (
                 <SidebarMenuItem key={item.title}>
@@ -280,6 +386,14 @@ export function NavMain() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {/* Add separator after major sections */}
+        {(nav.title === "Workspace" ||
+          nav.title === "Video Generation" ||
+          nav.title === "Team") &&
+          groupIndex < filteredNavItems.length - 1 && (
+          <Separator className="my-3 opacity-50" />
+        )}
+      </div>
       ))}
     </>
   );

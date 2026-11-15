@@ -11,10 +11,6 @@ const pageMapping: Record<string, { title: string; description: string }> = {
     title: "Profile",
     description: "This is how others will see you on the site."
   },
-  "/settings/account": {
-    title: "Account",
-    description: "Update your account settings and preferences."
-  },
   "/settings/appearance": {
     title: "Appearance",
     description:

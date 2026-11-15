@@ -1,2 +1,0 @@
--- Seed data for local development
--- This file contains initial data to populate your local database

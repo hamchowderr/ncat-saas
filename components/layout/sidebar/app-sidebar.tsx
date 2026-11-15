@@ -2,11 +2,12 @@
 
 import * as React from "react";
 import { useEffect } from "react";
-import { ChevronsUpDown, ShoppingBagIcon, UserCircle2Icon } from "lucide-react";
+import { ChevronsUpDown, ShoppingBagIcon, UserCircle2Icon, Check, Lock } from "lucide-react";
 import { PlusIcon } from "@radix-ui/react-icons";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useIsTablet } from "@/hooks/use-mobile";
 import { useWorkspace } from "@/hooks/use-workspace";
+import { useWorkspaceContext } from "@/lib/workspace-context";
 import Link from "next/link";
 
 import {
@@ -36,9 +37,23 @@ import { Button } from "@/components/ui/button";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
+  const router = useRouter();
   const { setOpen, setOpenMobile, isMobile } = useSidebar();
   const isTablet = useIsTablet();
-  const { workspace, loading } = useWorkspace();
+  const { data: workspace, isLoading } = useWorkspace();
+  const {
+    workspaceList,
+    activeWorkspaceId,
+    setActiveWorkspace,
+    isAppAdmin,
+    isImpersonating,
+    loading: contextLoading
+  } = useWorkspaceContext();
+
+  const handleWorkspaceSwitch = (workspaceId: string) => {
+    setActiveWorkspace(workspaceId); // Updates context + sessionStorage
+    router.refresh(); // Refresh all queries
+  };
 
   useEffect(() => {
     if (isMobile) setOpenMobile(false);
@@ -67,9 +82,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 align="end"
                 sideOffset={4}
               >
-                <DropdownMenuLabel>Organizations</DropdownMenuLabel>
+                <DropdownMenuLabel>
+                  {isAppAdmin ? "All Workspaces (Admin)" : "Your Workspaces"}
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {loading ? (
+                {contextLoading || isLoading ? (
                   <DropdownMenuItem className="flex items-center gap-3">
                     <UserCircle2Icon className="text-muted-foreground size-4" />
                     <div className="flex flex-col">
@@ -77,16 +94,35 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <span className="text-muted-foreground text-xs">Please wait</span>
                     </div>
                   </DropdownMenuItem>
-                ) : workspace ? (
-                  <DropdownMenuItem className="flex items-center gap-3">
-                    <UserCircle2Icon className="text-muted-foreground size-4" />
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">{workspace.name}</span>
-                      <span className="text-muted-foreground text-xs capitalize">
-                        {workspace.workspace_member_role || "Member"}
-                      </span>
-                    </div>
-                  </DropdownMenuItem>
+                ) : workspaceList.length > 0 ? (
+                  <>
+                    {workspaceList.map((ws) => {
+                      const isActive = activeWorkspaceId === ws.id;
+                      // Check if admin is viewing a workspace they're not a member of
+                      const isImpersonatingThis = isAppAdmin && workspace?.id !== ws.id && activeWorkspaceId !== ws.id;
+
+                      return (
+                        <DropdownMenuItem
+                          key={ws.id}
+                          className="flex items-center gap-2 cursor-pointer"
+                          onClick={() => handleWorkspaceSwitch(ws.id)}
+                        >
+                          {isImpersonatingThis ? (
+                            <Lock className="text-yellow-600 size-3" />
+                          ) : (
+                            <UserCircle2Icon className="text-muted-foreground size-4" />
+                          )}
+                          <div className="flex flex-col flex-1">
+                            <span className="text-sm font-medium">{ws.name}</span>
+                            {isActive && isImpersonating && (
+                              <span className="text-yellow-600 text-xs">🔐 Viewing</span>
+                            )}
+                          </div>
+                          {isActive && <Check className="size-4 text-primary" />}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </>
                 ) : (
                   <DropdownMenuItem className="flex items-center gap-3">
                     <UserCircle2Icon className="text-muted-foreground size-4" />

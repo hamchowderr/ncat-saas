@@ -1,18 +1,11 @@
-import { generateMeta } from "@/lib/utils";
-import { MediaToolsContent } from "./components/media-tools-content";
+"use client";
 
-export async function generateMetadata() {
-  return generateMeta({
-    title: "Media Tools",
-    description: "NCA Toolkit API endpoints for media processing and content creation.",
-    canonical: "/workspace/media-tools"
-  });
-}
+import { MediaToolsContent } from "./components/media-tools-content";
 
 export default function MediaToolsPage() {
   return (
     <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-      <div className="flex items-center justify-between space-y-2">
+      <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Media Tools</h2>
       </div>
       <MediaToolsContent />

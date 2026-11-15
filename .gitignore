@@ -45,6 +45,10 @@ pids
 coverage/
 *.lcov
 
+# Playwright
+playwright-report/
+test-results/
+
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
@@ -59,3 +63,16 @@ temp/
 # Development tools and configs
 .windsurf/
 .claude/
+.mcp.json
+
+# Debug documentation (internal use only)
+debug/
+
+# Airtable reference files (internal use only)
+airtable/
+
+# mastra build output
+.mastra/
+
+# stray Windows redirect artifact
+**/NUL

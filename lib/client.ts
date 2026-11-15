@@ -1,23 +1,15 @@
-import { createBrowserClient } from "@supabase/ssr";
-import { Database } from "./database.types";
+import { createBrowserClient } from '@supabase/ssr'
+import type { Database } from '@/lib/database.types'
 
 export function createClient() {
-  console.log("🔧 Debug: Creating client with URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-  console.log(
-    "🔧 Debug: Creating client with key:",
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY ? "KEY_PRESENT" : "KEY_MISSING"
-  );
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY
 
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY
-  ) {
-    console.error("❌ Missing Supabase environment variables!");
-    throw new Error("Missing Supabase environment variables");
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error(
+      'Missing Supabase environment variables. Please check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY in your .env.local file.'
+    )
   }
 
-  return createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY!
-  );
+  return createBrowserClient<Database>(supabaseUrl, supabaseKey)
 }

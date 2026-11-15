@@ -5,7 +5,7 @@ import type { CreateChatRequest, ListChatsResponse } from "@/lib/types/chat";
 
 export const maxDuration = 30;
 
-// GET /api/chat/sessions - List all chat sessions for the current user
+// GET /api/chat/sessions - List all chat sessions (threads) for the current user
 export async function GET() {
   try {
     const supabase = await createClient();
@@ -17,27 +17,27 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch all chats for the user, ordered by most recent first
-    const { data: chats, error } = await supabase
-      .from("chats")
-      .select("id, title, messages, created_at, updated_at")
-      .eq("user_id", user.id)
-      .order("updated_at", { ascending: false });
+    // Fetch threads with message counts using optimized database function
+    // This replaces N+1 query pattern (1 + thread_count queries) with a single aggregated query
+    const { data: threadsWithCounts, error: threadsError } = await supabase
+      .rpc('get_threads_with_message_counts', { p_user_id: user.id });
 
-    if (error) {
-      console.error("Error fetching chats:", error);
-      return NextResponse.json({ error: "Failed to fetch chats" }, { status: 500 });
+    if (threadsError) {
+      console.error("Error fetching threads:", threadsError);
+      return NextResponse.json({ error: "Failed to fetch chat sessions" }, { status: 500 });
     }
 
-    // Transform data to include message count
+    // Transform database result to API response format
+    const formattedThreads = (threadsWithCounts || []).map((thread: any) => ({
+      id: thread.id,
+      title: thread.title || "Untitled Chat",
+      messageCount: thread.message_count || 0,
+      createdAt: thread.createdAt,
+      updatedAt: thread.updatedAt
+    }));
+
     const response: ListChatsResponse = {
-      chats: chats.map((chat) => ({
-        id: chat.id,
-        title: chat.title,
-        messageCount: Array.isArray(chat.messages) ? chat.messages.length : 0,
-        createdAt: chat.created_at,
-        updatedAt: chat.updated_at
-      }))
+      chats: formattedThreads
     };
 
     return NextResponse.json(response);
@@ -47,7 +47,7 @@ export async function GET() {
   }
 }
 
-// POST /api/chat/sessions - Create a new chat session
+// POST /api/chat/sessions - Create a new chat session (thread)
 export async function POST(req: Request) {
   try {
     const supabase = await createClient();
@@ -62,42 +62,60 @@ export async function POST(req: Request) {
     const body = (await req.json()) as CreateChatRequest;
     const { title, messages, metadata, projectId } = body;
 
-    // Generate unique ID for the chat
-    const chatId = generateId();
+    // Generate unique ID for the thread
+    const threadId = generateId();
 
     // Generate default title from first user message if not provided
-    const chatTitle =
+    const threadTitle =
       title ||
-      (messages.length > 0
+      (messages && messages.length > 0
         ? messages[0].parts.find((p) => p.type === "text")?.text?.slice(0, 50) || "New Chat"
         : "New Chat");
 
-    // Insert chat into database
-    const { data: chat, error } = await supabase
-      .from("chats")
+    // Create thread in Mastra
+    const { data: thread, error: threadError } = await supabase
+      .from("mastra_threads")
       .insert({
-        id: chatId,
-        user_id: user.id,
-        title: chatTitle,
-        messages: messages as any,
-        metadata: metadata as any,
-        project_id: projectId || null
+        id: threadId,
+        resourceId: user.id,
+        title: threadTitle,
+        metadata: {
+          ...metadata,
+          project_id: projectId || null,
+          created_via: "api"
+        }
       })
       .select()
       .single();
 
-    if (error) {
-      console.error("Error creating chat:", error);
-      return NextResponse.json({ error: "Failed to create chat" }, { status: 500 });
+    if (threadError) {
+      console.error("Error creating thread:", threadError);
+      return NextResponse.json({ error: "Failed to create chat session" }, { status: 500 });
     }
 
+    // Create resource entry if it doesn't exist
+    await supabase
+      .from("mastra_resources")
+      .upsert(
+        {
+          id: user.id,
+          metadata: {},
+          updatedAt: new Date().toISOString()
+        },
+        { onConflict: "id", ignoreDuplicates: true }
+      );
+
+    // NOTE: Message insertion removed - Mastra automatically handles message persistence
+    // via the memory.savePerStep option when agent.stream() is called in /api/chat
+    // This prevents duplicate message insertion and ensures consistent message format
+
     return NextResponse.json({
-      id: chat.id,
-      title: chat.title,
-      messages: chat.messages,
-      metadata: chat.metadata,
-      createdAt: chat.created_at,
-      updatedAt: chat.updated_at
+      id: thread.id,
+      title: thread.title,
+      messages: messages || [],
+      metadata: thread.metadata,
+      createdAt: thread.createdAt,
+      updatedAt: thread.updatedAt
     });
   } catch (error) {
     console.error("Error in POST /api/chat/sessions:", error);
